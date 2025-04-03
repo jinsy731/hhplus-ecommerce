@@ -15,6 +15,7 @@
 - [7. 인기 상품 조회](#7-인기-상품-조회)
 - [✍️ 작성 정보](#✍️-작성-정보)
 
+
 ## 공통
 ### 요청 형식
 
@@ -85,9 +86,9 @@
 ### POST `/api/v1/users/{userId}/balance`
 
 #### Path Parameters
-| 이름       | 타입   | 필수  | 설명      |
-| -------- | ---- | --- | ------- |
-| `userId` | Long | ✅   | 사용자 식별자 |
+| 이름       | 타입   | 설명      |
+| -------- | ---- | ------- |
+| `userId` | Long | 사용자 식별자 |
 
 #### Request Body
 ```json
@@ -96,9 +97,9 @@
 }
 ```
 
-| 필드     | 타입  | 필수  | 설명            |
-| ------ | --- | --- | ------------- |
-| amount | Int | ✅   | 충전할 금액 (0 초과) |
+| 필드     | 타입  | 설명            |
+| ------ | --- | ------------- |
+| amount | Int | 충전할 금액 (0 초과) |
 
 #### Response (200 OK)
 ```json
@@ -112,10 +113,10 @@
 }
 ```
 
-| 필드        | 타입   | 필수  | 설명    |
-| --------- | ---- | --- | ----- |
-| `userId`  | Long | ✅   | 유저 ID |
-| `balance` | Int  | ✅   | 유저 잔액 |
+| 필드        | 타입   | 설명    |
+| --------- | ---- | ----- |
+| `userId`  | Long | 유저 ID |
+| `balance` | Int  | 유저 잔액 |
 
 #### 오류 예시
 | 상태코드 | 코드               | 설명          |
@@ -130,7 +131,7 @@
 
 ### GET `/api/v1/users/{userId}/balance`
 
-#### Response (200 OK)
+#### Response
 ```json
 {
   "code": "SUCCESS",
@@ -142,10 +143,10 @@
 }
 ```
 
-| 필드        | 타입   | 필수  | 설명    |
-| --------- | ---- | --- | ----- |
-| `userId`  | Long | ✅   | 유저 ID |
-| `balance` | Int  | ✅   | 유저 잔액 |
+| 필드        | 타입   | 설명    |
+| --------- | ---- | ----- |
+| `userId`  | Long | 유저 ID |
+| `balance` | Int  | 유저 잔액 |
 
 ---
 
@@ -191,20 +192,20 @@
 }
 ```
 
-| 필드                       | 타입       | 필수  | 설명                 |
-| ------------------------ | -------- | --- | ------------------ |
-| `productId`              | Long     | ✅   | 유저 ID              |
-| `name `                  | Int      | ✅   | 유저 잔액              |
-| `variants`               | Object[] | ✅   | 옵션                 |
-| `variants[].variantId`   | Long     | ✅   | 옵션 ID              |
-| `variants[].option`      | String   | ✅   | 옵션 이름              |
-| `variants[].price`       | Int      | ✅   | 가격                 |
-| `variants[].stock`       | Int      | ✅   | 재고                 |
-| `pageInfo`               | Object   | ✅   | 페이징 요청 시 페이지 관련 정보 |
-| `pageInfo.page`          | Int      | ✅   | 현재 페이지 번호          |
-| `pageInfo.size`          | Int      | ✅   | 요청한 페이지 크기         |
-| `pageInfo.totalElements` | Int      | ✅   | 전체 항목 수            |
-| `pageInfo.totalPages`    | Int      | ✅   | 전체 페이지 수           |
+| 필드                       | 타입       | 설명                 |
+| ------------------------ | -------- | ------------------ |
+| `productId`              | Long     | 유저 ID              |
+| `name `                  | Int      | 유저 잔액              |
+| `variants`               | Object[] | 옵션                 |
+| `variants[].variantId`   | Long     | 옵션 ID              |
+| `variants[].option`      | String   | 옵션 이름              |
+| `variants[].price`       | Int      | 가격                 |
+| `variants[].stock`       | Int      | 재고                 |
+| `pageInfo`               | Object   | 페이징 요청 시 페이지 관련 정보 |
+| `pageInfo.page`          | Int      | 현재 페이지 번호          |
+| `pageInfo.size`          | Int      | 요청한 페이지 크기         |
+| `pageInfo.totalElements` | Int      | 전체 항목 수            |
+| `pageInfo.totalPages`    | Int      | 전체 페이지 수           |
 
 
 ---
@@ -217,9 +218,9 @@
 
 #### Path Variable
 
-| 필드     | 타입   | 필수  | 설명    |
-| ------ | ---- | --- | ----- |
-| userId | Long | ✅   | 유저 ID |
+| 필드     | 타입   | 설명    |
+| ------ | ---- | ----- |
+| userId | Long | 유저 ID |
 
 
 #### Request Body
@@ -229,9 +230,9 @@
 }
 ```
 
-| 필드       | 타입   | 필수  | 설명         |
-| -------- | ---- | --- | ---------- |
-| couponId | Long | ✅   | 발급받을 쿠폰 ID |
+| 필드       | 타입   | 설명         |
+| -------- | ---- | ---------- |
+| couponId | Long | 발급받을 쿠폰 ID |
 
 #### Response
 ```json
@@ -245,10 +246,10 @@
 }
 ```
 
-| 필드             | 타입     | 필수  | 설명      |
-| -------------- | ------ | --- | ------- |
-| `userCouponId` | Long   | ✅   | 유저쿠폰 ID |
-| `status `      | String | ✅   | 쿠폰 상태   |
+| 필드             | 타입     | 설명      |
+| -------------- | ------ | ------- |
+| `userCouponId` | Long   | 유저쿠폰 ID |
+| `status `      | String | 쿠폰 상태   |
 
 #### 에러 코드
 
@@ -266,9 +267,9 @@
 
 #### Path Variable
 
-| 필드     | 타입   | 필수  | 설명    |
-| ------ | ---- | --- | ----- |
-| userId | Long | ✅   | 유저 ID |
+| 필드     | 타입   | 설명    |
+| ------ | ---- | ----- |
+| userId | Long | 유저 ID |
 
 #### Response
 ```json
@@ -296,19 +297,19 @@
 }
 ```
 
-| 필드                       | 타입        | 필수  | 설명                 |
-| ------------------------ | --------- | --- | ------------------ |
-| `coupons[].userCouponId` | Long      | ✅   | 유저쿠폰 ID            |
-| `coupons[].couponName`   | String    | ✅   | 쿠폰 이름              |
-| `coupons[].discountType` | String    | ✅   | 할인 타입              |
-| `coupons[].value`        | String    | ✅   | 할인값(금액 또는 할인율)     |
-| `coupons[].status`       | String    | ✅   | 쿠폰 상태              |
-| `coupons[].expiredAt`    | LocalDate | ✅   | 가격                 |
-| `pageInfo`               | Object    | ✅   | 페이징 요청 시 페이지 관련 정보 |
-| `pageInfo.page`          | Int       | ✅   | 현재 페이지 번호          |
-| `pageInfo.size`          | Int       | ✅   | 요청한 페이지 크기         |
-| `pageInfo.totalElements` | Int       | ✅   | 전체 항목 수            |
-| `pageInfo.totalPages`    | Int       | ✅   | 전체 페이지 수           |
+| 필드                       | 타입        | 설명                 |
+| ------------------------ | --------- | ------------------ |
+| `coupons[].userCouponId` | Long      | 유저쿠폰 ID            |
+| `coupons[].couponName`   | String    | 쿠폰 이름              |
+| `coupons[].discountType` | String    | 할인 타입              |
+| `coupons[].value`        | String    | 할인값(금액 또는 할인율)     |
+| `coupons[].status`       | String    | 쿠폰 상태              |
+| `coupons[].expiredAt`    | LocalDate | 가격                 |
+| `pageInfo`               | Object    | 페이징 요청 시 페이지 관련 정보 |
+| `pageInfo.page`          | Int       | 현재 페이지 번호          |
+| `pageInfo.size`          | Int       | 요청한 페이지 크기         |
+| `pageInfo.totalElements` | Int       | 전체 항목 수            |
+| `pageInfo.totalPages`    | Int       | 전체 페이지 수           |
 
 ---
 
@@ -356,11 +357,11 @@
 }
 ```
 
-| 필드           | 타입     | 필수  | 설명       |
-| ------------ | ------ | --- | -------- |
-| `orderId`    | Long   | ✅   | 주문 ID    |
-| `status`     | String | ✅   | 주문 상태    |
-| `finalTotal` | Int    | ✅   | 최종 결제금액 |
+| 필드           | 타입     | 설명       |
+| ------------ | ------ | -------- |
+| `orderId`    | Long   | 주문 ID    |
+| `status`     | String | 주문 상태    |
+| `finalTotal` | Int    | 최종 결제금액 |
 
 #### 에러 코드
 
@@ -390,11 +391,11 @@
 }
 ```
 
-| 필드          | 타입     | 필수  | 설명      |
-| ----------- | ------ | --- | ------- |
-| `productId` | Long   | ✅   | 상품 ID   |
-| `name`      | String | ✅   | 상품 이름   |
-| `totalSold` | Int    | ✅   | 총 판매수량 |
+| 필드          | 타입     | 설명      |
+| ----------- | ------ | ------- |
+| `productId` | Long   | 상품 ID   |
+| `name`      | String | 상품 이름   |
+| `totalSold` | Int    | 총 판매수량 |
 
 ## ✍️ 작성 정보
 | 수정내역  | 작성자 | 작성일        |
