@@ -202,9 +202,11 @@ graph TD
 
 #### 책임 메서드
 
-| 메서드                   | 설명                 |
-| --------------------- | ------------------ |
-| `findVariant(values)` | 옵션 조합으로 Variant 조회 |
+| 메서드                                              | 설명                          |
+| ------------------------------------------------ | --------------------------- |
+| `findVariant(values)`                            | 옵션 조합으로 Variant 조회          |
+| `checkHasEnoughStock(variantId: Long, qty: Int)` | 재고 검증(`ProductVariant`에 위임) |
+| `reduceStock(variantId: Long, qty: Int)`         | 재고 차감(`ProductVariant`에 위임) |
 
 #### 상태 전이
 - 없음 (구성 요소 변경만 존재)
@@ -238,11 +240,13 @@ graph TD
 
 #### 책임 메서드
 
-| 메서드 | 설명 |
-|--------|------|
-| `reduceStock(qty)` | 재고 차감 |
-| `getPrice(basePrice)` | 최종 가격 계산 |
-| `matches(optionValues)` | 옵션 매칭 여부 확인 |
+| 메서드                        | 설명          |
+| -------------------------- | ----------- |
+| `checkHasEnoughStock(qty)` | 재고 검증       |
+| `reduceStock(qty)`         | 재고 차감       |
+| `getPrice(basePrice)`      | 최종 가격 계산    |
+| `matches(optionValues)`    | 옵션 매칭 여부 확인 |
+
 
 #### 상태 전이
 - 없음 (수량만 변함)
