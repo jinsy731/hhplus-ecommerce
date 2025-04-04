@@ -1,8 +1,8 @@
 plugins {
-	kotlin("jvm") version "2.1.0"
-	kotlin("kapt") version "2.1.0"
-	kotlin("plugin.spring") version "2.1.0"
-	kotlin("plugin.jpa") version "2.1.0"
+	kotlin("jvm") version "1.9.0"
+	kotlin("kapt") version "1.9.0"
+	kotlin("plugin.spring") version "1.9.0"
+	kotlin("plugin.jpa") version "1.9.0"
 	id("org.springframework.boot") version "3.4.1"
 	id("io.spring.dependency-management") version "1.1.7"
 }
@@ -52,11 +52,16 @@ dependencies {
     // DB
 	runtimeOnly("com.mysql:mysql-connector-j")
 
-    // Test
+	// Doc
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+
+	// Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.boot:spring-boot-testcontainers")
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:mysql")
+//	testImplementation("io.kotest:kotest-runner-junit5")
+	testImplementation("io.kotest:kotest-assertions-core:5.8.0")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
