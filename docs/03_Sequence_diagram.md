@@ -10,6 +10,8 @@
 - [4. 보유 쿠폰 목록 조회](#4-보유-쿠폰-목록-조회)
 - [5. 주문 / 결제](#5-주문--결제)
 - [6. 인기 상품 조회](#6-인기-상품-조회)
+- [7. 판매량 집계 배치 프로세스](#7-판매량-집계-배치-프로세스)
+
 
 ## 1. 잔액 충전
 ---
@@ -19,6 +21,7 @@
 title: 01. 잔액 충전
 ---
 sequenceDiagram
+	autonumber
     actor C as 고객
     participant S as UserBalanceService
     participant DB as DB
@@ -44,17 +47,14 @@ sequenceDiagram
     
 ```
 
-### 흐름 요약
-사용자가 금액을 입력해 자신의 잔액을 충전하는 프로세스.  
-유효하지 않은 유저나 충전 금액에 대한 예외 처리도 포함됨.
-
-### 흐름 설명
-1. `UserBalanceService`에 충전 요청을 보냄.
-2. 서비스는 DB에서 해당 유저의 잔액 정보를 조회함.
-3. 존재하지 않는 유저인 경우 예외 응답.
-4. `UserBalance` 도메인에서 충전 로직 실행.
-    - 음수 금액일 경우 예외 발생.
-5. 잔액이 정상적으로 증가하면 충전 성공 응답 반환.
+(1) 고객이 UserBalanceService에게 잔액 충전 요청을 보낸다.  
+(2) 서비스는 DB에 유저 정보를 조회한다.
+(3) 유저가 존재하지 않는 경우, DB는 에러를 발생시키고 고객에게 예외 응답을 반환한다.
+(4) 유저가 존재하는 경우, DB는 해당 유저의 UserBalance 정보를 서비스에 반환한다.
+(5) UserBalanceService는 UserBalance 객체를 활성화하고 충전 요청을 보낸다.
+(6) 충전 금액(amount)이 0 이하인 경우, 예외가 발생하고 고객에게 에러 응답이 반환된다.
+(7) 충전이 정상적으로 수행되면, amount만큼 잔액이 증가하고 결과가 서비스로 반환된다.
+(8) 서비스는 고객에게 잔액 충전 성공 응답을 반환한다.
 
 
 
@@ -66,30 +66,34 @@ sequenceDiagram
 title: 02. 잔액 조회
 ---
 sequenceDiagram
-    actor C as 고객
+    autonumber
+    actor 고객
     participant S as UserBalanceService
     participant DB as DB
+    participant UB as UserBalance
 
-    C ->>+ S: [Request] 잔액 조회 요청
-    S ->>+ DB: 유저 조회
+    고객 ->>+ S: [Request] 잔액 조회 요청
+    S ->>+ DB: 유저 잔액 조회
 
-    opt 존재하지 않는 유저
-    DB -->> C: ❌예외 발생: 에러 응답
+    alt 잔액 정보 없음
+        S ->>+ UB: 새로운 UserBalance 생성 (초기 잔액: 0)
+        UB -->>- S: 생성된 UserBalance
+        S ->> DB: 생성된 UserBalance 저장
+    else 잔액 정보 있음
+        DB -->> S: 기존 UserBalance 반환
     end
-    
-    S -->>- C: ✅ [Response] 잔액 조회 응답
 
-    
+    S -->>- 고객: ✅ [Response] 잔액 조회 응답
+
 ```
 
-### 흐름 요약
-사용자가 자신의 현재 잔액을 조회하는 단순 조회 요청.
-
-### 흐름 설명
-1. `UserBalanceService`에 잔액 조회 요청.
-2. 서비스는 DB에서 유저 잔액 정보 조회.
-3. 유저가 없을 경우 예외 응답.
-4. 잔액 정보를 포함한 응답을 사용자에게 반환.
+(1) 고객이`UserBalanceService`에 잔액 조회 요청을 보낸다.  
+(2) 서비스는 DB에 해당 유저의 잔액 정보를 조회한다.
+(3) 잔액 정보(UserBalance)가 존재하지 않는 경우,
+(4) 서비스는 새로운`UserBalance`를 생성하여
+(5) DB에 저장한다. 초기 잔액은 0이다.
+(6) 유저가 존재하고(또는 새로 생성된 경우) `UserBalance`로 응답을 생성한다.
+(7) 서비스는 고객에게 잔액 조회 성공 응답을 반환한다.
 
 
 
@@ -101,6 +105,7 @@ sequenceDiagram
 title: 03. 선착순 쿠폰 발급
 ---
 sequenceDiagram
+	autonumber
     actor C as 고객
     participant S as UserCouponService
     participant DB as DB
@@ -126,19 +131,16 @@ sequenceDiagram
     S -->>- C: ✅ [Response] 쿠폰 발급 성공 응답
 ```
 
-### 흐름 요약
-사용자가 특정 쿠폰을 발급 요청할 때의 프로세스.  
-쿠폰의 잔여 수량과 유저 존재 여부 등 제약을 포함함.
-
-### 흐름 설명
-1. 고객이 `UserCouponService`에 쿠폰 발급 요청.
-2. DB에서 유저, 쿠폰 존재 여부 확인.
-3. 존재하지 않는 유저/쿠폰이거나 이미 발급받은 쿠폰인 경우 예외 발생.
-4. `Coupon` 도메인에서 발급 가능 여부 검사.
-    - 잔여 수량 부족 시 예외 발생.
-5. 성공 시 `UserCoupon`이 생성되고, 쿠폰 수량이 1 감소함.
-6. 발급 완료 응답 반환.
-
+(1) 고객이`UserCouponService`에 쿠폰 발급 요청을 보낸다.  
+(2) 서비스는 DB에서 해당 유저와 요청한 쿠폰 정보를 조회한다.
+(3) 유저나 쿠폰이 존재하지 않거나, 이미 해당 쿠폰을 발급받은 이력이 있는 경우 예외가 발생하고 에러 응답이 반환된다.
+(4) 유저와 쿠폰 정보가 유효하면, DB는 서비스에`User`와`Coupon`정보를 반환한다.
+(5)`Coupon`객체가 생성되며, 서비스는 이 객체에 쿠폰 발급 요청을 보낸다.
+(6) 쿠폰의 잔여 수량이 부족한 경우, 예외가 발생하고 고객에게 에러 응답이 반환된다.
+(7) 쿠폰 발급이 성공하면,`UserCoupon`객체가 반환된다. `Coupon`의 잔여 수량은 1 감소한다.
+(8) 서비스는 발급된`UserCoupon`및 잔여 수량이 갱신된`Coupon`객체를 DB에 저장한다.
+(9) DB는 저장 결과를 서비스에 반환한다.
+(10) 서비스는 고객에게 쿠폰 발급 성공 응답을 반환한다.
 
 
 ## 4. 보유 쿠폰 목록 조회
@@ -149,6 +151,7 @@ sequenceDiagram
 title: 04. 보유 쿠폰 목록 조회
 ---
 sequenceDiagram
+	autonumber
     actor C as 고객
     participant S as UserCouponService
     participant DB as DB
@@ -160,13 +163,10 @@ sequenceDiagram
     S -->>- C: ✅ [Response] 쿠폰 목록 조회 응답
 ```
 
-### 흐름 요약
-사용자가 자신이 보유한 쿠폰 목록을 조회하는 과정.
-
-### 흐름 설명
-1. 고객이 `UserCouponService`에 조회 요청.
-2. DB에서 해당 사용자의 `UserCoupon` 목록을 조회.
-3. 쿠폰 목록을 응답으로 반환.
+(1) 고객이`UserCouponService`에 보유 쿠폰 목록 조회 요청을 보낸다.  
+(2) 서비스는 DB에 해당 유저의 보유 쿠폰 목록을 조회한다.  
+(3) DB는 해당 유저가 보유한`UserCoupon`목록을 반환한다.  
+(4) 서비스는 쿠폰 목록 정보를 고객에게 성공 응답으로 반환한다.
 
 
 ## 5. 주문 / 결제
@@ -177,6 +177,7 @@ sequenceDiagram
 title: 05. 주문/결제
 ---
 sequenceDiagram
+	autonumber
     actor C as 고객
     participant S as OrderService
     participant DB as DB
@@ -256,48 +257,62 @@ sequenceDiagram
     S -->>- C: ✅ [Response] 주문 성공 응답
 ```
 
-### 흐름 요약
-복합적 로직이 포함된 **주문 처리의 전체 시나리오**.  
-상품 선택 → 쿠폰 적용 → 결제 → 잔액/재고 차감 → 외부 전송 까지 포함.
 
-### 흐름 설명
 
-#### 1. 사전 데이터 조회
-- 고객이 `OrderService`에 주문 요청
-- 서비스는 유저, 상품, 쿠폰 정보를 DB에서 조회
-- 존재하지 않는 경우 예외 처리
+### 주문 생성 단계
 
-#### 2. 주문 생성
-- `Order` 도메인에서 주문을 생성하고,
-- 유저 잔액이 충분한지 검증
-- 상품에 대해 재고 검증 및 주문 항목 생성
-    - 재고 부족 시 예외 발생
+(1) 고객(C)이 OrderService(S)에게 주문/결제 요청을 보낸다.  
+(2) OrderService는 DB에서 사용자, 상품, 보유 쿠폰 정보를 조회한다.  
+(3) 유저, 상품, 쿠폰 중 하나라도 존재하지 않으면 예외 발생 후 에러 응답을 반환한다.  
+(4) DB로부터 사용자, 상품 리스트, 사용자 보유 쿠폰 정보를 받아온다.
 
-#### 3. 쿠폰 적용
-- `UserCoupon` 상태 검증 (UNUSED인지, 유효기간 내인지)
-- `DiscountPolicy`를 통해 할인 금액 계산
-- 쿠폰 상태 → USED로 변경, 사용 시간 기록
-- 주문에 할인 금액 적용
+(5) 주문 생성을 시작한다. OrderService는 Order 객체에 주문 생성을 요청한다.  
+(6) Order는 User에게 잔액이 충분한지 검증을 요청한다.  
+(7) 잔액이 부족한 경우 에러 응답이 반환된다.
 
-#### 4. 결제 처리
-- 결제 시도
-- 결제 실패 시 예외 발생
-- 결제 성공
-    - 주문 상태 → `PAID`로 전이
-    - 유저 잔액 차감, 상품 재고 차감
-- 결제 내역 생성
+(8) 선택된 상품들에 대해 루프를 돌며 Order가 각 Product에 주문 아이템 생성을 요청한다.  
+(9) Product는 재고를 검증한다.  
+(10) 재고가 부족하면 예외가 발생하고 에러 응답이 반환된다.  
+(11) 주문 아이템 생성이 성공하면 Product는 Order에 응답을 반환한다.  
+(12) 모든 주문 아이템이 정상 생성되면 주문 생성이 완료된다.
 
-#### 5. 결과 저장
-- `UserBalance`, `Product`, `Payment`, `Order`, `ProductSalesLog` 를 DB에 저장
+---
 
-#### 6. 외부 시스템 전송
-- 외부 데이터 플랫폼으로 주문 데이터 전송
-    - 실패해도 주문은 성공으로 간주
+### 쿠폰 적용 단계
 
-#### ✅ 결과
-- 전체 트랜잭션은 **원자적으로 처리되어야 함**
-- 잔액 부족 / 쿠폰 만료 / 재고 부족 / 결제 실패 중 하나라도 발생하면 롤백 필요
+(13) 쿠폰이 있는 경우 쿠폰 적용 로직으로 넘어간다. OrderService는 Order에 쿠폰 적용을 요청한다.  
+(14) Order는 UserCoupon에 쿠폰 사용 요청을 보낸다.  
+(15) 쿠폰이`UNUSED`상태가 아니거나 만료되었으면 예외 발생 후 에러 응답이 반환된다.  
+(16) 유효한 쿠폰인 경우, UserCoupon은 DiscountPolicy에 할인 금액 계산 요청을 보낸다.  
+(17) 할인 금액이 계산되어 UserCoupon으로 반환된다.  
+(18) 쿠폰 상태를`USED`로 변경하고 사용 시각을 기록한다.  
+(19) 쿠폰 적용이 완료되면 Order에 결과를 반환한다.  
+(20) 주문 금액에 할인 금액을 반영한다.  
+(21) 쿠폰 적용이 완료되었음을 OrderService에 알린다.
 
+---
+
+### 결제 단계
+
+(22) 결제 처리를 시작한다. OrderService는 Payment에 결제를 요청한다.  
+(23) Payment는 User에게 잔액 검증 및 차감을 요청한다.  
+(24) 잔액이 부족하면 예외 발생 후 에러 응답이 반환된다.  
+(25) 잔액 차감이 성공하면 Payment는 결제 정보를 OrderService에 반환한다.  
+(26) 결제가 완료되면 OrderService는 Order에 결제 성공 처리를 요청한다.  
+(27) Order는 주문 상태를`PENDING`에서`COMPLETED`로 변경한다.  
+(28) 상태 변경 완료를 OrderService에 알린다.
+(29) 상품별 재고 차감 단계로 진입한다. 선택된 상품들에 대해 루프를 돌며 OrderService가 Product에 재고 차감을 요청한다.  
+(30) Product는 ProductVariant에 재고 차감을 요청한다.  
+(31) 재고가 부족하면 예외가 발생하고 에러 응답이 반환된다.  
+(32) 재고 차감이 성공적으로 완료되면 Product가 OrderService에 응답을 반환한다.
+
+---
+
+### 저장 및 응답 단계
+
+(33) 주문 관련 정보 저장 단계. OrderService는 DB에 잔액, 재고, 주문, 결제, 주문 내역 정보를 저장한다.  
+(34) 외부 연동 단계. OrderService는 외부 플랫폼(EXT)에 주문 정보를 전송하고 응답을 받는다. 성공 또는 실패 여부에 관계없이 처리는 계속된다.  
+(35) 모든 처리가 완료되면, OrderService는 고객에게 최종 주문 성공 응답을 반환한다.
 
 
 ## 6. 인기 상품 조회
@@ -308,6 +323,7 @@ sequenceDiagram
 title: 06. 인기 상품 조회
 ---
 sequenceDiagram
+	autonumber
     actor C as 고객
     participant S as PopularProductService
     participant DB as DB
@@ -321,12 +337,65 @@ sequenceDiagram
     S -->>- C: ✅ [Response] 인기상품 조회 응답
 ```
 
-### 흐름 요약
-최근 3일간의 판매 데이터를 기반으로 인기 상품 TOP5를 조회.
 
-### 흐름 설명
+(1) 고객이`PopularProductService`에 인기 상품 목록 조회 요청을 보낸다.  
+(2) 서비스는 DB에 인기 상품 목록 조회를 요청한다.  
+(3) DB는 최근 3일간의 주문 데이터를 기반으로 상위 5개 인기 상품 목록을 반환한다.
+(4) 서비스는 인기 상품 목록을 고객에게 응답으로 반환한다.
 
-1. 고객이 `PopularProductService`에 인기 상품 조회 요청
-2. DB에서 최근 3일 간의 집계 테이블을 조회
-3. 판매량 상위 5개 상품을 선정
-4. 응답으로 인기 상품 목록 반환
+
+## 7. 판매량 집계 배치 프로세스
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant S as Scheduler
+    participant BS as BatchProcessor
+    participant DB
+
+    S->>BS: 배치 실행(run)
+    activate BS
+
+    BS->>DB: 마지막 체크포인트 조회
+    DB-->>BS: 체크포인트 시간
+
+    BS->>DB: 체크포인트 이후 주문 내역 조회
+    DB-->>BS: 주문 목록
+
+    alt 주문 내역 있음
+        BS->>DB: 기존 일간 판매 통계 조회
+        DB-->>BS: 판매 통계 맵
+
+        BS->>BS: 주문을 상품 ID, 날짜 기준으로 집계
+
+        loop 상품 ID별 집계
+            alt 해당 날짜 row 존재
+                BS->>DB: 기존 row에 수량 합산 업데이트
+            else 존재하지 않음
+                BS->>DB: 새로운 row 생성
+            end
+        end
+
+    else 주문 내역 없음
+        BS->>BS: 아무 작업 없이 종료
+    end
+
+    BS->>DB: 체크포인트 현재 시각으로 갱신
+
+    deactivate BS
+
+```
+
+(1) 스케줄러(Scheduler)가 일정 주기(1시간)에 따라 배치 프로세서(BatchProcessor)를 실행시킨다.
+(2) 배치 프로세서는 DB에서 마지막으로 실행된 체크포인트 시간을 조회한다.
+(3) 조회한 체크포인트 이후의 주문 내역을 DB에서 가져온다.
+(4) 주문 내역이 있는지 확인한다.
+(5) 주문 내역이**있는 경우**:
+(6) 기존 판매량 일일 통계 데이터를 DB에서 조회한다.
+(7) 주문 데이터를 상품 ID와 날짜별로 그룹화하여 수량을 집계한다.
+(8) 집계된 항목들을 순회하며 다음과 같이 처리한다:
+(9) 해당 날짜의 통계 row가 이미 존재하면 수량을 합산하여 업데이트한다.
+(10) 해당 날짜의 통계 row가 존재하지 않으면 새로운 row를 생성한다.
+주문 내역이**없는 경우**:
+(11) 통계 작업은 생략하고 체크포인트만 현재 시각으로 갱신한다.
+(12) 모든 처리가 완료되면 체크포인트를 현재 시각으로 갱신하여 다음 배치 기준을 저장한다.
