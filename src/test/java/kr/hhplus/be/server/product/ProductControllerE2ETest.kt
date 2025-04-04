@@ -3,7 +3,7 @@ package kr.hhplus.be.server.product
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import kr.hhplus.be.server.common.ApiResponse
+import kr.hhplus.be.server.common.CommonResponse
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -24,7 +24,7 @@ internal class ProductControllerE2ETest {
             "/api/v1/products?page=0&size=20",
             HttpMethod.GET,
             null,
-            object : ParameterizedTypeReference<ApiResponse<ProductListResponse>>() {}
+            object : ParameterizedTypeReference<CommonResponse<ProductListResponse>>() {}
         )
 
         response.statusCode shouldBe HttpStatus.OK
@@ -41,7 +41,7 @@ internal class ProductControllerE2ETest {
             "/api/v1/products/popular",
             HttpMethod.GET,
             null,
-            object : ParameterizedTypeReference<ApiResponse<List<PopularProductResponse>>>() {}
+            object : ParameterizedTypeReference<CommonResponse<List<PopularProductResponse>>>() {}
         )
 
         response.statusCode shouldBe HttpStatus.OK

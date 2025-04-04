@@ -3,7 +3,7 @@ package kr.hhplus.be.server.coupon
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import kr.hhplus.be.server.common.ApiResponse
+import kr.hhplus.be.server.common.CommonResponse
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -28,7 +28,7 @@ internal class UserCouponControllerE2ETest {
             "/api/v1/users/$userId/coupons",
             HttpMethod.POST,
             HttpEntity(request),
-            object : ParameterizedTypeReference<ApiResponse<IssueCouponResponse>>() {}
+            object : ParameterizedTypeReference<CommonResponse<IssueCouponResponse>>() {}
         )
 
         response.statusCode shouldBe HttpStatus.OK
@@ -45,7 +45,7 @@ internal class UserCouponControllerE2ETest {
             "/api/v1/users/$userId/coupons",
             HttpMethod.GET,
             null,
-            object : ParameterizedTypeReference<ApiResponse<UserCouponListResponse>>() {}
+            object : ParameterizedTypeReference<CommonResponse<UserCouponListResponse>>() {}
         )
 
         response.statusCode shouldBe HttpStatus.OK

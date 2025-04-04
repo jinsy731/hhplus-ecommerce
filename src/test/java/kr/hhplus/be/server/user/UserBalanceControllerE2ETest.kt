@@ -3,7 +3,7 @@ package kr.hhplus.be.server.user
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import kr.hhplus.be.server.common.ApiResponse
+import kr.hhplus.be.server.common.CommonResponse
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -29,7 +29,7 @@ class UserBalanceE2ETest {
             "/api/v1/users/$userId/balance",
             HttpMethod.POST,
             HttpEntity(request),
-            object : ParameterizedTypeReference<ApiResponse<BalanceResponse>>() {}
+            object : ParameterizedTypeReference<CommonResponse<BalanceResponse>>() {}
         )
 
         response.statusCode shouldBe
@@ -48,7 +48,7 @@ class UserBalanceE2ETest {
             "/api/v1/users/$userId/balance",
             HttpMethod.GET,
             null,
-            object : ParameterizedTypeReference<ApiResponse<BalanceResponse>>() {}
+            object : ParameterizedTypeReference<CommonResponse<BalanceResponse>>() {}
         )
 
         response.statusCode shouldBe HttpStatus.OK
