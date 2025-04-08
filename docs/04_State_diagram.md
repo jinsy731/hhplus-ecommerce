@@ -194,8 +194,6 @@ stateDiagram-v2
   REFUND_PROCESSING --> REFUNDED : 전액 환불 완료
 
   PARTIALLY_REFUNDED --> REFUND_REQUESTED : 추가 환불 요청
-  PARTIALLY_REFUNDED --> REFUND_PROCESSING : 추가 환불 진행
-  PARTIALLY_REFUNDED --> REFUNDED : 최종 환불 완료
 
   REFUNDED --> [*]
   FAILED --> [*]
@@ -226,9 +224,6 @@ stateDiagram-v2
 | `REFUND_PROCESSING`  | `PARTIALLY_REFUNDED` | 일부 환불 완료     |
 | `REFUND_PROCESSING`  | `REFUNDED`           | 전액 환불 완료     |
 | `PARTIALLY_REFUNDED` | `REFUND_REQUESTED`   | 추가 환불 요청     |
-| `PARTIALLY_REFUNDED` | `REFUND_PROCESSING`  | 추가 환불 처리     |
-| `PARTIALLY_REFUNDED` | `REFUNDED`           | 최종 환불 완료     |
 | `REFUNDED`, `FAILED` | `[*]`                | 종료 상태        |
-
 
 
