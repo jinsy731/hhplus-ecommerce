@@ -16,13 +16,46 @@ class ProductController: ProductApiSpec {
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int
     ): CommonResponse<ProductListResponse> {
+        // 새로운 형식에 맞게 샘플 데이터 구성
         val result = ProductListResponse(
-            listOf(
+            products = listOf(
                 ProductResponse(
-                    1, "티셔츠", listOf(ProductVariantResponse(101, "검정 / L", 20000, 10))
+                    productId = 1,
+                    name = "티셔츠",
+                    basePrice = 29000,
+                    status = "ON_SALE",
+                    optionSpecs = listOf(
+                        OptionSpecResponse(
+                            id = 1,
+                            name = "색상",
+                            displayOrder = 1,
+                            values = listOf(
+                                OptionValueResponse(id = 11, value = "검정"),
+                                OptionValueResponse(id = 12, value = "회색")
+                            )
+                        ),
+                        OptionSpecResponse(
+                            id = 2,
+                            name = "사이즈",
+                            displayOrder = 2,
+                            values = listOf(
+                                OptionValueResponse(id = 13, value = "S"),
+                                OptionValueResponse(id = 14, value = "M")
+                            )
+                        )
+                    ),
+                    variants = listOf(
+                        ProductVariantResponse(
+                            variantId = 101,
+                            optionValueIds = listOf(11, 13),
+                            additionalPrice = 1000,
+                            status = "ACTIVE",
+                            stock = 10
+                        )
+                    )
                 )
             ),
-            PageInfo(page, size, 31, 4)
+            pageInfo = PageInfo(page, size, 31, 4)
         )
         return CommonResponse("SUCCESS", "상품 목록이 조회되었습니다.", result)
     }
