@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.user
+package kr.hhplus.be.server.user.entrypoint
 
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -15,7 +15,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class UserBalanceE2ETest {
+class UserPointControllerE2ETest {
 
     @Autowired
     lateinit var restTemplate: TestRestTemplate
