@@ -62,6 +62,7 @@ dependencies {
 	testImplementation("org.testcontainers:mysql")
 //	testImplementation("io.kotest:kotest-runner-junit5")
 	testImplementation("io.kotest:kotest-assertions-core:5.8.0")
+	testImplementation("io.mockk:mockk:1.13.17")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
