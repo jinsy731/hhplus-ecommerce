@@ -1,7 +1,6 @@
 package kr.hhplus.be.server.user.domain
 
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
