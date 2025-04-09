@@ -8,4 +8,6 @@ class UserPointCommand {
         val amount: Long,
         val time: LocalDateTime = LocalDateTime.now()
     )
+
+    data class Retrieve(val userId: Long)
 }

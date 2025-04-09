@@ -22,7 +22,17 @@ class UserPointService(
 
         return UserPointResult.Charge(
             pointAfterCharge = newUserPoint.balance,
-            updatedAt = newUserPoint.updatedAt ?: throw IllegalStateException("업데이트 시간 오류")
+            updatedAt = newUserPoint.updatedAt
+        )
+    }
+
+    @Transactional
+    fun retrievePoint(cmd: UserPointCommand.Retrieve): UserPointResult.Retrieve {
+        val userPoint = userPointRepository.getByUserId(cmd.userId)
+
+        return UserPointResult.Retrieve(
+            point = userPoint.balance,
+            updatedAt = userPoint.updatedAt
         )
     }
 }

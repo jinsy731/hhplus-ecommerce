@@ -79,4 +79,22 @@ class UserPointServiceTest {
         verify(exactly = 0) { userPointRepository.save(any()) }
         verify(exactly = 0) { userPointHistoryRepository.save(any()) }
     }
+    
+    @Test
+    fun `✅유저 포인트 조회`() {
+        // arrange
+        val userId = 1L
+        val balance = 100L
+        val time = LocalDateTime.now()
+        val userPoint = UserPoint(1L, userId, balance).apply { this.updatedAt = time }
+        val cmd = UserPointCommand.Retrieve(userId)
+        every { userPointRepository.getByUserId(1L) } returns userPoint
+
+        // act
+        val result = pointService.retrievePoint(cmd)
+
+        // assert
+        result.point shouldBe balance
+        result.updatedAt shouldBe time
+    }
 }
