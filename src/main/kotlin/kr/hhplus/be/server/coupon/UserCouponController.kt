@@ -15,7 +15,7 @@ class UserCouponController: UserCouponApiSpec {
         @RequestBody request: IssueCouponRequest
     ): CommonResponse<IssueCouponResponse> {
         val result = IssueCouponResponse(1234, "UNUSED")
-        return CommonResponse("SUCCESS", "쿠폰이 발급되었습니다.", result)
+        return CommonResponse(result)
     }
 
     @GetMapping("/{userId}/coupons")
@@ -28,6 +28,6 @@ class UserCouponController: UserCouponApiSpec {
             ),
             PageInfo(0, 20, 31, 4)
         )
-        return CommonResponse("SUCCESS", "쿠폰 조회에 성공하였습니다.", result)
+        return CommonResponse(result)
     }
 }

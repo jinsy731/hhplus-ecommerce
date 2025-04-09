@@ -37,7 +37,6 @@ internal class OrderControllerE2ETest {
         )
 
         response.statusCode shouldBe HttpStatus.OK
-        response.body?.code shouldBe "SUCCESS"
         response.body?.data.shouldNotBeNull()
         response.body?.data?.status shouldBe "PAID"
         response.body?.data?.finalTotal?.shouldBeGreaterThan(0)

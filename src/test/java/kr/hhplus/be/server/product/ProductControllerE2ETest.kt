@@ -28,9 +28,7 @@ internal class ProductControllerE2ETest {
         )
 
         response.statusCode shouldBe HttpStatus.OK
-        response.body?.code shouldBe "SUCCESS"
-        response.body?.message shouldBe "상품 목록이 조회되었습니다."
-        
+
         val data = response.body?.data.shouldNotBeNull()
         val products = data.products.shouldNotBeEmpty()
         val product = products.first()
@@ -79,7 +77,6 @@ internal class ProductControllerE2ETest {
         )
 
         response.statusCode shouldBe HttpStatus.OK
-        response.body?.code shouldBe "SUCCESS"
         response.body?.data.shouldNotBeNull().shouldNotBeEmpty()
     }
 }

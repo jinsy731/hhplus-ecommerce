@@ -32,7 +32,6 @@ internal class UserCouponControllerE2ETest {
         )
 
         response.statusCode shouldBe HttpStatus.OK
-        response.body?.code shouldBe "SUCCESS"
         response.body?.data.shouldNotBeNull()
         response.body?.data?.status shouldBe "UNUSED"
     }
@@ -49,7 +48,6 @@ internal class UserCouponControllerE2ETest {
         )
 
         response.statusCode shouldBe HttpStatus.OK
-        response.body?.code shouldBe "SUCCESS"
         response.body?.data.shouldNotBeNull()
         response.body?.data?.coupons.shouldNotBeEmpty()
     }

@@ -4,6 +4,7 @@ import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.common.CommonResponse
+import kr.hhplus.be.server.user.entrypoint.http.UserPointResponse
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -29,15 +30,14 @@ class UserBalanceE2ETest {
             "/api/v1/users/$userId/balance",
             HttpMethod.POST,
             HttpEntity(request),
-            object : ParameterizedTypeReference<CommonResponse<BalanceResponse>>() {}
+            object : ParameterizedTypeReference<CommonResponse<UserPointResponse.Charge>>() {}
         )
 
         response.statusCode shouldBe
         response.statusCode shouldBe HttpStatus.OK
-        response.body?.code shouldBe "SUCCESS"
         response.body?.data.shouldNotBeNull()
         response.body?.data?.userId shouldBe userId
-        response.body?.data?.balance?.shouldBeGreaterThan(0)
+        response.body?.data?.point?.shouldBeGreaterThan(0)
     }
 
     @Test
@@ -48,12 +48,12 @@ class UserBalanceE2ETest {
             "/api/v1/users/$userId/balance",
             HttpMethod.GET,
             null,
-            object : ParameterizedTypeReference<CommonResponse<BalanceResponse>>() {}
+            object : ParameterizedTypeReference<CommonResponse<UserPointResponse.Retrieve>>() {}
         )
 
         response.statusCode shouldBe HttpStatus.OK
-        response.body?.code shouldBe "SUCCESS"
         response.body?.data.shouldNotBeNull()
         response.body?.data?.userId shouldBe userId
+        response.body?.data?.point?.shouldBeGreaterThan(0)
     }
 }

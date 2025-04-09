@@ -48,6 +48,7 @@ class UserPointServiceTest {
         val result = pointService.charge(cmd)
 
         //assert
+        result.userId shouldBe 1L
         result.pointAfterCharge shouldBe 200L
         result.updatedAt shouldBe time
         verify(exactly = 1) { userPointRepository.save(expectedUserPoint) }
@@ -94,6 +95,7 @@ class UserPointServiceTest {
         val result = pointService.retrievePoint(cmd)
 
         // assert
+        result.userId shouldBe 1L
         result.point shouldBe balance
         result.updatedAt shouldBe time
     }

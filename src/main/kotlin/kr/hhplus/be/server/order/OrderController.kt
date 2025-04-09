@@ -15,6 +15,6 @@ class OrderController: OrderApiSpec {
         @RequestBody request: CreateOrderRequest
     ): CommonResponse<CreateOrderResponse> {
         val result = CreateOrderResponse(999, "PAID", 15000)
-        return CommonResponse("SUCCESS", "주문이 완료되었습니다.", result)
+        return CommonResponse(result)
     }
 }

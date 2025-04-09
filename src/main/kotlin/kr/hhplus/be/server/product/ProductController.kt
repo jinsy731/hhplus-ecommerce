@@ -57,12 +57,12 @@ class ProductController: ProductApiSpec {
             ),
             pageInfo = PageInfo(page, size, 31, 4)
         )
-        return CommonResponse("SUCCESS", "상품 목록이 조회되었습니다.", result)
+        return CommonResponse(result)
     }
 
     @GetMapping("/popular")
     override fun getPopularProducts(): CommonResponse<List<PopularProductResponse>> {
         val result = listOf(PopularProductResponse(1, "반팔티", 37))
-        return CommonResponse("SUCCESS", "인기 상품 조회 성공", result)
+        return CommonResponse(result)
     }
 }

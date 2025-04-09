@@ -21,6 +21,7 @@ class UserPointService(
         userPointHistoryRepository.save(history)
 
         return UserPointResult.Charge(
+            userId = newUserPoint.userId,
             pointAfterCharge = newUserPoint.balance,
             updatedAt = newUserPoint.updatedAt
         )
@@ -31,6 +32,7 @@ class UserPointService(
         val userPoint = userPointRepository.getByUserId(cmd.userId)
 
         return UserPointResult.Retrieve(
+            userId = userPoint.userId,
             point = userPoint.balance,
             updatedAt = userPoint.updatedAt
         )
