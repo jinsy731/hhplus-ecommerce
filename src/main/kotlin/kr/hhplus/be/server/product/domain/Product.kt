@@ -10,7 +10,7 @@ class Product(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "product_id")
-    val id: Long,
+    val id: Long? = null,
 
     @Column(nullable = false)
     var name: String,
@@ -39,13 +39,14 @@ class Product(
         variant.product = this
     }
 
-    fun canBuy(variantId: Long, quantity: Int): Boolean = true
+    fun checkAvailableToOrder(variantId: Long, quantity: Int) {
+        check(this.status in setOf(ProductStatus.ON_SALE, ProductStatus.PARTIALLY_OUT_OF_STOCK)) { throw ProductUnavailableException() }
+        findVariant(variantId)?.checkAvailableToOrder(quantity)
+    }
 
     fun getVariantPrice(variantId: Long): BigDecimal {
-        TODO()
+        return (this.basePrice + findVariant(variantId).additionalPrice)
     }
-}
 
-enum class ProductStatus {
-    DRAFT, ON_SALE, OUT_OF_STOCK, PARTIALLY_OUT_OF_STOCK, HIDDEN, DISCONTINUED
+    private fun findVariant(variantId: Long): ProductVariant = this.variants.find { it.id == variantId } ?: throw IllegalArgumentException("존재하지 않는 옵션입니다.")
 }

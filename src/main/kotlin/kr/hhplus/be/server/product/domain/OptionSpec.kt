@@ -16,9 +16,6 @@ class OptionSpec(
     var name: String,
 
     @Column(nullable = false)
-    var basePrice: BigDecimal,
-
-    @Column(nullable = false)
     var displayOrder: Int,
 
     @ManyToOne(fetch = FetchType.LAZY)

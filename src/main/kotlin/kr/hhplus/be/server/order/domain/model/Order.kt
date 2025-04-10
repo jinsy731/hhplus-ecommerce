@@ -2,7 +2,6 @@ package kr.hhplus.be.server.order.domain.model
 
 import jakarta.persistence.*
 import kr.hhplus.be.server.order.domain.AlreadyPaidOrderException
-import kr.hhplus.be.server.order.domain.EmptyOrderItemException
 import kr.hhplus.be.server.order.entrypoint.http.OrderItemRequest
 import kr.hhplus.be.server.product.domain.Product
 import java.math.BigDecimal
@@ -51,9 +50,9 @@ class Order(
         private fun createOrderItems(products: List<Product>, orderItemRequests: List<OrderItemRequest>): MutableList<OrderItem> {
             return orderItemRequests.map { orderItemReq -> with(orderItemReq) {
                 val product = products.find { it.id == productId } ?: throw IllegalArgumentException("존재하지 않는 상품입니다.")
-                product.canBuy(variantId, quantity)
+                product.checkAvailableToOrder(variantId, quantity)
                 OrderItem(
-                    productId = product.id,
+                    productId = product.id!!,
                     variantId = variantId,
                     quantity = quantity,
                     unitPrice = product.getVariantPrice(variantId)

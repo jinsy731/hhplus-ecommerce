@@ -2,6 +2,7 @@ package kr.hhplus.be.server.product.domain
 
 import jakarta.persistence.*
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
+import kr.hhplus.be.server.coupon.LongSetConverter
 import java.math.BigDecimal
 
 @Entity
@@ -17,7 +18,7 @@ class ProductVariant(
     var product: Product? = null,
 
     @Column(nullable = false)
-    var additionalPrice: BigDecimal,
+    var additionalPrice: BigDecimal = BigDecimal.ZERO,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -26,17 +27,18 @@ class ProductVariant(
     @Column(nullable = false)
     var stock: Int,
 
-    @ManyToMany
-    @JoinTable(
-        name = "variant_option_values",
-        joinColumns = [JoinColumn(name = "variant_id")],
-        inverseJoinColumns = [JoinColumn(name = "option_value_id")]
-    )
-    val optionValues: MutableSet<OptionValue> = mutableSetOf()
+    @Column(nullable = false) @Convert(converter = LongSetConverter::class)
+    val optionValues: MutableSet<Long> = mutableSetOf()
 ) : BaseTimeEntity() {
 
-    fun addOptionValue(optionValue: OptionValue) {
-        optionValues.add(optionValue)
+    fun checkAvailableToOrder(quantity: Int) {
+        check(this.status == VariantStatus.ACTIVE) { throw VariantUnavailableException() }
+        check(this.stock >= quantity) { throw VariantOutOfStockException() }
+    }
+
+    fun deductStock(quantity: Int) {
+        check(this.stock > quantity) { throw VariantOutOfStockException()  }
+        this.stock -= quantity
     }
 }
 
