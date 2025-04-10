@@ -7,5 +7,7 @@ enum class ErrorCode(
     val code: String,
     val message: String
 ) {
-    INVALID_CHARGE_AMOUNT(HttpStatus.BAD_REQUEST, "P001", "충전 금액은 0보다 커야합니다.")
+    INVALID_CHARGE_AMOUNT(HttpStatus.BAD_REQUEST, "P001", "충전 금액은 0보다 커야합니다."),
+
+    INvVALID_COUPON_STATUS(HttpStatus.CONFLICT, "C001", "유효하지 않은 쿠폰 상태입니다.")
 }

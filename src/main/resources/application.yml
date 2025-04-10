@@ -13,13 +13,17 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     open-in-view: false
-    generate-ddl: false
-    show-sql: false
+    generate-ddl: true
+    show-sql: true
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     properties:
       hibernate.timezone.default_storage: NORMALIZE_UTC
       hibernate.jdbc.time_zone: UTC
+      hibernate.format_sql: true
+      hibernate.highlight_sql: true
+      hibernate.use_sql_comments: true
+      hibernate.default_batch_fetch_size: 100
 
 ---
 spring.config.activate.on-profile: local, test
