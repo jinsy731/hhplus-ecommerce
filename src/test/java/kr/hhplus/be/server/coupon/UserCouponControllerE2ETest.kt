@@ -28,7 +28,7 @@ internal class UserCouponControllerE2ETest {
             "/api/v1/users/$userId/coupons",
             HttpMethod.POST,
             HttpEntity(request),
-            object : ParameterizedTypeReference<CommonResponse<IssueCouponResponse>>() {}
+            object : ParameterizedTypeReference<CommonResponse<kr.hhplus.be.server.coupon.entrypoint.http.IssueCouponResponse>>() {}
         )
 
         response.statusCode shouldBe HttpStatus.OK
@@ -44,7 +44,7 @@ internal class UserCouponControllerE2ETest {
             "/api/v1/users/$userId/coupons",
             HttpMethod.GET,
             null,
-            object : ParameterizedTypeReference<CommonResponse<UserCouponListResponse>>() {}
+            object : ParameterizedTypeReference<CommonResponse<kr.hhplus.be.server.coupon.entrypoint.http.UserCouponListResponse>>() {}
         )
 
         response.statusCode shouldBe HttpStatus.OK
