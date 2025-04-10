@@ -9,19 +9,22 @@ class OrderItem(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L,
-    
+
     @Column(nullable = false)
     val productId: Long,
-    
+
     @Column(nullable = false)
     val variantId: Long,
-    
+
     @Column(nullable = false)
     val quantity: Int,
-    
+
     @Column(nullable = false)
     val unitPrice: BigDecimal,
-    
+
+    @Column(nullable = false)
+    val discountAmount: BigDecimal = BigDecimal.ZERO, // 상품별 할인 금액
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     var status: OrderItemStatus = OrderItemStatus.ORDERED,
@@ -35,5 +38,7 @@ class OrderItem(
     /**
      * 항목의 소계를 계산합니다.
      */
-    fun subTotal(): BigDecimal = unitPrice * quantity.toBigDecimal()
+    fun subTotal(): BigDecimal = unitPrice * quantity.toBigDecimal() - discountAmount
+
+    fun subTotalBeforeDiscount(): BigDecimal = unitPrice * quantity.toBigDecimal()
 }

@@ -21,19 +21,11 @@ class PaymentItemDetail(
 
     // 기존 가격
     @Column(nullable = false)
-    val originalPrice: BigDecimal,
+    val originalAmount: BigDecimal,
 
     // 할인된 가격
     @Column(nullable = false)
-    val discountedPrice: BigDecimal,
-
-    // 포인트/예치금 등으로 결제한 금액
-    @Column(nullable = false)
-    val nonCashAmount: BigDecimal,
-
-    // 현금/카드 등으로 결제한 금액
-    @Column(nullable = false)
-    val paidAmount: BigDecimal,
+    val discountedAmount: BigDecimal,
 
     // 환불 여부
     @Column(nullable = false)

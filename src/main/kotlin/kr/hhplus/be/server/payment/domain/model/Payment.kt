@@ -2,6 +2,8 @@ package kr.hhplus.be.server.payment.domain.model
 
 import jakarta.persistence.*
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
+import kr.hhplus.be.server.order.domain.model.Order
+import kr.hhplus.be.server.payment.application.PaymentCommand
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -19,25 +21,13 @@ class Payment(
     @Column(nullable = false)
     val orderId: Long,
 
-    // 기존 총 금액
+    // 기존 가격
     @Column(nullable = false)
-    val originalTotal: BigDecimal,
+    val originalAmount: BigDecimal,
 
-    // 할인 적용 후 총 금액
+    // 할인된 가격
     @Column(nullable = false)
-    val finalTotal: BigDecimal,
-
-    // 비현금성 결제 수단으로 결제한 금액
-    @Column(nullable = false)
-    val nonCashAmount: BigDecimal,
-
-    // 현금성 결제 수단으로 결제한 금액
-    @Column(nullable = false)
-    val paidAmount: BigDecimal,
-
-    // 누적 환불 금액
-    @Column(nullable = false)
-    var refundedAmount: BigDecimal = BigDecimal.ZERO,
+    val discountedAmount: BigDecimal,
 
     // 결제 상태
     @Enumerated(EnumType.STRING)
@@ -54,6 +44,33 @@ class Payment(
     val methods: MutableList<PaymentMethod> = mutableListOf()
 ) : BaseTimeEntity() {
 
+    companion object {
+        fun create(cmd: PaymentCommand.Prepare): Payment {
+            return Payment(
+                orderId = cmd.order.id,
+                originalAmount = cmd.order.originalTotal,
+                discountedAmount = cmd.order.discountedAmount,
+                timestamp = cmd.now,
+                details = createPaymentDetails(cmd.order),
+                methods = createPaymentMethods(cmd.payMethods)
+            )
+        }
+
+        private fun createPaymentDetails(order: Order): MutableList<PaymentItemDetail> {
+            return order.orderItems.map { PaymentItemDetail(
+                orderItemId = it.id,
+                originalAmount = it.subTotalBeforeDiscount(),
+                discountedAmount = it.discountAmount,
+            ) }.toMutableList()
+        }
+
+        private fun createPaymentMethods(payMethods: List<PaymentCommand.PayMethod>): MutableList<PaymentMethod> {
+            return payMethods.map { PaymentMethod(
+                type = it.type,
+                amount = it.amount,
+            ) }.toMutableList()
+        }
+    }
 
     /**
      * 상세 항목 추가
