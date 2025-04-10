@@ -14,7 +14,7 @@ class PaymentTest {
     fun `✅주문 생성`() {
         // arrange
         val now = LocalDateTime.now()
-        val order = OrderTestFixture.createOrder()
+        val order = OrderTestFixture.createOrder(1L)
         val payMethods = listOf(
             PaymentCommand.PayMethod(PaymentMethodType.COUPON, BigDecimal(4500)),
             PaymentCommand.PayMethod(PaymentMethodType.POINT, BigDecimal(4500))

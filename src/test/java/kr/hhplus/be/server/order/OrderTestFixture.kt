@@ -7,9 +7,9 @@ import kr.hhplus.be.server.order.domain.model.OrderStatus
 import java.math.BigDecimal
 
 object OrderTestFixture {
-    fun createOrder() = Order(
+    fun createOrder(userId: Long) = Order(
         id = 1L,
-        userId = 1L,
+        userId = userId,
         status = OrderStatus.CREATED,
         originalTotal = BigDecimal(10000),
         discountedAmount = BigDecimal(9000),

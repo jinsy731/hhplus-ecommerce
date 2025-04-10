@@ -107,8 +107,7 @@ class CouponTest {
         // act
         val discountAmount = coupon.calculateDiscount(
             now = now,
-            price = BigDecimal(20000),
-            context = DiscountContext(orderAmount = BigDecimal(20000)))
+            price = BigDecimal(20000))
         println("discountAmount = ${discountAmount}")
         // assert
         discountAmount.compareTo(BigDecimal(5000)) shouldBe 0
@@ -139,8 +138,7 @@ class CouponTest {
         // act
         val discountAmount = coupon.calculateDiscount(
             now = now,
-            price = BigDecimal(20000),
-            context = DiscountContext(orderAmount = BigDecimal(20000)))
+            price = BigDecimal(20000))
         // assert
         discountAmount.compareTo(BigDecimal(0)) shouldBe 0
     }

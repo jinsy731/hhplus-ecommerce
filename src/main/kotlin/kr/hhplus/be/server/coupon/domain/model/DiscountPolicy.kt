@@ -2,7 +2,6 @@ package kr.hhplus.be.server.coupon.domain.model
 
 import java.math.BigDecimal
 import jakarta.persistence.*
-import jdk.jpackage.internal.Arguments.CLIOptions.context
 
 /**
  * 할인 정책 인터페이스

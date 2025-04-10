@@ -2,33 +2,25 @@ package kr.hhplus.be.server.coupon.application
 
 import kr.hhplus.be.server.coupon.application.CouponResult.CouponDiscountPerItem
 import kr.hhplus.be.server.coupon.domain.model.DiscountContext
+import kr.hhplus.be.server.coupon.domain.model.UserCoupon
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
+import kr.hhplus.be.server.order.domain.model.Order
 import kr.hhplus.be.server.order.domain.model.OrderItem
-import org.springframework.data.jpa.domain.AbstractPersistable_.id
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import kotlin.collections.lastIndex
 import kotlin.collections.withIndex
 
 @Service
-class CouponService(
-    private val couponRepository: CouponRepository,
-    private val userCouponRepository: UserCouponRepository
-) {
+class CouponService(private val userCouponRepository: UserCouponRepository) {
 
     fun applyCoupon(cmd: CouponCommand.ApplyToOrder): CouponResult.ApplyToOrder {
         val userCoupons = userCouponRepository.findAllByUserIdAndIdIsIn(cmd.userId, cmd.userCouponIds)
         val totalItemDiscounts = mutableListOf<CouponDiscountPerItem>()
         userCoupons.forEach { userCoupon ->
-            userCoupon.use(cmd.now)
-            val applicableItems = cmd.order.orderItems.filter { orderItem ->
-                userCoupon.coupon.isApplicableTo(DiscountContext(
-                    userId = cmd.userId,
-                    productId = orderItem.productId,
-                    variantId = orderItem.variantId,
-                    orderAmount = cmd.order.originalTotal))
-            }
+            val applicableItems = filterApplicableItems(userCoupon, cmd.order, cmd.userId)
+            if(applicableItems.isNotEmpty()) userCoupon.use(cmd.now)
             val totalDiscount = userCoupon.coupon.calculateDiscount(cmd.now, applicableItems.sumOf { it.subTotal() })
             totalItemDiscounts.addAll(distributeDiscount(applicableItems, totalDiscount))
         }
@@ -37,6 +29,16 @@ class CouponService(
             totalDiscount = totalItemDiscounts.sumOf { it.discountAmount },
             discountPerItem = totalItemDiscounts
         )
+    }
+
+    private fun filterApplicableItems(userCoupon: UserCoupon, order: Order, userId: Long): List<OrderItem> {
+        return order.orderItems.filter { orderItem ->
+            userCoupon.coupon.isApplicableTo(DiscountContext(
+                userId = userId,
+                productId = orderItem.productId,
+                variantId = orderItem.variantId,
+                orderAmount = order.originalTotal))
+        }
     }
 
     fun distributeDiscount(

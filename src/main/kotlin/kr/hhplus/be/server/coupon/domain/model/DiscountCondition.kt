@@ -26,18 +26,7 @@ abstract class DiscountCondition {
     abstract fun isSatisfiedBy(context: DiscountContext): Boolean
 }
 
-/**
- * 할인 조건 검증에 필요한 컨텍스트 정보
- */
-data class DiscountContext(
-    val userId: Long? = null,
-    val productId: Long? = null,
-    val variantId: Long? = null,
-    val orderAmount: BigDecimal? = null,
 
-    // 필요한 다른 컨텍스트 정보들을 추가할 수 있음
-    val additionalContext: Map<String, Any> = emptyMap()
-)
 
 /**
  * 최소 주문 금액 조건

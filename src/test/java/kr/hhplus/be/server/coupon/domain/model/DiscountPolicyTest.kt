@@ -16,7 +16,7 @@ class DiscountPolicyTest {
             discountCondition = MinOrderAmountCondition(BigDecimal(100))
         )
         // act
-        val discountAmount = policy.calculateDiscount(price = BigDecimal(500), context = DiscountContext(orderAmount = BigDecimal(500)))
+        val discountAmount = policy.calculateDiscount(price = BigDecimal(500))
         // assert
         discountAmount.compareTo(BigDecimal(500)) shouldBe 0
     }
@@ -31,7 +31,7 @@ class DiscountPolicyTest {
             discountCondition = MinOrderAmountCondition(BigDecimal(100))
         )
         // act
-        val discountAmount = policy.calculateDiscount(price = BigDecimal(50), context = DiscountContext(orderAmount = BigDecimal(50)))
+        val discountAmount = policy.calculateDiscount(price = BigDecimal(50))
         // assert
         discountAmount.compareTo(BigDecimal.ZERO) shouldBe 0
     }
