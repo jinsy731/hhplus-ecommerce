@@ -7,12 +7,10 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository
 interface CouponRepository{
     fun findById(id: Long): Coupon?
 }
 
-@Repository
 interface UserCouponRepository{
     fun findByUserIdAndId(userId: Long, id: Long): UserCoupon?
     fun getByUserIdAndId(userId: Long, id: Long): UserCoupon

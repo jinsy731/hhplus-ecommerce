@@ -3,18 +3,21 @@ package kr.hhplus.be.server.coupon.application
 import kr.hhplus.be.server.coupon.application.CouponResult.CouponDiscountPerItem
 import kr.hhplus.be.server.coupon.domain.model.DiscountContext
 import kr.hhplus.be.server.coupon.domain.model.UserCoupon
-import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
 import kr.hhplus.be.server.order.domain.model.Order
 import kr.hhplus.be.server.order.domain.model.OrderItem
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
-import kotlin.collections.lastIndex
-import kotlin.collections.withIndex
 
 @Service
 class CouponService(private val userCouponRepository: UserCouponRepository) {
 
+    /**
+     * 쿠폰 적용 메서드
+     * 1. 할인 적용 대상 필터링
+     * 2. 적용 대상 전체에 대한 할인 금액 계산
+     * 3. 각 대상에 할인 금액 분배 (물품별 할인 금액 계산을 위해)
+     */
     fun applyCoupon(cmd: CouponCommand.ApplyToOrder): CouponResult.ApplyToOrder {
         val userCoupons = userCouponRepository.findAllByUserIdAndIdIsIn(cmd.userId, cmd.userCouponIds)
         val totalItemDiscounts = mutableListOf<CouponDiscountPerItem>()

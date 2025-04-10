@@ -46,7 +46,7 @@ class MinOrderAmountCondition(
 
 /**
  * 특정 상품 할인 조건
- * @param productId 상품 ID
+ * @param productIds 상품 ID 리스트
  */
 @Entity
 @DiscriminatorValue("SPECIFIC_PRODUCT")
