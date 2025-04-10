@@ -25,7 +25,7 @@ internal class ProductControllerE2ETest {
             "/api/v1/products?page=0&size=20",
             HttpMethod.GET,
             null,
-            object : ParameterizedTypeReference<CommonResponse<ProductResponse.Retrieve.Entry>>() {}
+            object : ParameterizedTypeReference<CommonResponse<ProductResponse.Retrieve.Lists>>() {}
         )
 
         response.statusCode shouldBe HttpStatus.OK

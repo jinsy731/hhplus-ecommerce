@@ -17,37 +17,37 @@ class ProductController: ProductApiSpec {
     override fun getProducts(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int
-    ): CommonResponse<ProductResponse.Retrieve.Entry> {
+    ): CommonResponse<ProductResponse.Retrieve.Lists> {
         // 새로운 형식에 맞게 샘플 데이터 구성
-        val result = ProductResponse.Retrieve.Entry(
+        val result = ProductResponse.Retrieve.Lists(
             products = listOf(
-                ProductResponse.ProductData(
+                ProductResponse.ProductDetail(
                     productId = 1,
                     name = "티셔츠",
                     basePrice = BigDecimal(29000),
                     status = ProductStatus.ON_SALE,
                     optionSpecs = listOf(
-                        ProductResponse.OptionSpecData(
+                        ProductResponse.OptionSpecDetail(
                             id = 1,
                             name = "색상",
                             displayOrder = 1,
                             values = listOf(
-                                ProductResponse.OptionValueData(id = 11, value = "검정"),
-                                ProductResponse.OptionValueData(id = 12, value = "회색")
+                                ProductResponse.OptionValueDetail(id = 11, value = "검정"),
+                                ProductResponse.OptionValueDetail(id = 12, value = "회색")
                             )
                         ),
-                        ProductResponse.OptionSpecData(
+                        ProductResponse.OptionSpecDetail(
                             id = 2,
                             name = "사이즈",
                             displayOrder = 2,
                             values = listOf(
-                                ProductResponse.OptionValueData(id = 13, value = "S"),
-                                ProductResponse.OptionValueData(id = 14, value = "M")
+                                ProductResponse.OptionValueDetail(id = 13, value = "S"),
+                                ProductResponse.OptionValueDetail(id = 14, value = "M")
                             )
                         )
                     ),
                     variants = listOf(
-                        ProductResponse.ProductVariantData(
+                        ProductResponse.ProductVariantDetail(
                             variantId = 101,
                             optionValueIds = listOf(11, 13),
                             additionalPrice = 1000,

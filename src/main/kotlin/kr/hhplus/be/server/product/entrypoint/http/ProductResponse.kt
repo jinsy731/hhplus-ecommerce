@@ -9,9 +9,9 @@ class ProductResponse {
 
     class Retrieve {
         @Schema(description = "상품 목록 응답")
-        data class Entry(
+        data class Lists(
             @Schema(description = "상품 리스트")
-            val products: List<ProductData>,
+            val products: List<ProductDetail>,
 
             @Schema(description = "페이지 정보")
             val pageInfo: PageInfo
@@ -32,7 +32,7 @@ class ProductResponse {
 
 
     @Schema(description = "옵션 스펙 값")
-    data class OptionValueData(
+    data class OptionValueDetail(
         @Schema(description = "옵션 값 ID", example = "11")
         val id: Long,
 
@@ -41,7 +41,7 @@ class ProductResponse {
     )
 
     @Schema(description = "옵션 스펙")
-    data class OptionSpecData(
+    data class OptionSpecDetail(
         @Schema(description = "옵션 스펙 ID", example = "1")
         val id: Long,
 
@@ -52,11 +52,11 @@ class ProductResponse {
         val displayOrder: Int,
 
         @Schema(description = "옵션 값 배열")
-        val values: List<OptionValueData>
+        val values: List<OptionValueDetail>
     )
 
     @Schema(description = "상품 옵션 조합")
-    data class ProductVariantData(
+    data class ProductVariantDetail(
         @Schema(description = "옵션 조합 ID", example = "101")
         val variantId: Long,
 
@@ -74,7 +74,7 @@ class ProductResponse {
     )
 
     @Schema(description = "상품 정보")
-    data class ProductData(
+    data class ProductDetail(
         @Schema(description = "상품 ID", example = "1")
         val productId: Long,
 
@@ -88,9 +88,9 @@ class ProductResponse {
         val status: ProductStatus,
 
         @Schema(description = "옵션 스펙 배열")
-        val optionSpecs: List<OptionSpecData>,
+        val optionSpecs: List<OptionSpecDetail>,
 
         @Schema(description = "옵션 조합 배열")
-        val variants: List<ProductVariantData>
+        val variants: List<ProductVariantDetail>
     )
 }
