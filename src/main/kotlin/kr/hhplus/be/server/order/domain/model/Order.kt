@@ -1,7 +1,10 @@
 package kr.hhplus.be.server.order.domain.model
 
 import jakarta.persistence.*
+import kr.hhplus.be.server.order.domain.AlreadyPaidOrderException
 import kr.hhplus.be.server.order.domain.EmptyOrderItemException
+import kr.hhplus.be.server.order.entrypoint.http.OrderItemRequest
+import kr.hhplus.be.server.product.domain.Product
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -20,10 +23,16 @@ class Order(
     var status: OrderStatus = OrderStatus.CREATED,
 
     @Column(nullable = false)
-    var originalTotal: BigDecimal,
+    var originalTotal: BigDecimal = BigDecimal.ZERO,
 
     @Column(nullable = false)
     var discountedAmount: BigDecimal = BigDecimal.ZERO,
+
+    @OneToMany(mappedBy = "order", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var orderItems: MutableList<OrderItem> = mutableListOf(),
+
+    @OneToMany(mappedBy = "order", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var discountLines: MutableList<DiscountLine> = mutableListOf(),
 
     @Column(nullable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
@@ -31,26 +40,44 @@ class Order(
     @Column(nullable = false)
     val updatedAt: LocalDateTime = LocalDateTime.now(),
 ) {
+    companion object {
+        fun create(userId: Long, products: List<Product>, orderItemRequests: List<OrderItemRequest>): Order {
+            return Order(
+                userId = userId,
+                orderItems = createOrderItems(products, orderItemRequests)
+            ).apply { this.originalTotal = calculateOriginalTotal()}
+        }
+
+        private fun createOrderItems(products: List<Product>, orderItemRequests: List<OrderItemRequest>): MutableList<OrderItem> {
+            return orderItemRequests.map { orderItemReq -> with(orderItemReq) {
+                val product = products.find { it.id == productId } ?: throw IllegalArgumentException("존재하지 않는 상품입니다.")
+                product.canBuy(variantId, quantity)
+                OrderItem(
+                    productId = product.id,
+                    variantId = variantId,
+                    quantity = quantity,
+                    unitPrice = product.getVariantPrice(variantId)
+                )
+            }}.toMutableList()
+        }
+    }
+
+    private fun calculateOriginalTotal(): BigDecimal {
+        return this.orderItems.sumOf { it.subTotal() }
+    }
     
     /**
      * 최종 주문 금액 계산
      */
     fun finalTotal(): BigDecimal = originalTotal - discountedAmount
-    
-    /**
-     * 주문 항목들의 소계 합산하여 주문 총액 설정
-     */
-    fun calculateTotal(items: List<OrderItem>) {
-        if (items.isEmpty()) {
-            throw EmptyOrderItemException()
-        }
-        originalTotal = items.sumOf { it.subTotal() }
-    }
-    
+
     /**
      * 할인 적용
      */
     fun applyDiscount(discountLines: List<DiscountLine>) {
+        this.discountLines.addAll(discountLines)
+        discountLines.forEach { it.order = this }
+
         discountedAmount = discountLines.sumOf { it.amount }
         
         // 할인액이 주문 총액을 초과하지 않도록 조정
@@ -64,7 +91,7 @@ class Order(
      */
     fun completeOrder() {
         if (status != OrderStatus.CREATED) {
-            throw IllegalStateException("이미 처리된 주문입니다: $status")
+            throw AlreadyPaidOrderException()
         }
         status = OrderStatus.PAID
     }
@@ -98,4 +125,6 @@ class Order(
             return
         }
     }
+
+
 }

@@ -11,9 +11,6 @@ class OrderItem(
     val id: Long = 0L,
     
     @Column(nullable = false)
-    val orderId: Long,
-    
-    @Column(nullable = false)
     val productId: Long,
     
     @Column(nullable = false)
@@ -27,9 +24,14 @@ class OrderItem(
     
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    var status: OrderItemStatus = OrderItemStatus.ORDERED
+    var status: OrderItemStatus = OrderItemStatus.ORDERED,
+
+    @ManyToOne(cascade = [CascadeType.ALL], optional = false)
+    @JoinColumn(name = "order_id", nullable = false)
+    var order: Order? = null
 ) {
-    
+
+
     /**
      * 항목의 소계를 계산합니다.
      */

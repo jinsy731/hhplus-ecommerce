@@ -12,5 +12,6 @@ enum class ErrorCode(
     INVALID_COUPON_STATUS(HttpStatus.CONFLICT, "C001", "유효하지 않은 쿠폰 상태입니다."),
     EXPIRED_COUPON(HttpStatus.CONFLICT, "C002", "만료된 쿠폰입니다."),
 
-    EMPTY_ORDER_ITEM(HttpStatus.BAD_REQUEST, "O001", "주문 항목이 비어있습니다.")
+    EMPTY_ORDER_ITEM(HttpStatus.BAD_REQUEST, "O001", "주문 항목이 비어있습니다."),
+    ALREADY_PAID_ORDER(HttpStatus.CONFLICT, "O002", "이미 결제된 주문입니다.")
 }

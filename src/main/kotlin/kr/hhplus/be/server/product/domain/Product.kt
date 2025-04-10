@@ -2,6 +2,7 @@ package kr.hhplus.be.server.product.domain
 
 import jakarta.persistence.*
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
+import java.math.BigDecimal
 
 @Entity
 @Table(name = "products")
@@ -15,7 +16,7 @@ class Product(
     var name: String,
 
     @Column(nullable = false)
-    var basePrice: Int,
+    var basePrice: BigDecimal,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -36,6 +37,12 @@ class Product(
     fun addVariant(variant: ProductVariant) {
         variants.add(variant)
         variant.product = this
+    }
+
+    fun canBuy(variantId: Long, quantity: Int): Boolean = true
+
+    fun getVariantPrice(variantId: Long): BigDecimal {
+        TODO()
     }
 }
 

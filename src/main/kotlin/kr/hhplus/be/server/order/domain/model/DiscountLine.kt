@@ -10,10 +10,7 @@ class DiscountLine(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L,
-    
-    @Column(nullable = false)
-    val orderId: Long,
-    
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     val type: DiscountType,
@@ -25,16 +22,20 @@ class DiscountLine(
     val amount: BigDecimal,
     
     @Column(nullable = false)
-    val description: String
+    val description: String,
+
+    @ManyToOne(cascade = [CascadeType.ALL], optional = false)
+    @JoinColumn(name = "order_id", nullable = false)
+    var order: Order? = null
 ) : BaseTimeEntity() {
-    
+
+
     companion object {
         /**
          * 쿠폰에서 할인 내역 생성
          */
-        fun fromCoupon(orderId: Long, couponId: Long, amount: BigDecimal, description: String): DiscountLine {
+        fun fromCoupon(couponId: Long, amount: BigDecimal, description: String): DiscountLine {
             return DiscountLine(
-                orderId = orderId,
                 type = DiscountType.COUPON,
                 sourceId = couponId,
                 amount = amount,
@@ -45,9 +46,8 @@ class DiscountLine(
         /**
          * 포인트 사용 할인 내역 생성
          */
-        fun fromPoint(orderId: Long, amount: BigDecimal): DiscountLine {
+        fun fromPoint(amount: BigDecimal): DiscountLine {
             return DiscountLine(
-                orderId = orderId,
                 type = DiscountType.POINT,
                 sourceId = null,
                 amount = amount,

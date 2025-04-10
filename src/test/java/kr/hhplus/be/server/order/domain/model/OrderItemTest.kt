@@ -11,7 +11,6 @@ class OrderItemTest {
         // arrange
         val orderItem = OrderItem(
             id = 1L,
-            orderId = 1L,
             productId = 1L,
             variantId = 1L,
             quantity = 10,
