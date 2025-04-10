@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.order.domain.port
 
-import kr.hhplus.be.server.order.domain.DiscountLine
+import kr.hhplus.be.server.order.domain.model.DiscountLine
 import kr.hhplus.be.server.order.domain.model.DiscountType
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository

@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.order.entrypoint.http
 
 import io.swagger.v3.oas.annotations.media.Schema
-import kr.hhplus.be.server.order.domain.OrderStatus
+import kr.hhplus.be.server.order.domain.model.OrderStatus
 
 
 @Schema(description = "주문 항목 요청 정보")

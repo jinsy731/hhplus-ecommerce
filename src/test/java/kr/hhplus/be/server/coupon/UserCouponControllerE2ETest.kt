@@ -4,6 +4,7 @@ import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.common.CommonResponse
+import kr.hhplus.be.server.coupon.domain.model.UserCouponStatus
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -28,12 +29,12 @@ internal class UserCouponControllerE2ETest {
             "/api/v1/users/$userId/coupons",
             HttpMethod.POST,
             HttpEntity(request),
-            object : ParameterizedTypeReference<CommonResponse<kr.hhplus.be.server.coupon.entrypoint.http.IssueCouponResponse>>() {}
+            object : ParameterizedTypeReference<CommonResponse<kr.hhplus.be.server.coupon.entrypoint.http.CouponResponse.Issue>>() {}
         )
 
         response.statusCode shouldBe HttpStatus.OK
         response.body?.data.shouldNotBeNull()
-        response.body?.data?.status shouldBe "UNUSED"
+        response.body?.data?.status shouldBe UserCouponStatus.UNUSED
     }
 
     @Test
@@ -44,7 +45,7 @@ internal class UserCouponControllerE2ETest {
             "/api/v1/users/$userId/coupons",
             HttpMethod.GET,
             null,
-            object : ParameterizedTypeReference<CommonResponse<kr.hhplus.be.server.coupon.entrypoint.http.UserCouponListResponse>>() {}
+            object : ParameterizedTypeReference<CommonResponse<kr.hhplus.be.server.coupon.entrypoint.http.CouponResponse.Retrieve>>() {}
         )
 
         response.statusCode shouldBe HttpStatus.OK

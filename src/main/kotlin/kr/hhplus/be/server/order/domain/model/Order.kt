@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.order.domain.model
 
-import kr.hhplus.be.server.common.BaseTimeEntity
 import jakarta.persistence.*
 import kr.hhplus.be.server.order.domain.EmptyOrderItemException
 import java.math.BigDecimal

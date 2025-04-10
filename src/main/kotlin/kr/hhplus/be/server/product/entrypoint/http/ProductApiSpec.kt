@@ -19,14 +19,14 @@ interface ProductApiSpec {
         summary = "상품 목록 조회",
         description = "상품 목록을 페이지 단위로 조회합니다.",
         responses = [
-            ApiResponse(responseCode = "200", description = "조회 성공", content = [Content(schema = Schema(implementation = ProductResponse.Retrieve.List::class))])
+            ApiResponse(responseCode = "200", description = "조회 성공", content = [Content(schema = Schema(implementation = ProductResponse.Retrieve.Entry::class))])
         ]
     )
     @GetMapping
     fun getProducts(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int
-    ): CommonResponse<ProductResponse.Retrieve.List>
+    ): CommonResponse<ProductResponse.Retrieve.Entry>
 
     @Operation(
         summary = "인기 상품 조회",

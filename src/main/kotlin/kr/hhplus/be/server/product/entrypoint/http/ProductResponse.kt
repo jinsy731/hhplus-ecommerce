@@ -9,7 +9,7 @@ class ProductResponse {
 
     class Retrieve {
         @Schema(description = "상품 목록 응답")
-        data class List(
+        data class Entry(
             @Schema(description = "상품 리스트")
             val products: List<ProductData>,
 

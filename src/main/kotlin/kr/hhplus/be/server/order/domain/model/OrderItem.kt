@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.order.domain.model
 
-import kr.hhplus.be.server.common.BaseTimeEntity
 import jakarta.persistence.*
 import java.math.BigDecimal
 
@@ -21,7 +20,7 @@ class OrderItem(
     val variantId: Long,
     
     @Column(nullable = false)
-    val quantity: BigDecimal,
+    val quantity: Int,
     
     @Column(nullable = false)
     val unitPrice: BigDecimal,
@@ -34,5 +33,5 @@ class OrderItem(
     /**
      * 항목의 소계를 계산합니다.
      */
-    fun subTotal(): BigDecimal = unitPrice * quantity
+    fun subTotal(): BigDecimal = unitPrice * quantity.toBigDecimal()
 }

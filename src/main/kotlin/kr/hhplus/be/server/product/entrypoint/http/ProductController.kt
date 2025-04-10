@@ -17,9 +17,9 @@ class ProductController: ProductApiSpec {
     override fun getProducts(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int
-    ): CommonResponse<ProductResponse.Retrieve.List> {
+    ): CommonResponse<ProductResponse.Retrieve.Entry> {
         // 새로운 형식에 맞게 샘플 데이터 구성
-        val result = ProductResponse.Retrieve.List(
+        val result = ProductResponse.Retrieve.Entry(
             products = listOf(
                 ProductResponse.ProductData(
                     productId = 1,

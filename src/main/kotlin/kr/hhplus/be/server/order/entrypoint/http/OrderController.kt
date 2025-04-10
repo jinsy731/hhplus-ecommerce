@@ -1,10 +1,7 @@
 package kr.hhplus.be.server.order.entrypoint.http
 
 import kr.hhplus.be.server.common.CommonResponse
-import kr.hhplus.be.server.order.domain.OrderStatus
-import kr.hhplus.be.server.order.entrypoint.http.OrderApiSpec
-import kr.hhplus.be.server.order.entrypoint.http.CreateOrderRequest
-import kr.hhplus.be.server.order.entrypoint.http.CreateOrderResponse
+import kr.hhplus.be.server.order.domain.model.OrderStatus
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
