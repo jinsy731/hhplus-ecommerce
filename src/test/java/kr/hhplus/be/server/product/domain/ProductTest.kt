@@ -3,6 +3,7 @@ package kr.hhplus.be.server.product.domain
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.product.ProductTestFixture
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -14,13 +15,10 @@ class ProductTest {
     @EnumSource(value = ProductStatus::class, names = ["ON_SALE", "PARTIALLY_OUT_OF_STOCK"])
     fun `✅주문 시 상품 검증 성공`(status: ProductStatus) {
         // arrange
-        val product = Product(
-            name = "상품 A",
-            basePrice = BigDecimal(1000),
-            status = status
-        )
+        val product = ProductTestFixture.createValidProduct(id = 1L).apply { this.status = status }
+
         // act, assert
-        shouldNotThrowAny { product.checkAvailableToOrder(1L, 1) }
+        shouldNotThrowAny { product.checkAvailableToOrder(variantId = 1L, quantity = 1) }
     }
 
     @ParameterizedTest

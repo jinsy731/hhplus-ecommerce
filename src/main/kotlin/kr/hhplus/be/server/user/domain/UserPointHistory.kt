@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.user.domain
 
-import kr.hhplus.be.server.common.BaseTimeEntity
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -12,15 +11,17 @@ data class UserPointHistory(
     val createdAt: LocalDateTime? = null
 ) {
     companion object {
-        fun createChargeHistory(userId: Long, amount: BigDecimal, updatedAt: LocalDateTime): UserPointHistory = UserPointHistory(
+        fun createChargeHistory(userId: Long, amount: BigDecimal, now: LocalDateTime): UserPointHistory = UserPointHistory(
             userId = userId,
             transactionType = TransactionType.CHARGE,
-            amount = amount
+            amount = amount,
+            createdAt = now
         )
-        fun createUseHistory(userId: Long, amount: BigDecimal, updatedAt: LocalDateTime): UserPointHistory = UserPointHistory(
+        fun createUseHistory(userId: Long, amount: BigDecimal, now: LocalDateTime): UserPointHistory = UserPointHistory(
             userId = userId,
             transactionType = TransactionType.USE,
-            amount = amount
+            amount = amount,
+            createdAt = now
         )
     }
 }

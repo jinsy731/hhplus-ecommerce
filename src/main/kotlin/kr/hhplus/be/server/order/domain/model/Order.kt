@@ -1,8 +1,10 @@
 package kr.hhplus.be.server.order.domain.model
 
 import jakarta.persistence.*
+import kr.hhplus.be.server.coupon.domain.model.DiscountLine
+import kr.hhplus.be.server.order.application.OrderCommand
+import kr.hhplus.be.server.order.application.OrderItemCommand
 import kr.hhplus.be.server.order.domain.AlreadyPaidOrderException
-import kr.hhplus.be.server.order.entrypoint.http.OrderItemRequest
 import kr.hhplus.be.server.product.domain.Product
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -30,9 +32,6 @@ class Order(
     @OneToMany(mappedBy = "order", cascade = [CascadeType.ALL], orphanRemoval = true)
     var orderItems: MutableList<OrderItem> = mutableListOf(),
 
-    @OneToMany(mappedBy = "order", cascade = [CascadeType.ALL], orphanRemoval = true)
-    var discountLines: MutableList<DiscountLine> = mutableListOf(),
-
     @Column(nullable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
@@ -40,15 +39,17 @@ class Order(
     val updatedAt: LocalDateTime = LocalDateTime.now(),
 ) {
     companion object {
-        fun create(userId: Long, products: List<Product>, orderItemRequests: List<OrderItemRequest>): Order {
+        fun create(cmd: OrderCommand.Create): Order {
             return Order(
-                userId = userId,
-                orderItems = createOrderItems(products, orderItemRequests)
+                userId = cmd.userId,
+                orderItems = createOrderItems(cmd.products, cmd.orderItems),
+                createdAt = cmd.now,
+                updatedAt = cmd.now
             ).apply { this.originalTotal = calculateOriginalTotal()}
         }
 
-        private fun createOrderItems(products: List<Product>, orderItemRequests: List<OrderItemRequest>): MutableList<OrderItem> {
-            return orderItemRequests.map { orderItemReq -> with(orderItemReq) {
+        private fun createOrderItems(products: List<Product>, orderItemCmd: List<OrderItemCommand.Create>): MutableList<OrderItem> {
+            return orderItemCmd.map { orderItemReq -> with(orderItemReq) {
                 val product = products.find { it.id == productId } ?: throw IllegalArgumentException("존재하지 않는 상품입니다.")
                 product.checkAvailableToOrder(variantId, quantity)
                 OrderItem(
@@ -74,8 +75,10 @@ class Order(
      * 할인 적용
      */
     fun applyDiscount(discountLines: List<DiscountLine>) {
-        this.discountLines.addAll(discountLines)
-        discountLines.forEach { it.order = this }
+        discountLines.forEach { discountLine ->
+            val orderItem = this.orderItems.find { orderItem -> orderItem.id == discountLine.orderItemId }
+            orderItem?.applyDiscount(discountLine.amount) ?: throw IllegalStateException()
+        }
 
         discountedAmount = discountLines.sumOf { it.amount }
         

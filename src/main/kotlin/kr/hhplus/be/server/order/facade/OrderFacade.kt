@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.order.facade
 
 import kr.hhplus.be.server.coupon.application.CouponService
+import kr.hhplus.be.server.order.application.OrderCommand
 import kr.hhplus.be.server.order.application.OrderService
 import kr.hhplus.be.server.payment.application.PaymentService
 import kr.hhplus.be.server.product.application.ProductService
@@ -17,6 +18,9 @@ class OrderFacade(
     ) {
 
     fun placeOrder(cri: OrderCriteria.PlaceOrder) {
-
+        val products = productService.findAllById(cri.orderItem.map { it.productId })
+        val order = orderService.createOrder(cri.toOrderCommand(products))
+        val applyCouponResult = couponService.applyCoupon(cri.toCouponCommand(order))
+//        val discountedOrder = orderService.applyDiscount(OrderCommand.ApplyDiscount(order, applyCouponResult.))
     }
 }

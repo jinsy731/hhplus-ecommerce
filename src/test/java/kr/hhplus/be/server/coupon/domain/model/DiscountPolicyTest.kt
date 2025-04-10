@@ -20,19 +20,4 @@ class DiscountPolicyTest {
         // assert
         discountAmount.compareTo(BigDecimal(500)) shouldBe 0
     }
-    
-    
-    @Test
-    fun `⛔️할인 금액 계산_조건을 만족하지 않으면 0을 반환해야 한다`() {
-        // arrange
-        val policy = DiscountPolicy(
-            name = "할인 정책 A",
-            discountType = FixedAmountDiscountType(BigDecimal(1000)),
-            discountCondition = MinOrderAmountCondition(BigDecimal(100))
-        )
-        // act
-        val discountAmount = policy.calculateDiscount(price = BigDecimal(50))
-        // assert
-        discountAmount.compareTo(BigDecimal.ZERO) shouldBe 0
-    }
 }

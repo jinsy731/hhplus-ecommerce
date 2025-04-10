@@ -33,18 +33,18 @@ class UserPointServiceTest {
         val chargeAmount = BigDecimal(100)
         val finalBalance = initialBalance + chargeAmount
         
-        val userPoint = UserPoint(1L, userId, initialBalance)
-        val expectedUserPoint = UserPoint(1L, userId, finalBalance)
+        val userPoint = UserPoint(1L, userId, initialBalance).apply { this.createdAt = time }
 
         val expectedHistory = UserPointHistory(
             userId = userId,
             amount = chargeAmount,
             transactionType = TransactionType.CHARGE,
+            createdAt = time
         )
         
         every { userPointRepository.getByUserId(userId) } returns userPoint
-        every { userPointRepository.save(userPoint) } returns expectedUserPoint
-        every { userPointHistoryRepository.save(expectedHistory) } returns mockk<UserPointHistory>()
+        every { userPointRepository.save(any()) } returns userPoint
+        every { userPointHistoryRepository.save(any()) } returns mockk<UserPointHistory>()
         
         val cmd = UserPointCommand.Charge(
             userId = userId,
@@ -57,7 +57,7 @@ class UserPointServiceTest {
 
         //assert
         result.userId shouldBe 1L
-        result.pointAfterCharge shouldBe BigDecimal(200)
+        result.pointAfterCharge shouldBe finalBalance
         result.updatedAt shouldBe time
         verify(exactly = 1) { userPointRepository.save(userPoint) }
         verify(exactly = 1) { userPointHistoryRepository.save(expectedHistory) }
@@ -98,17 +98,17 @@ class UserPointServiceTest {
         val useAmount = BigDecimal(100)
         val finalBalance = initialBalance - useAmount
 
-        val userPoint = UserPoint(1L, userId, initialBalance)
-        val expectedUserPoint = UserPoint(1L, userId, finalBalance)
+        val userPoint = UserPoint(1L, userId, initialBalance).apply { this.createdAt = time }
 
         val expectedHistory = UserPointHistory(
             userId = userId,
             amount = useAmount,
             transactionType = TransactionType.USE,
+            createdAt = time
         )
 
         every { userPointRepository.getByUserId(userId) } returns userPoint
-        every { userPointRepository.save(userPoint) } returns expectedUserPoint
+        every { userPointRepository.save(any()) } returns userPoint
         every { userPointHistoryRepository.save(expectedHistory) } returns mockk<UserPointHistory>()
 
         val cmd = UserPointCommand.Use(
@@ -121,6 +121,7 @@ class UserPointServiceTest {
         pointService.use(cmd)
 
         //assert
+        userPoint.balance shouldBe finalBalance
         verify(exactly = 1) { userPointRepository.save(userPoint) }
         verify(exactly = 1) { userPointHistoryRepository.save(expectedHistory) }
     }
@@ -133,7 +134,7 @@ class UserPointServiceTest {
         val initialBalance = BigDecimal(100)
         val useAmount = BigDecimal(101)
 
-        val userPoint = UserPoint(1L, userId, initialBalance)
+        val userPoint = UserPoint(1L, userId, initialBalance).apply { this.createdAt = time }
 
         every { userPointRepository.getByUserId(userId) } returns userPoint
 
@@ -147,6 +148,7 @@ class UserPointServiceTest {
         shouldThrowExactly<InsufficientPointException> { pointService.use(cmd) }
 
         //assert
+        userPoint.balance shouldBe initialBalance
         verify(exactly = 0) { userPointRepository.save(any()) }
         verify(exactly = 0) { userPointHistoryRepository.save(any()) }
     }

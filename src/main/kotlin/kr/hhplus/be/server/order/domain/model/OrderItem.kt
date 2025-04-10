@@ -23,7 +23,7 @@ class OrderItem(
     val unitPrice: BigDecimal,
 
     @Column(nullable = false)
-    val discountAmount: BigDecimal = BigDecimal.ZERO, // 상품별 할인 금액
+    var discountAmount: BigDecimal = BigDecimal.ZERO, // 상품별 할인 금액
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -41,4 +41,8 @@ class OrderItem(
     fun subTotal(): BigDecimal = unitPrice * quantity.toBigDecimal() - discountAmount
 
     fun subTotalBeforeDiscount(): BigDecimal = unitPrice * quantity.toBigDecimal()
+
+    fun applyDiscount(amount: BigDecimal) {
+        this.discountAmount += amount
+    }
 }

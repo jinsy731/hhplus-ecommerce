@@ -2,6 +2,7 @@ package kr.hhplus.be.server.product.application
 
 import jakarta.transaction.Transactional
 import kr.hhplus.be.server.common.PaginationResult
+import kr.hhplus.be.server.product.domain.Product
 import kr.hhplus.be.server.product.domain.ProductRepository
 import org.springframework.stereotype.Service
 
@@ -16,4 +17,7 @@ class ProductService(private val productRepository: ProductRepository) {
             paginationResult = PaginationResult.of(productPage)
         )
     }
+
+    @Transactional
+    fun findAllById(ids: List<Long>): List<Product> = productRepository.findAll(ids)
 }

@@ -3,10 +3,15 @@ package kr.hhplus.be.server.order.domain.model
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.common.ErrorCode
+import kr.hhplus.be.server.coupon.domain.model.DiscountLine
+import kr.hhplus.be.server.order.OrderTestFixture
+import kr.hhplus.be.server.order.application.OrderCommand
+import kr.hhplus.be.server.order.application.OrderItemCommand
 import kr.hhplus.be.server.order.domain.AlreadyPaidOrderException
 import kr.hhplus.be.server.order.entrypoint.http.OrderItemRequest
 import kr.hhplus.be.server.product.ProductTestFixture
 import org.junit.jupiter.api.Test
+import org.testcontainers.shaded.org.bouncycastle.pqc.legacy.math.linearalgebra.IntegerFunctions.order
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -16,11 +21,12 @@ class OrderTest {
     fun `✅주문 생성`() {
         // arrange
         val now = LocalDateTime.now()
-        val order = Order.create(
+        val order = Order.create(OrderCommand.Create(
             userId = 1L,
             products = listOf(ProductTestFixture.createValidProduct(1L), ProductTestFixture.createValidProduct(2L)),
-            orderItemRequests = listOf(OrderItemRequest(1L, 1L, 1), OrderItemRequest(1L, 2L, 1)) // 2600 포인트
-        )
+            orderItems = listOf(OrderItemCommand.Create(1L, 1L, 1), OrderItemCommand.Create(1L, 2L, 1)), // 2600 포인트
+            now = now
+        ))
 
         // act, assert
         order.userId shouldBe 1L
@@ -52,16 +58,10 @@ class OrderTest {
     fun `✅할인 항목 추가_할인 항목이 추가되면 해당 금액만큼 discountedAmount가 증가해야 한다`() {
         // arrange
         val now = LocalDateTime.now()
-        val order = Order(
-            id = 1L,
-            userId = 1L,
-            originalTotal = BigDecimal(10000),
-            createdAt = now,
-            updatedAt = now
-        )
+        val order = OrderTestFixture.createOrder(1L)
         val discountLines = listOf(
-            DiscountLine(1L, DiscountType.COUPON, 1L, BigDecimal(1000), description = "쿠폰 할인"),
-            DiscountLine(2L, DiscountType.COUPON, 2L, BigDecimal(1000), description = "쿠폰 할인"),
+            DiscountLine(1L, 1L, kr.hhplus.be.server.coupon.domain.model.DiscountMethod.COUPON, 1L, BigDecimal(1000)),
+            DiscountLine(2L, 2L, kr.hhplus.be.server.coupon.domain.model.DiscountMethod.COUPON, 2L, BigDecimal(1000)),
         )
         // act
         order.applyDiscount(discountLines)
@@ -71,19 +71,40 @@ class OrderTest {
     }
 
     @Test
+    fun `✅할인 항목 추가_할인 항목이 추가되면 해당 금액만큼 orderItem의 discountedAmount가 증가해야 한다`() {
+        // arrange
+        val order = OrderTestFixture.createOrder(1L)
+        val discountLines = listOf(
+            DiscountLine(1L, orderItemId = 1L, kr.hhplus.be.server.coupon.domain.model.DiscountMethod.COUPON, 1L, BigDecimal(1000)),
+            DiscountLine(2L, orderItemId = 2L, kr.hhplus.be.server.coupon.domain.model.DiscountMethod.COUPON, 2L, BigDecimal(1000)),
+        )
+        // act
+        order.applyDiscount(discountLines)
+
+        // assert
+        order.orderItems[0].discountAmount shouldBe BigDecimal(1500)
+        order.orderItems[1].discountAmount shouldBe BigDecimal(1500)
+    }
+
+    @Test
+    fun `✅할인 항목 추가 싪패_할인 항목이 추가됐을 때 해당하는 orderItem이 없으면 IllegalStateException 예외를 발생시켜야 한다`() {
+        // arrange
+        val order = OrderTestFixture.createOrder(1L)
+        val discountLines = listOf(
+            DiscountLine(1L, orderItemId = 3L, kr.hhplus.be.server.coupon.domain.model.DiscountMethod.COUPON, 1L, BigDecimal(1000)),
+            DiscountLine(2L, orderItemId = 4L, kr.hhplus.be.server.coupon.domain.model.DiscountMethod.COUPON, 2L, BigDecimal(1000)),
+        )
+        // act, assert
+        shouldThrowExactly<IllegalStateException> { order.applyDiscount(discountLines) }
+    }
+
+    @Test
     fun `⛔️할인 항목 추가_할인의 총합은 주문 금액 총합을 넘을 수 없다`() {
         // arrange
-        val now = LocalDateTime.now()
-        val order = Order(
-            id = 1L,
-            userId = 1L,
-            originalTotal = BigDecimal(10000),
-            createdAt = now,
-            updatedAt = now
-        )
+        val order = OrderTestFixture.createOrder(1L)
         val discountLines = listOf(
-            DiscountLine(1L, DiscountType.COUPON, 1L, BigDecimal(10000), description = "쿠폰 할인"),
-            DiscountLine(2L, DiscountType.COUPON, 2L, BigDecimal(10000), description = "쿠폰 할인"),
+            DiscountLine(1L, 1L, kr.hhplus.be.server.coupon.domain.model.DiscountMethod.COUPON, 1L, BigDecimal(10000)),
+            DiscountLine(2L, 2L, kr.hhplus.be.server.coupon.domain.model.DiscountMethod.COUPON, 2L, BigDecimal(10000)),
         )
         // act
         order.applyDiscount(discountLines)

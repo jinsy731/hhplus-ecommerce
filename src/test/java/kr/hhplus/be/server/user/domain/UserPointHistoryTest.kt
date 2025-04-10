@@ -12,7 +12,7 @@ class UserPointHistoryTest {
         val time = LocalDateTime.now()
         val chargeHistory = UserPointHistory.createChargeHistory(1L, BigDecimal(100), time)
         chargeHistory.userId shouldBe 1L
-        chargeHistory.amount shouldBe 100L
+        chargeHistory.amount shouldBe BigDecimal(100)
         chargeHistory.transactionType shouldBe TransactionType.CHARGE
         chargeHistory.createdAt shouldBe time
     }
@@ -22,7 +22,7 @@ class UserPointHistoryTest {
         val time = LocalDateTime.now()
         val chargeHistory = UserPointHistory.createUseHistory(1L, BigDecimal(100), time)
         chargeHistory.userId shouldBe 1L
-        chargeHistory.amount shouldBe 100L
+        chargeHistory.amount shouldBe BigDecimal(100)
         chargeHistory.transactionType shouldBe TransactionType.USE
         chargeHistory.createdAt shouldBe time
     }
