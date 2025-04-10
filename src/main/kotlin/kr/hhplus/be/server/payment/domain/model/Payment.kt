@@ -2,6 +2,7 @@ package kr.hhplus.be.server.payment.domain.model
 
 import jakarta.persistence.*
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 /**
@@ -20,23 +21,23 @@ class Payment(
 
     // 기존 총 금액
     @Column(nullable = false)
-    val originalTotal: Int,
+    val originalTotal: BigDecimal,
 
     // 할인 적용 후 총 금액
     @Column(nullable = false)
-    val finalTotal: Int,
+    val finalTotal: BigDecimal,
 
     // 비현금성 결제 수단으로 결제한 금액
     @Column(nullable = false)
-    val nonCashAmount: Int,
+    val nonCashAmount: BigDecimal,
 
     // 현금성 결제 수단으로 결제한 금액
     @Column(nullable = false)
-    val paidAmount: Int,
+    val paidAmount: BigDecimal,
 
     // 누적 환불 금액
     @Column(nullable = false)
-    var refundedAmount: Int = 0,
+    var refundedAmount: BigDecimal = BigDecimal.ZERO,
 
     // 결제 상태
     @Enumerated(EnumType.STRING)

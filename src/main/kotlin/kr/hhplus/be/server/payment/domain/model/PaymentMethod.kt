@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
+import java.math.BigDecimal
 
 /**
  * 결제 수단 엔티티
@@ -31,7 +32,7 @@ class PaymentMethod(
 
     // 해당 결제 수단으로 결제된 금액
     @Column(nullable = false)
-    val amount: Int,
+    val amount: BigDecimal,
 
     // 결제 식별 정보 (카드 번호 마스킹, 계좌 정보 등)
     val identifier: String? = null,

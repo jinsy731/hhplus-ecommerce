@@ -2,6 +2,7 @@ package kr.hhplus.be.server.payment.domain.model
 
 import jakarta.persistence.*
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
+import java.math.BigDecimal
 
 /**
  * 결제 항목 상세 엔티티
@@ -20,19 +21,19 @@ class PaymentItemDetail(
 
     // 기존 가격
     @Column(nullable = false)
-    val originalPrice: Int,
+    val originalPrice: BigDecimal,
 
     // 할인된 가격
     @Column(nullable = false)
-    val discountedPrice: Int,
+    val discountedPrice: BigDecimal,
 
     // 포인트/예치금 등으로 결제한 금액
     @Column(nullable = false)
-    val nonCashAmount: Int,
+    val nonCashAmount: BigDecimal,
 
     // 현금/카드 등으로 결제한 금액
     @Column(nullable = false)
-    val paidAmount: Int,
+    val paidAmount: BigDecimal,
 
     // 환불 여부
     @Column(nullable = false)
