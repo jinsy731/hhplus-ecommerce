@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.product
+package kr.hhplus.be.server.product.entrypoint.http
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.ArraySchema
@@ -19,22 +19,22 @@ interface ProductApiSpec {
         summary = "상품 목록 조회",
         description = "상품 목록을 페이지 단위로 조회합니다.",
         responses = [
-            ApiResponse(responseCode = "200", description = "조회 성공", content = [Content(schema = Schema(implementation = ProductListResponse::class))])
+            ApiResponse(responseCode = "200", description = "조회 성공", content = [Content(schema = Schema(implementation = ProductResponse.Retrieve.List::class))])
         ]
     )
     @GetMapping
     fun getProducts(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int
-    ): CommonResponse<ProductListResponse>
+    ): CommonResponse<ProductResponse.Retrieve.List>
 
     @Operation(
         summary = "인기 상품 조회",
         description = "최근 3일간 상위 5개 인기 상품을 조회합니다.",
         responses = [
-            ApiResponse(responseCode = "200", description = "조회 성공", content = [Content(array = ArraySchema(schema = Schema(implementation = PopularProductResponse::class)))])
+            ApiResponse(responseCode = "200", description = "조회 성공", content = [Content(array = ArraySchema(schema = Schema(implementation = ProductResponse.Retrieve.Popular::class)))])
         ]
     )
     @GetMapping("/popular")
-    fun getPopularProducts(): CommonResponse<List<PopularProductResponse>>
+    fun getPopularProducts(): CommonResponse<List<ProductResponse.Retrieve.Popular>>
 }
