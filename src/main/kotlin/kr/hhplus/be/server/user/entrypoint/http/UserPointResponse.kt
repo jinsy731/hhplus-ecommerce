@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.user.entrypoint.http
 
 import io.swagger.v3.oas.annotations.media.Schema
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 class UserPointResponse {
@@ -10,7 +11,7 @@ class UserPointResponse {
         @Schema(description = "유저 ID", example = "1")
         val userId: Long,
         @Schema(description = "잔액", example = "12000")
-        val point: Long,
+        val point: BigDecimal,
         @Schema(description = "최중 수정 시각", example = "2025-05-10'T'10:00:00")
         val updatedAt: LocalDateTime?
     )
@@ -20,7 +21,7 @@ class UserPointResponse {
         @Schema(description = "유저 ID", example = "1")
         val userId: Long,
         @Schema(description = "잔액", example = "12000")
-        val point: Long,
+        val point: BigDecimal,
         @Schema(description = "최중 수정 시각", example = "2025-05-10'T'10:00:00")
         val updatedAt: LocalDateTime?
     )

@@ -14,17 +14,27 @@ class UserPointService(
     @Transactional
     fun charge(cmd: UserPointCommand.Charge): UserPointResult.Charge {
         val userPoint = userPointRepository.getByUserId(cmd.userId)
-        val newUserPoint = userPoint.charge(cmd.amount, cmd.time) // UserPoint의 time과 UserPointHistory의 time이 일치하는지 확인하려면 time의 주입을 어디까지 밀어내야할까?
-        val history = UserPointHistory.createChargeHistory(cmd.userId, cmd.amount, cmd.time)
+        userPoint.charge(cmd.amount, cmd.now) // UserPoint의 time과 UserPointHistory의 time이 일치하는지 확인하려면 time의 주입을 어디까지 밀어내야할까?
+        val history = UserPointHistory.createChargeHistory(cmd.userId, cmd.amount, cmd.now)
 
-        userPointRepository.save(newUserPoint)
+        userPointRepository.save(userPoint)
         userPointHistoryRepository.save(history)
 
         return UserPointResult.Charge(
-            userId = newUserPoint.userId,
-            pointAfterCharge = newUserPoint.balance,
-            updatedAt = newUserPoint.updatedAt
+            userId = userPoint.userId,
+            pointAfterCharge = userPoint.balance,
+            updatedAt = userPoint.updatedAt
         )
+    }
+
+    @Transactional
+    fun use(cmd: UserPointCommand.Use) {
+        val userPoint = userPointRepository.getByUserId(cmd.userId)
+        userPoint.use(cmd.amount, cmd.now)
+        val history = UserPointHistory.createUseHistory(cmd.userId, cmd.amount, cmd.now)
+
+        userPointRepository.save(userPoint)
+        userPointHistoryRepository.save(history)
     }
 
     @Transactional

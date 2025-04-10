@@ -13,6 +13,7 @@ import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import java.math.BigDecimal
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class UserPointControllerE2ETest {
@@ -37,7 +38,7 @@ class UserPointControllerE2ETest {
         response.statusCode shouldBe HttpStatus.OK
         response.body?.data.shouldNotBeNull()
         response.body?.data?.userId shouldBe userId
-        response.body?.data?.point?.shouldBeGreaterThan(0)
+        response.body?.data?.point?.shouldBeGreaterThan(BigDecimal.ZERO)
     }
 
     @Test
@@ -54,6 +55,6 @@ class UserPointControllerE2ETest {
         response.statusCode shouldBe HttpStatus.OK
         response.body?.data.shouldNotBeNull()
         response.body?.data?.userId shouldBe userId
-        response.body?.data?.point?.shouldBeGreaterThan(0)
+        response.body?.data?.point?.shouldBeGreaterThan(BigDecimal.ZERO)
     }
 }

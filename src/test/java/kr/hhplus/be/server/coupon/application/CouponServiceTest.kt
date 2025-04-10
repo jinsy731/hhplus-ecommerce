@@ -27,7 +27,7 @@ class CouponServiceTest {
     fun setUp() {
         couponRepository = mockk()
         userCouponRepository = mockk()
-        couponService = CouponService(couponRepository, userCouponRepository)
+        couponService = CouponService(userCouponRepository)
     }
     
     @Test
