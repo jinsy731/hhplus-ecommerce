@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.coupon.domain.model
 
 import jakarta.persistence.*
+import kr.hhplus.be.server.coupon.LongSetConverter
 import java.math.BigDecimal
 
 /**
@@ -59,12 +60,12 @@ class MinOrderAmountCondition(
 @Entity
 @DiscriminatorValue("SPECIFIC_PRODUCT")
 class SpecificProductCondition(
-    @Column(name = "product_id")
-    val productId: Long
+    @Column(name = "product_id") @Convert(converter = LongSetConverter::class)
+    val productIds: Set<Long>
 ) : DiscountCondition() {
     
     override fun isSatisfiedBy(context: DiscountContext): Boolean {
-        return context.productId == productId
+        return productIds.contains(context.productId)
     }
 }
 

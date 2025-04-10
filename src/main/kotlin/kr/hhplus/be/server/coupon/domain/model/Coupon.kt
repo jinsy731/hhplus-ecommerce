@@ -61,16 +61,15 @@ class Coupon(
     /**
      * 쿠폰이 유효한지 확인
      */
-    fun isValid(): Boolean {
-        val now = LocalDateTime.now()
+    fun isValid(now: LocalDateTime): Boolean {
         return isActive && now.isAfter(startAt) && now.isBefore(endAt)
     }
     
     /**
      * 쿠폰 할인 금액 계산
      */
-    fun calculateDiscount(price: BigDecimal, context: DiscountContext): BigDecimal {
-        return if (isValid()) {
+    fun calculateDiscount(now: LocalDateTime, price: BigDecimal, context: DiscountContext): BigDecimal {
+        return if (isValid(now)) {
             discountPolicy.calculateDiscount(price, context)
         } else {
             BigDecimal.ZERO

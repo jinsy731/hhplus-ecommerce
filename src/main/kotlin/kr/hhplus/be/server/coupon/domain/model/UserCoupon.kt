@@ -9,7 +9,8 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import kr.hhplus.be.server.coupon.domain.InvalidCouponStatus
+import kr.hhplus.be.server.coupon.domain.ExpiredCouponException
+import kr.hhplus.be.server.coupon.domain.InvalidCouponStatusException
 import java.time.LocalDateTime
 
 /**
@@ -40,23 +41,27 @@ class UserCoupon(
     var usedAt: LocalDateTime? = null,
 
     @Column(nullable = false)
-    var status: UserCouponStatus,
+    var status: UserCouponStatus = UserCouponStatus.UNUSED,
 ) {
     /**
      * 쿠폰 사용 처리
      */
-    fun use(time: LocalDateTime) {
-        check(status == UserCouponStatus.UNUSED && coupon.isValid()) { throw InvalidCouponStatus() }
+    fun use(now: LocalDateTime) {
+        check(status == UserCouponStatus.UNUSED && coupon.isValid(now)) { throw InvalidCouponStatusException() }
+        check(expiredAt.isAfter(now)) {
+            this.status = UserCouponStatus.EXPIRED
+            throw ExpiredCouponException()
+        }
 
-        this.usedAt = time
+        this.usedAt = now
         this.status = UserCouponStatus.USED
     }
 
     /**
      * 쿠폰이 사용 가능한지 확인
      */
-    fun isAvailable(): Boolean {
-        return this.status == UserCouponStatus.UNUSED && coupon.isValid()
+    fun isAvailable(now: LocalDateTime): Boolean {
+        return this.status == UserCouponStatus.UNUSED && coupon.isValid(now)
     }
 }
 
