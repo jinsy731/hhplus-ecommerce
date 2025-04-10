@@ -11,6 +11,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import jdk.jpackage.internal.Arguments.CLIOptions.context
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isActive
 
 /**
@@ -68,11 +69,15 @@ class Coupon(
     /**
      * 쿠폰 할인 금액 계산
      */
-    fun calculateDiscount(now: LocalDateTime, price: BigDecimal, context: DiscountContext): BigDecimal {
+    fun calculateDiscount(now: LocalDateTime, price: BigDecimal): BigDecimal {
         return if (isValid(now)) {
-            discountPolicy.calculateDiscount(price, context)
+            discountPolicy.calculateDiscount(price)
         } else {
             BigDecimal.ZERO
         }
+    }
+
+    fun isApplicableTo(context: DiscountContext): Boolean {
+        return this.discountPolicy.discountCondition.isSatisfiedBy(context)
     }
 }

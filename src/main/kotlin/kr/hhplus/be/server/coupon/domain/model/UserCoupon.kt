@@ -56,13 +56,6 @@ class UserCoupon(
         this.usedAt = now
         this.status = UserCouponStatus.USED
     }
-
-    /**
-     * 쿠폰이 사용 가능한지 확인
-     */
-    fun isAvailable(now: LocalDateTime): Boolean {
-        return this.status == UserCouponStatus.UNUSED && coupon.isValid(now)
-    }
 }
 
 enum class UserCouponStatus {

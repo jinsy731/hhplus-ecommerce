@@ -16,7 +16,8 @@ abstract class DiscountCondition {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null
-    
+
+
     /**
      * 할인 조건 충족 여부 확인 메서드
      * @param context 할인 조건 검증에 필요한 컨텍스트 정보
@@ -31,6 +32,7 @@ abstract class DiscountCondition {
 data class DiscountContext(
     val userId: Long? = null,
     val productId: Long? = null,
+    val variantId: Long? = null,
     val orderAmount: BigDecimal? = null,
 
     // 필요한 다른 컨텍스트 정보들을 추가할 수 있음
@@ -47,7 +49,7 @@ class MinOrderAmountCondition(
     @Column(name = "min_amount")
     val minAmount: BigDecimal
 ) : DiscountCondition() {
-    
+
     override fun isSatisfiedBy(context: DiscountContext): Boolean {
         return context.orderAmount?.let { it >= minAmount } ?: false
     }

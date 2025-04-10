@@ -2,6 +2,7 @@ package kr.hhplus.be.server.coupon.domain.model
 
 import java.math.BigDecimal
 import jakarta.persistence.*
+import jdk.jpackage.internal.Arguments.CLIOptions.context
 
 /**
  * 할인 정책 인터페이스
@@ -24,7 +25,7 @@ class DiscountPolicy {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "discount_condition_id", nullable = false)
     val discountCondition: DiscountCondition
-    
+
     constructor(name: String, discountType: DiscountType, discountCondition: DiscountCondition) {
         this.name = name
         this.discountType = discountType
@@ -37,11 +38,7 @@ class DiscountPolicy {
      * @param context 할인 조건 검증에 필요한 컨텍스트 정보
      * @return 할인 금액 (조건을 만족하지 않으면 0)
      */
-    fun calculateDiscount(price: BigDecimal, context: DiscountContext): BigDecimal {
-        return if (discountCondition.isSatisfiedBy(context)) {
-            discountType.calculateDiscount(price)
-        } else {
-            BigDecimal.ZERO
-        }
+    fun calculateDiscount(price: BigDecimal): BigDecimal {
+        return discountType.calculateDiscount(price)
     }
 }
