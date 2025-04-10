@@ -1,6 +1,8 @@
-package kr.hhplus.be.server.order
+package kr.hhplus.be.server.order.entrypoint.http
 
 import io.swagger.v3.oas.annotations.media.Schema
+import kr.hhplus.be.server.order.domain.OrderStatus
+
 
 @Schema(description = "주문 항목 요청 정보")
 data class OrderItemRequest(
@@ -29,7 +31,6 @@ data class CreateOrderRequest(
     val userCouponId: Long?
 )
 
-
 @Schema(description = "주문 생성 응답")
 data class CreateOrderResponse(
 
@@ -37,9 +38,8 @@ data class CreateOrderResponse(
     val orderId: Long,
 
     @Schema(description = "주문 상태", example = "PAID")
-    val status: String,
+    val status: OrderStatus,
 
     @Schema(description = "최종 결제 금액", example = "15000")
     val finalTotal: Int
 )
-

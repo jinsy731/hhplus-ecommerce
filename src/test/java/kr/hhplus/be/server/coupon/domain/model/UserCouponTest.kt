@@ -79,7 +79,7 @@ class UserCouponTest {
 
         // act, assert
         val ex = shouldThrowExactly<InvalidCouponStatusException> { userCoupon.use(time) }
-        ex.message shouldBe ErrorCode.INvVALID_COUPON_STATUS.message
+        ex.message shouldBe ErrorCode.INVALID_COUPON_STATUS.message
     }
     
     @Test
@@ -118,6 +118,6 @@ class UserCouponTest {
         )
         // act, assert
         val ex = shouldThrowExactly<InvalidCouponStatusException> { userCoupon.use(time) }
-        ex.message shouldBe ErrorCode.INvVALID_COUPON_STATUS.message
+        ex.message shouldBe ErrorCode.INVALID_COUPON_STATUS.message
     }
 }
