@@ -1,15 +1,18 @@
 package kr.hhplus.be.server.coupon.domain.model
 
 import io.kotest.assertions.throwables.shouldThrowExactly
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
-import kr.hhplus.be.server.common.ErrorCode
+import kr.hhplus.be.server.common.exception.ErrorCode
+import kr.hhplus.be.server.common.exception.ExpiredCouponException
+import kr.hhplus.be.server.common.exception.InvalidCouponStatusException
 import kr.hhplus.be.server.coupon.CouponTestFixture
-import kr.hhplus.be.server.coupon.domain.ExpiredCouponException
-import kr.hhplus.be.server.coupon.domain.InvalidCouponStatusException
+import kr.hhplus.be.server.order.OrderTestFixture
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 class UserCouponTest {
@@ -119,5 +122,59 @@ class UserCouponTest {
         // act, assert
         val ex = shouldThrowExactly<InvalidCouponStatusException> { userCoupon.use(time) }
         ex.message shouldBe ErrorCode.INVALID_COUPON_STATUS.message
+    }
+    
+    @Test
+    fun `✅할인 적용_할인이 정상적으로 적용되면 DiscountLine이 반환된다`() {
+        // arrange
+        val time = LocalDateTime.now()
+        val expiredAt = time.plusMinutes(1)
+        val coupon = CouponTestFixture.createValidCoupon()
+        val order = OrderTestFixture.createOrder(1L)
+        val userCoupon = UserCoupon(
+            id = 1L,
+            userId = 1L,
+            coupon = coupon,
+            issuedAt = time,
+            expiredAt = expiredAt,
+            status = UserCouponStatus.UNUSED
+        )
+        // act
+        val discountLines = userCoupon.applyTo(order, 1L, time)
+        // assert
+        discountLines shouldHaveSize 2
+        discountLines.sumOf { it.amount }.compareTo(BigDecimal(5000)) shouldBe 0
+        discountLines[0].sourceId shouldBe 1L
+        discountLines[0].createdAt shouldBe time
+        discountLines[0].amount.compareTo(BigDecimal(2500)) shouldBe 0
+        discountLines[0].type shouldBe DiscountMethod.COUPON
+        discountLines[0].orderItemId shouldBe 1L
+        discountLines[0].createdAt shouldBe time
+        discountLines[1].sourceId shouldBe 1L
+        discountLines[1].createdAt shouldBe time
+        discountLines[1].amount.compareTo(BigDecimal(2500)) shouldBe 0
+        discountLines[1].type shouldBe DiscountMethod.COUPON
+        discountLines[1].orderItemId shouldBe 2L
+        discountLines[1].createdAt shouldBe time
+    }
+    
+    @Test
+    fun `⛔️할인 적용_적용가능한 상품이 없다면 빈 리스트를 반환해야 한다`() {
+        val time = LocalDateTime.now()
+        val expiredAt = time.plusMinutes(1)
+        val coupon = CouponTestFixture.createValidCoupon()
+        val order = OrderTestFixture.createOrder(1L).apply { this.orderItems.clear() }
+        val userCoupon = UserCoupon(
+            id = 1L,
+            userId = 1L,
+            coupon = coupon,
+            issuedAt = time,
+            expiredAt = expiredAt,
+            status = UserCouponStatus.UNUSED
+        )
+
+        val result = userCoupon.applyTo(order, 1L, time)
+
+        result shouldHaveSize 0
     }
 }

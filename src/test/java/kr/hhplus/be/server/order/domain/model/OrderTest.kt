@@ -2,16 +2,15 @@ package kr.hhplus.be.server.order.domain.model
 
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
-import kr.hhplus.be.server.common.ErrorCode
+import kr.hhplus.be.server.common.exception.AlreadyPaidOrderException
+import kr.hhplus.be.server.common.exception.ErrorCode
 import kr.hhplus.be.server.coupon.domain.model.DiscountLine
 import kr.hhplus.be.server.order.OrderTestFixture
 import kr.hhplus.be.server.order.application.OrderCommand
 import kr.hhplus.be.server.order.application.OrderItemCommand
-import kr.hhplus.be.server.order.domain.AlreadyPaidOrderException
-import kr.hhplus.be.server.order.entrypoint.http.OrderItemRequest
+import kr.hhplus.be.server.order.domain.Order
 import kr.hhplus.be.server.product.ProductTestFixture
 import org.junit.jupiter.api.Test
-import org.testcontainers.shaded.org.bouncycastle.pqc.legacy.math.linearalgebra.IntegerFunctions.order
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -30,7 +29,7 @@ class OrderTest {
 
         // act, assert
         order.userId shouldBe 1L
-        order.status shouldBe OrderStatus.CREATED
+        order.status shouldBe kr.hhplus.be.server.order.domain.OrderStatus.CREATED
         order.originalTotal shouldBe BigDecimal(2600)
         order.discountedAmount shouldBe BigDecimal.ZERO
         order.orderItems.size shouldBe 2
@@ -124,7 +123,7 @@ class OrderTest {
         order.completeOrder()
         
         // assert
-        order.status shouldBe OrderStatus.PAID
+        order.status shouldBe kr.hhplus.be.server.order.domain.OrderStatus.PAID
     }
 
 
@@ -134,7 +133,7 @@ class OrderTest {
         val order = Order(
             id = 1L,
             userId = 1L,
-            status = OrderStatus.PAID
+            status = kr.hhplus.be.server.order.domain.OrderStatus.PAID
         )
         // act, assert
         val ex = shouldThrowExactly<AlreadyPaidOrderException> { order.completeOrder() }

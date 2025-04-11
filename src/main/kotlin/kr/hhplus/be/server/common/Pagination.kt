@@ -2,12 +2,6 @@ package kr.hhplus.be.server.common
 
 import org.springframework.data.domain.Page
 
-data class Pagination(
-    val offset: Long,
-    val limit: Long,
-    val sort: Array<String>
-)
-
 data class PaginationResult(
     val page: Int,
     val size: Int,

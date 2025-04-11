@@ -1,12 +1,18 @@
 package kr.hhplus.be.server.order
 
-import kr.hhplus.be.server.order.domain.model.Order
-import kr.hhplus.be.server.order.domain.model.OrderItem
-import kr.hhplus.be.server.order.domain.model.OrderItemStatus
-import kr.hhplus.be.server.order.domain.model.OrderStatus
+import kr.hhplus.be.server.order.domain.Order
+import kr.hhplus.be.server.order.domain.OrderItem
+import kr.hhplus.be.server.order.domain.OrderItemStatus
+import kr.hhplus.be.server.order.domain.OrderStatus
 import java.math.BigDecimal
 
 object OrderTestFixture {
+    /**
+     * 1. 총액 10000원
+     * 2. 할인금액 9000원
+     * 3. 총 2개의 상품 주문
+     * 4. 각 상품은 1000 * 5 = 5000원 - 500원 할인
+     */
     fun createOrder(userId: Long) = Order(
         id = 1L,
         userId = userId,

@@ -1,10 +1,10 @@
-package kr.hhplus.be.server.order.domain.model
+package kr.hhplus.be.server.order.domain
 
 import jakarta.persistence.*
+import kr.hhplus.be.server.common.exception.AlreadyPaidOrderException
 import kr.hhplus.be.server.coupon.domain.model.DiscountLine
 import kr.hhplus.be.server.order.application.OrderCommand
 import kr.hhplus.be.server.order.application.OrderItemCommand
-import kr.hhplus.be.server.order.domain.AlreadyPaidOrderException
 import kr.hhplus.be.server.product.domain.Product
 import java.math.BigDecimal
 import java.time.LocalDateTime

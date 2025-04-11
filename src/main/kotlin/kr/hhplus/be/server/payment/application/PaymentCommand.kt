@@ -1,9 +1,7 @@
 package kr.hhplus.be.server.payment.application
 
-import kr.hhplus.be.server.order.domain.model.Order
-import kr.hhplus.be.server.payment.domain.model.Payment
-import kr.hhplus.be.server.payment.domain.model.PaymentMethod
-import kr.hhplus.be.server.payment.domain.model.PaymentMethodType
+import kr.hhplus.be.server.order.domain.Order
+import kr.hhplus.be.server.payment.domain.PaymentMethodType
 import java.math.BigDecimal
 import java.time.LocalDateTime
 

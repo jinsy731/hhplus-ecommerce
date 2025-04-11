@@ -3,10 +3,12 @@ package kr.hhplus.be.server.payment.domain.model
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import kr.hhplus.be.server.coupon.domain.AlreadyPaidException
+import kr.hhplus.be.server.common.exception.AlreadyPaidException
 import kr.hhplus.be.server.order.OrderTestFixture
 import kr.hhplus.be.server.payment.application.PaymentCommand
-import org.apache.logging.log4j.message.MapMessage.MapFormat.names
+import kr.hhplus.be.server.payment.domain.Payment
+import kr.hhplus.be.server.payment.domain.PaymentMethodType
+import kr.hhplus.be.server.payment.domain.PaymentStatus
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource

@@ -1,10 +1,8 @@
 package kr.hhplus.be.server.payment.application
 
 import jakarta.transaction.Transactional
-import kr.hhplus.be.server.payment.domain.model.Payment
-import kr.hhplus.be.server.payment.domain.model.PaymentItemDetail
-import kr.hhplus.be.server.payment.domain.model.PaymentMethod
-import kr.hhplus.be.server.payment.domain.port.PaymentRepository
+import kr.hhplus.be.server.payment.domain.Payment
+import kr.hhplus.be.server.payment.domain.PaymentRepository
 import org.springframework.stereotype.Service
 
 @Service

@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.payment.domain.model
+package kr.hhplus.be.server.payment.domain
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -13,6 +13,22 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
 import java.math.BigDecimal
+
+
+/**
+ * 결제 수단 유형을 나타내는 enum
+ */
+enum class PaymentMethodType {
+    CREDIT_CARD, // 신용카드
+    DEBIT_CARD,  // 체크카드
+    BANK_TRANSFER,  // 계좌이체
+    MOBILE_PAYMENT, // 모바일 결제
+    VIRTUAL_ACCOUNT, // 가상계좌
+    POINT,          // 포인트
+    COUPON,         // 쿠폰
+    DEPOSIT;        // 예치금
+}
+
 
 /**
  * 결제 수단 엔티티
@@ -44,9 +60,4 @@ class PaymentMethod(
     @JoinColumn(name = "payment_id")
     var payment: Payment? = null
 ) : BaseTimeEntity() {
-
-    /** 현금성 결제 수단인지 여부 반환 */
-    fun isCashPayment(): Boolean {
-        return type.isCashPayment
-    }
 }

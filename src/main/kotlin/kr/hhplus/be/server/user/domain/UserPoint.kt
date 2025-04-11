@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.user.domain
 
+import kr.hhplus.be.server.common.exception.InsufficientPointException
+import kr.hhplus.be.server.common.exception.InvalidChargeAmountException
 import java.math.BigDecimal
 import java.time.LocalDateTime
 

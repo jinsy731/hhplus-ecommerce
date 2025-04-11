@@ -9,8 +9,9 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import kr.hhplus.be.server.coupon.domain.ExpiredCouponException
-import kr.hhplus.be.server.coupon.domain.InvalidCouponStatusException
+import kr.hhplus.be.server.common.exception.ExpiredCouponException
+import kr.hhplus.be.server.common.exception.InvalidCouponStatusException
+import kr.hhplus.be.server.order.domain.Order
 import java.time.LocalDateTime
 
 /**
@@ -55,6 +56,16 @@ class UserCoupon(
 
         this.usedAt = now
         this.status = UserCouponStatus.USED
+    }
+
+    fun applyTo(order: Order, userId: Long, now: LocalDateTime): List<DiscountLine> {
+        val applicableItems = coupon.applicableItems(order, userId)
+        if (applicableItems.isEmpty()) return emptyList()
+
+        use(now)
+
+        val totalDiscount = coupon.calculateDiscount(now, applicableItems.sumOf { it.subTotal() })
+        return DiscountDistributor.distribute(applicableItems, this.id!!, now, totalDiscount)
     }
 }
 

@@ -8,10 +8,17 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import kr.hhplus.be.server.common.BaseTimeEntity
 import kr.hhplus.be.server.coupon.domain.model.DiscountMethod
 import java.math.BigDecimal
 import java.time.LocalDateTime
+
+/**
+ * 할인 유형
+ */
+enum class DiscountMethod {
+    COUPON,
+    PROMOTION,
+}
 
 @Entity
 @Table(name = "discount_lines")

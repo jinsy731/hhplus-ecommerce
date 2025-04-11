@@ -9,6 +9,10 @@ import java.time.LocalDateTime
 
 object CouponTestFixture {
 
+    /**
+     * 1. 할인 금액 5000원
+     * 2. 할인 조건 10000원 이상 구매
+     */
     fun createValidCoupon(
         startAt: LocalDateTime = LocalDateTime.now().minusHours(1),
         endAt: LocalDateTime = LocalDateTime.now().plusHours(1)) = Coupon(

@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.coupon.application
 
-import kr.hhplus.be.server.order.domain.model.Order
+import kr.hhplus.be.server.order.domain.Order
 import java.time.LocalDateTime
 
 class CouponCommand {

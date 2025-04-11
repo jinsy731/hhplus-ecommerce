@@ -11,13 +11,14 @@ import kr.hhplus.be.server.coupon.application.CouponResult
 import kr.hhplus.be.server.coupon.application.CouponService
 import kr.hhplus.be.server.coupon.domain.model.DiscountLine
 import kr.hhplus.be.server.coupon.domain.model.DiscountMethod
+import kr.hhplus.be.server.common.MessagingService
 import kr.hhplus.be.server.order.application.OrderService
 import kr.hhplus.be.server.order.facade.OrderCriteria
 import kr.hhplus.be.server.order.facade.OrderFacade
 import kr.hhplus.be.server.payment.application.PaymentCommand
 import kr.hhplus.be.server.payment.application.PaymentService
-import kr.hhplus.be.server.payment.domain.model.Payment
-import kr.hhplus.be.server.payment.domain.model.PaymentMethodType
+import kr.hhplus.be.server.payment.domain.Payment
+import kr.hhplus.be.server.payment.domain.PaymentMethodType
 import kr.hhplus.be.server.product.application.ProductService
 import kr.hhplus.be.server.product.domain.Product
 import kr.hhplus.be.server.user.application.UserPointService
@@ -32,9 +33,10 @@ class OrderFacadeTest {
     private val userPointService = mockk<UserPointService>(relaxed = true)
     private val paymentService = mockk<PaymentService>(relaxed = true)
     private val productService = mockk<ProductService>(relaxed = true)
+    private val messageService = mockk<MessagingService>(relaxed = true)
 
     private val orderFacade = OrderFacade(
-        orderService, couponService, userPointService, paymentService, productService
+        orderService, couponService, userPointService, paymentService, productService, messageService
     )
 
     @Test
@@ -52,7 +54,8 @@ class OrderFacadeTest {
         every { paymentService.preparePayment(any()) } returns payment
         every { paymentService.completePayment(any()) } just Runs
         every { userPointService.use(any()) } just Runs
-        every { orderService.applyDiscount(any()) } just Runs
+        every { orderService.completeOrder(any()) } just Runs
+        every { messageService.publish(any()) } just Runs
 
         // when
         orderFacade.placeOrder(cri)
@@ -62,10 +65,11 @@ class OrderFacadeTest {
             productService.findAllById(any())
             orderService.createOrder(any())
             couponService.applyCoupon(any())
-            orderService.applyDiscount(any())
             paymentService.preparePayment(any())
             paymentService.completePayment(any())
+            orderService.completeOrder(any())
             userPointService.use(any())
+            messageService.publish(any())
         }
     }
 
@@ -90,7 +94,6 @@ class OrderFacadeTest {
         verify(exactly = 1) { orderService.createOrder(any()) }
         verify(exactly = 1) { couponService.applyCoupon(any()) }
 
-        verify(exactly = 0) { orderService.applyDiscount(any()) }
         verify(exactly = 0) { paymentService.preparePayment(any()) }
         verify(exactly = 0) { userPointService.use(any()) }
     }
@@ -106,10 +109,11 @@ class OrderFacadeTest {
         every { productService.findAllById(any()) } returns products
         every { orderService.createOrder(any()) } returns order
         every { couponService.applyCoupon(any()) } returns applyCouponResult
-        every { orderService.applyDiscount(any()) } just Runs
         every { paymentService.preparePayment(any()) } returns payment
         every { paymentService.completePayment(any()) } just Runs
         every { userPointService.use(any()) } just Runs
+        every { messageService.publish(any()) } just Runs
+        every { orderService.completeOrder(any()) } just Runs
 
         orderFacade.placeOrder(cri)
 
