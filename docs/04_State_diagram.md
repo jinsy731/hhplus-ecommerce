@@ -8,6 +8,8 @@
 - [2. Order 상태 다이어그램](#2-order-상태-다이어그램)
 - [3. OrderItem 상태 다이어그램](#3-orderitem-상태-다이어그램)
 - [4. Payment 상태 다이어그램](#4-payment-상태-다이어그램)
+- [5. Product 상태 다이어그램](#5-product-상태-다이어그램)
+- [6. ProductVariant 상태 다이어그램](#6-productvariant-상태-전이-다이어그램)
 
 ## 1. Coupon 상태 다이어그램
 
@@ -194,8 +196,6 @@ stateDiagram-v2
   REFUND_PROCESSING --> REFUNDED : 전액 환불 완료
 
   PARTIALLY_REFUNDED --> REFUND_REQUESTED : 추가 환불 요청
-  PARTIALLY_REFUNDED --> REFUND_PROCESSING : 추가 환불 진행
-  PARTIALLY_REFUNDED --> REFUNDED : 최종 환불 완료
 
   REFUNDED --> [*]
   FAILED --> [*]
@@ -226,9 +226,103 @@ stateDiagram-v2
 | `REFUND_PROCESSING`  | `PARTIALLY_REFUNDED` | 일부 환불 완료     |
 | `REFUND_PROCESSING`  | `REFUNDED`           | 전액 환불 완료     |
 | `PARTIALLY_REFUNDED` | `REFUND_REQUESTED`   | 추가 환불 요청     |
-| `PARTIALLY_REFUNDED` | `REFUND_PROCESSING`  | 추가 환불 처리     |
-| `PARTIALLY_REFUNDED` | `REFUNDED`           | 최종 환불 완료     |
 | `REFUNDED`, `FAILED` | `[*]`                | 종료 상태        |
 
+---
 
+## 5. Product 상태 다이어그램
+
+```mermaid
+---
+title: 상품 상태전이 다이어그램
+---
+stateDiagram-v2
+    [*] --> Registered
+    Registered --> OnSale : 등록 완료
+    OnSale --> PartiallyOutOfStock : 일부 옵션 품절
+    PartiallyOutOfStock --> OutOfStock : 모든 옵션 품절
+    OutOfStock --> OnSale : 재입고
+    OnSale --> Discontinued : 판매 종료
+    OutOfStock --> Discontinued : 판매 종료
+    OnSale --> Hidden : 노출 중지
+    Hidden --> OnSale : 노출 재개
+
+```
+
+
+### 상태 정의
+| 상태                       | 설명                   |
+| ------------------------ | -------------------- |
+| `REGISTERED`             | 시스템에 상품이 등록된 상태      |
+| `ON_SALE`                | 하나 이상의 옵션이 판매 가능한 상태 |
+| `PARTIALLY_OUT_OF_STOCK` | 일부 옵션만 품절된 상태        |
+| `OUT_OF_STOCK`           | 모든 옵션이 품절된 상태        |
+| `DISCONTINUED`           | 판매가 완전히 종료된 상태       |
+| `HIDDEN`                 | 사용자에게는 노출되지 않음       |
+
+### 상품 상태 전이
+|From|To|트리거|
+|---|---|---|
+|`[*]`|`REGISTERED`|상품 등록|
+|`REGISTERED`|`ON_SALE`|판매 시작|
+|`ON_SALE`|`PARTIALLY_OUT_OF_STOCK`|일부 옵션 품절|
+|`PARTIALLY_OUT_OF_STOCK`|`OUT_OF_STOCK`|모든 옵션 품절|
+|`OUT_OF_STOCK`|`ON_SALE`|재입고|
+|`ON_SALE`|`DISCONTINUED`|판매 종료|
+|`OUT_OF_STOCK`|`DISCONTINUED`|판매 종료|
+|`ON_SALE`|`HIDDEN`|노출 중지|
+|`HIDDEN`|`ON_SALE`|노출 재개|
+
+---
+
+### 6. ProductVariant 상태 전이 다이어그램
+```mermaid
+---
+title: ProductVariant 상태 전이 다이어그램
+---
+stateDiagram-v2
+    [*] --> ACTIVE : 옵션 생성
+    ACTIVE --> OUT_OF_STOCK : 재고 소진
+    OUT_OF_STOCK --> ACTIVE : 재입고
+    ACTIVE --> DISCONTINUED : 단종 처리
+    OUT_OF_STOCK --> DISCONTINUED : 단종 처리
+    ACTIVE --> HIDDEN : 숨김 처리
+    HIDDEN --> ACTIVE : 노출 재개
+    ACTIVE --> BLOCKED : 정책/법적 이슈
+    BLOCKED --> ACTIVE : 이슈 해소
+    ACTIVE --> DELETED : 삭제
+    DISCONTINUED --> DELETED : 정리 삭제
+    HIDDEN --> DELETED : 정리 삭제
+
+```
+
+### 상태 정의
+
+| 상태             | 설명                          |
+| -------------- | --------------------------- |
+| `ACTIVE`       | 정상적으로 판매 가능한 상태             |
+| `OUT_OF_STOCK` | 재고가 0으로 일시적으로 품절된 상태        |
+| `HIDDEN`       | 사용자에게 노출되지 않는 상태 (일시 숨김 등)  |
+| `DISCONTINUED` | 단종된 상태. 재입고 없이 판매 종료됨       |
+| `BLOCKED`      | 정책, 법적, 품질 등의 이유로 판매 금지된 상태 |
+| `DELETED`      | 삭제된 상태 (논리 삭제, 복구 가능)       |
+
+---
+
+### 상태 전이
+
+|From|To|트리거 설명|
+|---|---|---|
+|`[*]`|`ACTIVE`|옵션 생성|
+|`ACTIVE`|`OUT_OF_STOCK`|재고가 0이 됨|
+|`OUT_OF_STOCK`|`ACTIVE`|재입고|
+|`ACTIVE`|`DISCONTINUED`|옵션 단종|
+|`OUT_OF_STOCK`|`DISCONTINUED`|재입고 없이 단종 처리|
+|`ACTIVE`|`HIDDEN`|관리자에 의한 숨김 처리|
+|`HIDDEN`|`ACTIVE`|노출 재개|
+|`ACTIVE`|`BLOCKED`|정책/법적 이슈로 판매 금지|
+|`BLOCKED`|`ACTIVE`|이슈 해소|
+|`ACTIVE`|`DELETED`|삭제 처리|
+|`DISCONTINUED`|`DELETED`|정리용 삭제|
+|`HIDDEN`|`DELETED`|정리용 삭제|
 
