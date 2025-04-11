@@ -2,8 +2,11 @@ package kr.hhplus.be.server.payment.domain.model
 
 import jakarta.persistence.*
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
+import kr.hhplus.be.server.coupon.domain.AlreadyPaidException
+import kr.hhplus.be.server.order.domain.AlreadyPaidOrderException
 import kr.hhplus.be.server.order.domain.model.Order
 import kr.hhplus.be.server.payment.application.PaymentCommand
+import kr.hhplus.be.server.payment.application.PaymentService
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -72,19 +75,8 @@ class Payment(
         }
     }
 
-    /**
-     * 상세 항목 추가
-     */
-    fun addDetail(detail: PaymentItemDetail) {
-        details.add(detail)
-        detail.payment = this
-    }
-
-    /**
-     * 결제 수단 추가
-     */
-    fun addMethod(method: PaymentMethod) {
-        methods.add(method)
-        method.payment = this
+    fun completePayment() {
+        check(this.status == PaymentStatus.PENDING || this.status == PaymentStatus.FAILED) { throw AlreadyPaidException() }
+        this.status = PaymentStatus.PAID
     }
 }

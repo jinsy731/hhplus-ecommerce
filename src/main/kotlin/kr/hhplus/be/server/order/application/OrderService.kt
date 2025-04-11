@@ -18,4 +18,9 @@ class OrderService(private val orderRepository: OrderRepository) {
 
     @Transactional
     fun save(order: Order): Order = orderRepository.save(order)
+
+    @Transactional
+    fun completeOrder(order: Order) {
+        order.completeOrder()
+    }
 }

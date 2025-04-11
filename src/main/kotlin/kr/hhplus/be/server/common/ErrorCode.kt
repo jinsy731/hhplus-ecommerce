@@ -17,6 +17,7 @@ enum class ErrorCode(
     VARIANT_UNAVAILABLE(HttpStatus.CONFLICT, "P001", "해당 옵션은 구매 불가합니다."),
     VARIANT_OUT_OF_STOCK(HttpStatus.CONFLICT, "P002", "해당 옵션의 재고가 부족합니다."),
     PRODUCT_UNAVAILABLE(HttpStatus.CONFLICT, "P003", "해당 상품은 구매 불가합니다."),
-    INSUFFICIENT_POINT(HttpStatus.CONFLICT, "UP001", "잔여 포인트가 부족합니다.")
+    INSUFFICIENT_POINT(HttpStatus.CONFLICT, "UP001", "잔여 포인트가 부족합니다."),
+    ALREADY_PAID(HttpStatus.CONFLICT, "PMT001", "이미 결제되었습니다.")
 
 }

@@ -1,10 +1,15 @@
 package kr.hhplus.be.server.payment.domain.model
 
+import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.coupon.domain.AlreadyPaidException
 import kr.hhplus.be.server.order.OrderTestFixture
 import kr.hhplus.be.server.payment.application.PaymentCommand
+import org.apache.logging.log4j.message.MapMessage.MapFormat.names
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -38,5 +43,36 @@ class PaymentTest {
         payment.methods[0].amount shouldBe BigDecimal(4500)
         payment.methods[1].type shouldBe PaymentMethodType.POINT
         payment.methods[1].amount shouldBe BigDecimal(4500)
+    }
+    
+    @Test
+    fun `✅결제 완료`() {
+        // arrange
+        val payment = Payment(
+            orderId = 1L,
+            originalAmount = BigDecimal(100),
+            discountedAmount = BigDecimal(10),
+            status = PaymentStatus.PENDING
+        )
+        // act
+        payment.completePayment()
+        
+        // assert
+        payment.status shouldBe PaymentStatus.PAID
+    }
+
+
+    @ParameterizedTest
+    @EnumSource(value = PaymentStatus::class, mode = EnumSource.Mode.EXCLUDE, names = ["PENDING", "FAILED"])
+    fun `⛔️결제 완료 실패`(status: PaymentStatus) {
+        // arrange
+        val payment = Payment(
+            orderId = 1L,
+            originalAmount = BigDecimal(100),
+            discountedAmount = BigDecimal(10),
+            status = status
+        )
+        // act, assert
+        shouldThrowExactly<AlreadyPaidException> { payment.completePayment() }
     }
 }

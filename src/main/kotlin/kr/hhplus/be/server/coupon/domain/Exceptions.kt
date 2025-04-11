@@ -5,3 +5,4 @@ import kr.hhplus.be.server.common.ErrorCode
 
 class InvalidCouponStatusException: BusinessException(ErrorCode.INVALID_COUPON_STATUS)
 class ExpiredCouponException: BusinessException(ErrorCode.EXPIRED_COUPON)
+class AlreadyPaidException: BusinessException(ErrorCode.ALREADY_PAID)
