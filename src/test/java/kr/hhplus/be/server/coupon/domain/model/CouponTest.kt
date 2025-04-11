@@ -1,6 +1,9 @@
 package kr.hhplus.be.server.coupon.domain.model
 
+import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.coupon.CouponTestFixture
+import kr.hhplus.be.server.coupon.domain.ExceededMaxCouponLimitException
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -141,5 +144,30 @@ class CouponTest {
             price = BigDecimal(20000))
         // assert
         discountAmount.compareTo(BigDecimal(0)) shouldBe 0
+    }
+    
+    @Test
+    fun `✅쿠폰 발급`() {
+        // arrange
+        val coupon = CouponTestFixture.createValidCoupon()
+        val now = LocalDateTime.now()
+        // act
+        val userCoupon = coupon.issueTo(1L, now)
+        // assert
+        userCoupon.userId shouldBe 1L
+        userCoupon.status shouldBe UserCouponStatus.UNUSED
+        userCoupon.expiredAt shouldBe now.plusDays(10)
+    }
+
+    @Test
+    fun `⛔️쿠폰 발급 실패`() {
+        // arrange
+        val coupon = CouponTestFixture.createValidCoupon().apply {
+            this.maxIssueLimit = 10
+            this.issuedCount = 10
+        }
+        val now = LocalDateTime.now()
+        // act, assert
+        shouldThrowExactly<ExceededMaxCouponLimitException> { coupon.issueTo(1L, now) }
     }
 }
