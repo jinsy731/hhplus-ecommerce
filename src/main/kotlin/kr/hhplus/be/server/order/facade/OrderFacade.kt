@@ -2,6 +2,7 @@ package kr.hhplus.be.server.order.facade
 
 import jakarta.transaction.Transactional
 import kr.hhplus.be.server.coupon.application.CouponService
+import kr.hhplus.be.server.messaging.MessagingService
 import kr.hhplus.be.server.order.application.OrderCommand
 import kr.hhplus.be.server.order.application.OrderService
 import kr.hhplus.be.server.payment.application.PaymentCommand
@@ -18,6 +19,7 @@ class OrderFacade(
     private val userPointService: UserPointService,
     private val paymentService: PaymentService,
     private val productService: ProductService,
+    private val messagingService: MessagingService
     ) {
 
     @Transactional
@@ -28,6 +30,8 @@ class OrderFacade(
         orderService.applyDiscount(OrderCommand.ApplyDiscount(order, applyCouponResult.discountLine))
         val payment = paymentService.preparePayment(cri.toPreparePaymentCommand(order))
         paymentService.completePayment(PaymentCommand.Complete(payment.id))
+        orderService.completeOrder(order)
         userPointService.use(UserPointCommand.Use(cri.userId, order.finalTotal(), cri.now))
+        messagingService.publish(order)
     }
 }
