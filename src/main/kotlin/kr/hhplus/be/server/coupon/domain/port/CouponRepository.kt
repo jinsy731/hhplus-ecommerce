@@ -9,10 +9,12 @@ import java.time.LocalDateTime
 
 interface CouponRepository{
     fun findById(id: Long): Coupon?
+    fun getById(id: Long): Coupon
 }
 
 interface UserCouponRepository{
     fun findByUserIdAndId(userId: Long, id: Long): UserCoupon?
     fun getByUserIdAndId(userId: Long, id: Long): UserCoupon
     fun findAllByUserIdAndIdIsIn(userId: Long, ids: List<Long>): List<UserCoupon>
+    fun save(userCoupon: UserCoupon): UserCoupon
 }
