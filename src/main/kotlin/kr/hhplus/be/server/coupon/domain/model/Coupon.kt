@@ -1,6 +1,8 @@
 package kr.hhplus.be.server.coupon.domain.model
 
 import jakarta.persistence.*
+import kr.hhplus.be.server.order.domain.Order
+import kr.hhplus.be.server.order.domain.OrderItem
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -69,5 +71,18 @@ class Coupon(
 
     fun isApplicableTo(context: DiscountContext): Boolean {
         return this.discountPolicy.discountCondition.isSatisfiedBy(context)
+    }
+
+    fun applicableItems(order: Order, userId: Long): List<OrderItem> {
+        return order.orderItems.filter {
+            isApplicableTo(
+                DiscountContext(
+                    userId = userId,
+                    productId = it.productId,
+                    variantId = it.variantId,
+                    orderAmount = order.originalTotal
+                )
+            )
+        }
     }
 }

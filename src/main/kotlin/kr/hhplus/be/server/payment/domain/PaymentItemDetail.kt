@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.payment.domain.model
+package kr.hhplus.be.server.payment.domain
 
 import jakarta.persistence.*
 import kr.hhplus.be.server.common.entity.BaseTimeEntity

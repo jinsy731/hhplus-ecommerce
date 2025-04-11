@@ -1,6 +1,10 @@
 package kr.hhplus.be.server.coupon.domain.model
 
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.coupon.CouponTestFixture
+import kr.hhplus.be.server.order.OrderTestFixture
+import kr.hhplus.be.server.order.domain.model.OrderTest
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -141,5 +145,27 @@ class CouponTest {
             price = BigDecimal(20000))
         // assert
         discountAmount.compareTo(BigDecimal(0)) shouldBe 0
+    }
+
+    @Test
+    fun `✅할인 적용 대상 반환`() {
+        // arrange
+        val coupon = CouponTestFixture.createValidCoupon()
+        val order = OrderTestFixture.createOrder(1L)
+        // act
+        val result = coupon.applicableItems(order, 1L)
+        // assert
+        result shouldHaveSize 2
+    }
+    
+    @Test
+    fun `⛔️할인 적용 대상 반환_적용할 수 있는 대상이 없으면 빈 리스트를 반환한다`() {
+        // arrange
+        val coupon = CouponTestFixture.createValidCoupon()
+        val order = OrderTestFixture.createOrder(1L).apply { this.originalTotal = BigDecimal(1000) }
+        // act
+        val result = coupon.applicableItems(order, 1L)
+        // assert
+        result shouldHaveSize 0
     }
 }

@@ -1,6 +1,8 @@
 package kr.hhplus.be.server.product.domain
 
 import jakarta.persistence.*
+import kr.hhplus.be.server.common.exception.VariantOutOfStockException
+import kr.hhplus.be.server.common.exception.VariantUnavailableException
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
 import kr.hhplus.be.server.coupon.LongSetConverter
 import java.math.BigDecimal

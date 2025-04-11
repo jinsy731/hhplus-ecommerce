@@ -1,14 +1,24 @@
-package kr.hhplus.be.server.payment.domain.model
+package kr.hhplus.be.server.payment.domain
 
 import jakarta.persistence.*
+import kr.hhplus.be.server.common.exception.AlreadyPaidException
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
-import kr.hhplus.be.server.coupon.domain.AlreadyPaidException
-import kr.hhplus.be.server.order.domain.AlreadyPaidOrderException
-import kr.hhplus.be.server.order.domain.model.Order
+import kr.hhplus.be.server.order.domain.Order
 import kr.hhplus.be.server.payment.application.PaymentCommand
-import kr.hhplus.be.server.payment.application.PaymentService
 import java.math.BigDecimal
 import java.time.LocalDateTime
+
+/**
+ * 결제 상태를 나타내는 enum
+ */
+enum class PaymentStatus {
+    PENDING,   // 결제 대기중
+    PAID,      // 결제 완료
+    PARTIALLY_REFUNDED,  // 부분 환불됨
+    REFUNDED,  // 전액 환불됨
+    FAILED     // 결제 실패
+}
+
 
 /**
  * 결제 엔티티

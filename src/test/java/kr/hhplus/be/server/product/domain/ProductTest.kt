@@ -3,6 +3,7 @@ package kr.hhplus.be.server.product.domain
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.common.exception.ProductUnavailableException
 import kr.hhplus.be.server.product.ProductTestFixture
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest

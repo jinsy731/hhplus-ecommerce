@@ -8,16 +8,4 @@ class CouponResult {
     data class ApplyToOrder(
         val discountLine: List<DiscountLine>
     )
-
-    data class AppliedDiscount(
-        val sourceId: Long,
-        val discountSubTotal: BigDecimal,
-        val discountMethod: DiscountMethod,
-        val discountPerItem: List<DiscountPerItem>,
-    )
-
-    data class DiscountPerItem(
-        val orderItemId: Long,
-        val discountAmount: BigDecimal
-    )
 }

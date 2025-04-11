@@ -1,8 +1,19 @@
 package kr.hhplus.be.server.product.domain
 
 import jakarta.persistence.*
+import kr.hhplus.be.server.common.exception.ProductUnavailableException
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
 import java.math.BigDecimal
+
+enum class ProductStatus {
+    DRAFT,
+    ON_SALE,
+    OUT_OF_STOCK,
+    PARTIALLY_OUT_OF_STOCK,
+    HIDDEN,
+    DISCONTINUED
+}
+
 
 @Entity
 @Table(name = "products")
