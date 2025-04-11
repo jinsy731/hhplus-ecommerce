@@ -35,7 +35,7 @@ class CouponServiceTest {
         couponRepository = mockk()
         userCouponRepository = mockk()
         discountLineRepository = mockk()
-        couponService = CouponService(userCouponRepository, discountLineRepository)
+        couponService = CouponService(couponRepository, userCouponRepository, discountLineRepository)
     }
     
     @Test
@@ -402,5 +402,21 @@ class CouponServiceTest {
         val discount3 = result.find { it.orderItemId == 3L }!!.amount
         val expected3 = BigDecimal(400)
         discount3.compareTo(expected3) shouldBe 0
+    }
+    
+    @Test
+    fun `✅쿠폰 발급`() {
+        // arrange
+        val coupon = CouponTestFixture.createValidCoupon()
+        val userCoupon = coupon.issueTo(1L)
+        val cmd = CouponCommand.Issue(1L, 1L)
+        every { couponRepository.getById(1L) } returns coupon
+        every { userCouponRepository.save(any()) } returns userCoupon
+        // act
+        val result = couponService.issueCoupon(cmd)
+        // assert
+        result.status shouldBe UserCouponStatus.UNUSED
+        verify(exactly = 1) { couponRepository.getById(1L) }
+        verify(exactly = 1) { userCouponRepository.save(any()) }
     }
 }

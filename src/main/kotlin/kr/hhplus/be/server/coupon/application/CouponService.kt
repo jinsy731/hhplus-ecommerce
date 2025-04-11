@@ -1,9 +1,11 @@
 package kr.hhplus.be.server.coupon.application
 
+import jakarta.transaction.Transactional
 import kr.hhplus.be.server.coupon.domain.model.DiscountContext
 import kr.hhplus.be.server.coupon.domain.model.DiscountLine
 import kr.hhplus.be.server.coupon.domain.model.DiscountMethod
 import kr.hhplus.be.server.coupon.domain.model.UserCoupon
+import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.DiscountLineRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
 import kr.hhplus.be.server.order.domain.model.Order
@@ -14,9 +16,23 @@ import java.time.LocalDateTime
 
 @Service
 class CouponService(
+    private val couponRepository: CouponRepository,
     private val userCouponRepository: UserCouponRepository,
     private val discountLineRepository: DiscountLineRepository,
     ) {
+
+    @Transactional
+    fun issueCoupon(cmd: CouponCommand.Issue): CouponResult.Issue {
+        val coupon = couponRepository.getById(cmd.couponId)
+        val userCoupon = coupon.issueTo(cmd.userId)
+        val savedUserCoupon = userCouponRepository.save(userCoupon)
+
+        return CouponResult.Issue(
+            userCouponId = savedUserCoupon.id,
+            status = savedUserCoupon.status,
+            expiredAt = savedUserCoupon.expiredAt
+        )
+    }
 
     /**
      * 쿠폰 적용 메서드
@@ -24,6 +40,7 @@ class CouponService(
      * 2. 적용 대상 전체에 대한 할인 금액 계산
      * 3. 각 대상에 할인 금액 분배 (물품별 할인 금액 계산을 위해)
      */
+    @Transactional
     fun applyCoupon(cmd: CouponCommand.ApplyToOrder): CouponResult.ApplyToOrder {
         val userCoupons = userCouponRepository.findAllByUserIdAndIdIsIn(cmd.userId, cmd.userCouponIds)
         val discountLines  = userCoupons.flatMap { userCoupon ->

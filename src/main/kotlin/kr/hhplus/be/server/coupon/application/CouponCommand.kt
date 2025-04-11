@@ -10,4 +10,9 @@ class CouponCommand {
         val userCouponIds: List<Long>,
         val now: LocalDateTime
     )
+
+    data class Issue(
+        val userId: Long,
+        val couponId: Long
+    )
 }
