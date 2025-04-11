@@ -1,8 +1,7 @@
 package kr.hhplus.be.server.coupon.domain.model
 
 import jakarta.persistence.*
-import kr.hhplus.be.server.order.domain.Order
-import kr.hhplus.be.server.order.domain.OrderItem
+import kr.hhplus.be.server.coupon.domain.ExceededMaxCouponLimitException
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -31,10 +30,10 @@ class Coupon(
     val isActive: Boolean = true,
     
     @Column(nullable = false)
-    val maxIssueLimit: Int,
+    var maxIssueLimit: Int,
 
     @Column(nullable = false)
-    val issuedCount: Int = 0,
+    var issuedCount: Int = 0,
 
     @Column(nullable = false)
     val startAt: LocalDateTime,
@@ -73,16 +72,14 @@ class Coupon(
         return this.discountPolicy.discountCondition.isSatisfiedBy(context)
     }
 
-    fun applicableItems(order: Order, userId: Long): List<OrderItem> {
-        return order.orderItems.filter {
-            isApplicableTo(
-                DiscountContext(
-                    userId = userId,
-                    productId = it.productId,
-                    variantId = it.variantId,
-                    orderAmount = order.originalTotal
-                )
-            )
-        }
+    fun issueTo(userId: Long, now: LocalDateTime = LocalDateTime.now()): UserCoupon {
+        check(this.issuedCount < this.maxIssueLimit) { throw ExceededMaxCouponLimitException() }
+
+        return UserCoupon(
+            userId = userId,
+            coupon = this,
+            issuedAt = now,
+            expiredAt = now.plusDays(this.validDays.toLong()),
+        )
     }
 }

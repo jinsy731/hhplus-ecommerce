@@ -1,10 +1,9 @@
 package kr.hhplus.be.server.coupon.domain.model
 
-import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.coupon.CouponTestFixture
-import kr.hhplus.be.server.order.OrderTestFixture
-import kr.hhplus.be.server.order.domain.model.OrderTest
+import kr.hhplus.be.server.coupon.domain.ExceededMaxCouponLimitException
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -148,24 +147,27 @@ class CouponTest {
     }
 
     @Test
-    fun `✅할인 적용 대상 반환`() {
+    fun `✅쿠폰 발급`() {
         // arrange
         val coupon = CouponTestFixture.createValidCoupon()
-        val order = OrderTestFixture.createOrder(1L)
+        val now = LocalDateTime.now()
         // act
-        val result = coupon.applicableItems(order, 1L)
+        val userCoupon = coupon.issueTo(1L, now)
         // assert
-        result shouldHaveSize 2
+        userCoupon.userId shouldBe 1L
+        userCoupon.status shouldBe UserCouponStatus.UNUSED
+        userCoupon.expiredAt shouldBe now.plusDays(10)
     }
-    
+
     @Test
-    fun `⛔️할인 적용 대상 반환_적용할 수 있는 대상이 없으면 빈 리스트를 반환한다`() {
+    fun `⛔️쿠폰 발급 실패`() {
         // arrange
-        val coupon = CouponTestFixture.createValidCoupon()
-        val order = OrderTestFixture.createOrder(1L).apply { this.originalTotal = BigDecimal(1000) }
-        // act
-        val result = coupon.applicableItems(order, 1L)
-        // assert
-        result shouldHaveSize 0
+        val coupon = CouponTestFixture.createValidCoupon().apply {
+            this.maxIssueLimit = 10
+            this.issuedCount = 10
+        }
+        val now = LocalDateTime.now()
+        // act, assert
+        shouldThrowExactly<ExceededMaxCouponLimitException> { coupon.issueTo(1L, now) }
     }
 }
