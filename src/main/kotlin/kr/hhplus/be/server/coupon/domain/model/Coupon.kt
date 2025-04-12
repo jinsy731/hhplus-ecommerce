@@ -89,6 +89,7 @@ class Coupon(
 
     fun issueTo(userId: Long, now: LocalDateTime = LocalDateTime.now()): UserCoupon {
         check(this.issuedCount < this.maxIssueLimit) { throw ExceededMaxCouponLimitException() }
+        this.issuedCount++
 
         return UserCoupon(
             userId = userId,

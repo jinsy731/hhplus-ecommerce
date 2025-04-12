@@ -178,6 +178,7 @@ class CouponTest {
         // act
         val userCoupon = coupon.issueTo(1L, now)
         // assert
+        coupon.issuedCount shouldBe 1
         userCoupon.userId shouldBe 1L
         userCoupon.status shouldBe UserCouponStatus.UNUSED
         userCoupon.expiredAt shouldBe now.plusDays(10)
