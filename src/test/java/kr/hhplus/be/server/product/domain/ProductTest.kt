@@ -53,4 +53,14 @@ class ProductTest {
         // assert
         variantPrice shouldBe BigDecimal(1500)
     }
+    
+    @Test
+    fun `✅상품 구매_검증이 통과하면 상품옵션별 재고가 감소해야한다`() {
+        // arrange
+        val product = ProductTestFixture.createValidProduct()
+        // act
+        product.purchase(1L, 1)
+        // assert
+        product.variants.find { it.id == 1L }!!.stock shouldBe 9
+    }
 }

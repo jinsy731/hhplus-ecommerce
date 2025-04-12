@@ -50,6 +50,11 @@ class Product(
         variant.product = this
     }
 
+    fun purchase(variantId: Long, quantity: Int) {
+        checkAvailableToOrder(variantId, quantity)
+        findVariant(variantId).deductStock(quantity)
+    }
+
     fun checkAvailableToOrder(variantId: Long, quantity: Int) {
         check(this.status in setOf(ProductStatus.ON_SALE, ProductStatus.PARTIALLY_OUT_OF_STOCK)) { throw ProductUnavailableException() }
         findVariant(variantId)?.checkAvailableToOrder(quantity)

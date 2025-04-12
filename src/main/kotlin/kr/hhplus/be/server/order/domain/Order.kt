@@ -51,7 +51,7 @@ class Order(
         private fun createOrderItems(products: List<Product>, orderItemCmd: List<OrderItemCommand.Create>): MutableList<OrderItem> {
             return orderItemCmd.map { orderItemReq -> with(orderItemReq) {
                 val product = products.find { it.id == productId } ?: throw IllegalArgumentException("존재하지 않는 상품입니다.")
-                product.checkAvailableToOrder(variantId, quantity)
+                product.purchase(variantId, quantity)
                 OrderItem(
                     productId = product.id!!,
                     variantId = variantId,
