@@ -67,7 +67,7 @@ class CouponServiceTest {
             now = now
         )
         // act
-        couponService.applyCoupon(cmd)
+        couponService.calculateDiscountAndUse(cmd)
         
         // assert
         userCoupon.status shouldBe UserCouponStatus.USED
@@ -105,7 +105,7 @@ class CouponServiceTest {
             now = now
         )
         // act
-        couponService.applyCoupon(cmd)
+        couponService.calculateDiscountAndUse(cmd)
 
         // assert
         userCoupon.status shouldBe UserCouponStatus.UNUSED
@@ -144,7 +144,7 @@ class CouponServiceTest {
         )
 
         // act
-        val result = couponService.applyCoupon(cmd)
+        val result = couponService.calculateDiscountAndUse(cmd)
 
         // assert
         result.discountLine shouldHaveSize 2
@@ -201,7 +201,7 @@ class CouponServiceTest {
         )
 
         // act
-        val result = couponService.applyCoupon(cmd)
+        val result = couponService.calculateDiscountAndUse(cmd)
 
         // assert
         result.discountLine.sumOf { it.amount }.compareTo(BigDecimal(10000)) shouldBe 0  // 두 개의 5000원 정액 할인 쿠폰 적용
@@ -265,7 +265,7 @@ class CouponServiceTest {
         )
 
         // act
-        val result = couponService.applyCoupon(cmd)
+        val result = couponService.calculateDiscountAndUse(cmd)
 
         // assert
         result.discountLine.sumOf { it.amount }.compareTo(BigDecimal(5000)) shouldBe 0  // 5000원 정액 할인 적용
@@ -304,7 +304,7 @@ class CouponServiceTest {
         )
 
         // act
-        val result = couponService.applyCoupon(cmd)
+        val result = couponService.calculateDiscountAndUse(cmd)
 
         // assert
         result.discountLine.sumOf { it.amount } shouldBe BigDecimal.ZERO

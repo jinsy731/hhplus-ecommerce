@@ -33,7 +33,7 @@ class CouponService(
      * 3. 각 대상에 할인 금액 분배 (물품별 할인 금액 계산을 위해)
      */
     @Transactional
-    fun applyCoupon(cmd: CouponCommand.ApplyToOrder): CouponResult.ApplyToOrder {
+    fun calculateDiscountAndUse(cmd: CouponCommand.ApplyToOrder): CouponResult.ApplyToOrder {
         val userCoupons = userCouponRepository.findAllByUserIdAndIdIsIn(cmd.userId, cmd.userCouponIds)
 
         val discountLines = userCoupons.flatMap {

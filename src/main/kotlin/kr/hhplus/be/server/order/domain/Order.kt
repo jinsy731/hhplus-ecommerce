@@ -89,11 +89,6 @@ class Order(
         }
     }
 
-    fun applyDiscount(discount: Discount) {
-        val applicableItems = discount.applicableItems(this, userId)
-
-    }
-    
     /**
      * 결제 완료 처리
      */

@@ -3,7 +3,6 @@ package kr.hhplus.be.server.order.facade
 import jakarta.transaction.Transactional
 import kr.hhplus.be.server.coupon.application.CouponService
 import kr.hhplus.be.server.common.MessagingService
-import kr.hhplus.be.server.order.application.OrderCommand
 import kr.hhplus.be.server.order.application.OrderService
 import kr.hhplus.be.server.payment.application.PaymentCommand
 import kr.hhplus.be.server.payment.application.PaymentService
@@ -28,7 +27,8 @@ class OrderFacade(
         val products = productService.findAllById(cri.orderItem.map { it.productId })
         val order = orderService.createOrder(cri.toOrderCommand(products))
         // 쿠폰 적용
-        val applyCouponResult = couponService.applyCoupon(cri.toCouponCommand(order))
+        val applyCouponResult = couponService.calculateDiscountAndUse(cri.toCouponCommand(order))
+
         // 결제 시작
         val payment = paymentService.preparePayment(cri.toPreparePaymentCommand(order))
         paymentService.completePayment(PaymentCommand.Complete(payment.id))
