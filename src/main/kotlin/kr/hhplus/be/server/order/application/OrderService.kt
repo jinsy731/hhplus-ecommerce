@@ -15,7 +15,9 @@ class OrderService(private val orderRepository: OrderRepository) {
     }
 
     @Transactional
-    fun completeOrder(order: Order) {
+    fun completeOrder(orderId: Long) {
+        val order = orderRepository.getById(orderId)
         order.completeOrder()
+        orderRepository.save(order)
     }
 }

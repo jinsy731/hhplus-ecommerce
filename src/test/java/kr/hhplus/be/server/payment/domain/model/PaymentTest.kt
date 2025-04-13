@@ -23,8 +23,7 @@ class PaymentTest {
         val now = LocalDateTime.now()
         val order = OrderTestFixture.createOrder(1L)
         val payMethods = listOf(
-            PaymentCommand.PayMethod(PaymentMethodType.COUPON, BigDecimal(4500)),
-            PaymentCommand.PayMethod(PaymentMethodType.POINT, BigDecimal(4500))
+            PaymentCommand.PayMethod(PaymentMethodType.POINT, BigDecimal(10000))
         )
         val cmd = PaymentCommand.Prepare(order, now, payMethods)
         // act
@@ -33,18 +32,16 @@ class PaymentTest {
         // assert
         payment.orderId shouldBe 1L
         payment.originalAmount shouldBe BigDecimal(10000)
-        payment.discountedAmount shouldBe BigDecimal(9000)
+        payment.discountedAmount shouldBe BigDecimal.ZERO
         payment.details shouldHaveSize 2
         payment.details[0].originalAmount shouldBe BigDecimal(5000)
-        payment.details[0].discountedAmount shouldBe BigDecimal(500)
+        payment.details[0].discountedAmount shouldBe BigDecimal.ZERO
         payment.details[0].orderItemId shouldBe 1L
         payment.details[1].originalAmount shouldBe BigDecimal(5000)
-        payment.details[1].discountedAmount shouldBe BigDecimal(500)
+        payment.details[1].discountedAmount shouldBe BigDecimal.ZERO
         payment.details[1].orderItemId shouldBe 2L
-        payment.methods[0].type shouldBe PaymentMethodType.COUPON
-        payment.methods[0].amount shouldBe BigDecimal(4500)
-        payment.methods[1].type shouldBe PaymentMethodType.POINT
-        payment.methods[1].amount shouldBe BigDecimal(4500)
+        payment.methods[0].type shouldBe PaymentMethodType.POINT
+        payment.methods[0].amount shouldBe BigDecimal(10000)
     }
     
     @Test

@@ -28,11 +28,11 @@ class OrderFacade(
         val products = productService.findAllById(cri.orderItem.map { it.productId })
         val order = orderService.createOrder(cri.toOrderCommand(products))
         // 쿠폰 적용
-        couponService.applyCoupon(cri.toCouponCommand(order))
+        val applyCouponResult = couponService.applyCoupon(cri.toCouponCommand(order))
         // 결제 시작
         val payment = paymentService.preparePayment(cri.toPreparePaymentCommand(order))
         paymentService.completePayment(PaymentCommand.Complete(payment.id))
-        orderService.completeOrder(order)
+        orderService.completeOrder(order.id)
         userPointService.use(UserPointCommand.Use(cri.userId, order.finalTotal(), cri.now))
         // 주문 메시지 전송
         messagingService.publish(order)

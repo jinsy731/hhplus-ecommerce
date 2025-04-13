@@ -1,8 +1,6 @@
 package kr.hhplus.be.server.coupon.application
 
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.comparables.compareTo
-import io.kotest.matchers.longs.exactly
 import io.kotest.matchers.shouldBe
 import io.mockk.Runs
 import io.mockk.every

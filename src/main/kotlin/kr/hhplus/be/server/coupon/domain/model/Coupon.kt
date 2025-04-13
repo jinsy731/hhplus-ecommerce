@@ -51,7 +51,7 @@ class Coupon(
     
     @Column(nullable = false)
     val updatedAt: LocalDateTime = LocalDateTime.now()
-) {
+): Discount {
     /**
      * 쿠폰이 유효한지 확인
      */
@@ -62,19 +62,19 @@ class Coupon(
     /**
      * 쿠폰 할인 금액 계산
      */
-    fun calculateDiscount(now: LocalDateTime, price: BigDecimal): BigDecimal {
+    override fun calculateDiscount(now: LocalDateTime, order: Order, targetItems: List<OrderItem>): Map<OrderItem, BigDecimal> {
         return if (isValid(now)) {
-            discountPolicy.calculateDiscount(price)
+            discountPolicy.calculateDiscount(order, targetItems)
         } else {
-            BigDecimal.ZERO
+            mapOf()
         }
     }
 
-    fun isApplicableTo(context: DiscountContext): Boolean {
+    override fun isApplicableTo(context: DiscountContext): Boolean {
         return this.discountPolicy.discountCondition.isSatisfiedBy(context)
     }
 
-    fun applicableItems(order: Order, userId: Long): List<OrderItem> {
+    override fun applicableItems(order: Order, userId: Long): List<OrderItem> {
         return order.orderItems.filter {
             isApplicableTo(
                 DiscountContext(

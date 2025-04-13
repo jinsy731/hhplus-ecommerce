@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.coupon.domain.model
 
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.Assertions.*
+import kr.hhplus.be.server.order.OrderTestFixture
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
@@ -12,12 +12,14 @@ class DiscountPolicyTest {
         // arrange
         val policy = DiscountPolicy(
             name = "할인 정책 A",
-            discountType = FixedAmountDiscountType(BigDecimal(1000)),
+            discountType = FixedAmountTotalDiscountType(BigDecimal(1000)),
             discountCondition = MinOrderAmountCondition(BigDecimal(100))
         )
+        val order = OrderTestFixture.createOrder()
         // act
-        val discountAmount = policy.calculateDiscount(price = BigDecimal(500))
+        val orderItemsDiscountMap = policy.calculateDiscount(order, order.orderItems)
+        val discounts = orderItemsDiscountMap.values.toList()
         // assert
-        discountAmount.compareTo(BigDecimal(500)) shouldBe 0
+        discounts.sumOf { it }.compareTo(BigDecimal(1000)) shouldBe 0
     }
 }

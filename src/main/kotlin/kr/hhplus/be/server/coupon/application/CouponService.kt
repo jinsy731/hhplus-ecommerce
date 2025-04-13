@@ -37,10 +37,8 @@ class CouponService(
         val userCoupons = userCouponRepository.findAllByUserIdAndIdIsIn(cmd.userId, cmd.userCouponIds)
 
         val discountLines = userCoupons.flatMap {
-            it.applyTo(cmd.order, cmd.userId, cmd.now)
+            it.calculateDiscountAndUse(cmd.order, cmd.userId, cmd.now)
         }
-
-        cmd.order.applyDiscount(discountLines)
 
         discountLineRepository.saveAll(discountLines)
 

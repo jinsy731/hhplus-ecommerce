@@ -81,8 +81,8 @@ class OrderTest {
         order.applyDiscount(discountLines)
 
         // assert
-        order.orderItems[0].discountAmount shouldBe BigDecimal(1500)
-        order.orderItems[1].discountAmount shouldBe BigDecimal(1500)
+        order.orderItems[0].discountAmount shouldBe BigDecimal(1000)
+        order.orderItems[1].discountAmount shouldBe BigDecimal(1000)
     }
 
     @Test

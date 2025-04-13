@@ -140,7 +140,7 @@ class UserCouponTest {
             status = UserCouponStatus.UNUSED
         )
         // act
-        val discountLines = userCoupon.applyTo(order, 1L, time)
+        val discountLines = userCoupon.calculateDiscountAndUse(order, 1L, time)
         // assert
         discountLines shouldHaveSize 2
         discountLines.sumOf { it.amount }.compareTo(BigDecimal(5000)) shouldBe 0
@@ -173,7 +173,7 @@ class UserCouponTest {
             status = UserCouponStatus.UNUSED
         )
 
-        val result = userCoupon.applyTo(order, 1L, time)
+        val result = userCoupon.calculateDiscountAndUse(order, 1L, time)
 
         result shouldHaveSize 0
     }

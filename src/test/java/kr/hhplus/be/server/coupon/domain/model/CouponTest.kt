@@ -21,7 +21,7 @@ class CouponTest {
             description = "신규 할인 쿠폰",
             discountPolicy = DiscountPolicy(
                 name = "5000원 정액 할인",
-                discountType = FixedAmountDiscountType(BigDecimal(5000)),
+                discountType = FixedAmountTotalDiscountType(BigDecimal(5000)),
                 discountCondition = MinOrderAmountCondition(BigDecimal(10000))
             ),
             isActive = true,
@@ -48,7 +48,7 @@ class CouponTest {
             description = "신규 할인 쿠폰",
             discountPolicy = DiscountPolicy(
                 name = "5000원 정액 할인",
-                discountType = FixedAmountDiscountType(BigDecimal(5000)),
+                discountType = FixedAmountTotalDiscountType(BigDecimal(5000)),
                 discountCondition = MinOrderAmountCondition(BigDecimal(10000))
             ),
             isActive = false,
@@ -66,7 +66,7 @@ class CouponTest {
             description = "신규 할인 쿠폰",
             discountPolicy = DiscountPolicy(
                 name = "5000원 정액 할인",
-                discountType = FixedAmountDiscountType(BigDecimal(5000)),
+                discountType = FixedAmountTotalDiscountType(BigDecimal(5000)),
                 discountCondition = MinOrderAmountCondition(BigDecimal(10000))
             ),
             isActive = true,
@@ -91,13 +91,14 @@ class CouponTest {
     fun `✅할인 금액 계산_쿠폰이 유효하면 할인 금액을 반환해야 한다`() {
         // arrange
         val now = LocalDateTime.now()
+        val order = OrderTestFixture.createOrder()
         val coupon = Coupon(
             id = 1L,
             name = "쿠폰 A",
             description = "신규 할인 쿠폰",
             discountPolicy = DiscountPolicy(
                 name = "5000원 정액 할인",
-                discountType = FixedAmountDiscountType(BigDecimal(5000)),
+                discountType = FixedAmountTotalDiscountType(BigDecimal(5000)),
                 discountCondition = MinOrderAmountCondition(BigDecimal(10000))
             ),
             isActive = true,
@@ -110,25 +111,29 @@ class CouponTest {
             updatedAt = LocalDateTime.now(),
         )
         // act
-        val discountAmount = coupon.calculateDiscount(
+        val orderItemDiscountMap = coupon.calculateDiscount(
             now = now,
-            price = BigDecimal(20000))
-        println("discountAmount = ${discountAmount}")
+            order = order,
+            targetItems = order.orderItems
+            )
         // assert
-        discountAmount.compareTo(BigDecimal(5000)) shouldBe 0
+        val discountAmounts = orderItemDiscountMap.values.toList()
+        discountAmounts[0].compareTo(BigDecimal(2500)) shouldBe 0
+        discountAmounts[1].compareTo(BigDecimal(2500)) shouldBe 0
     }
 
     @Test
     fun `⛔️할인 금액 계산_쿠폰이 유효하지 않으면 0을 반환해야 한다`() {
         // arrange
         val now = LocalDateTime.now()
+        val order = OrderTestFixture.createOrder()
         val coupon = Coupon(
             id = 1L,
             name = "쿠폰 A",
             description = "신규 할인 쿠폰",
             discountPolicy = DiscountPolicy(
                 name = "5000원 정액 할인",
-                discountType = FixedAmountDiscountType(BigDecimal(5000)),
+                discountType = FixedAmountTotalDiscountType(BigDecimal(5000)),
                 discountCondition = MinOrderAmountCondition(BigDecimal(10000))
             ),
             isActive = false,
@@ -141,11 +146,13 @@ class CouponTest {
             updatedAt = LocalDateTime.now(),
         )
         // act
-        val discountAmount = coupon.calculateDiscount(
+        val orderItemDiscountMap = coupon.calculateDiscount(
             now = now,
-            price = BigDecimal(20000))
+            order = order,
+            targetItems = order.orderItems
+            )
         // assert
-        discountAmount.compareTo(BigDecimal(0)) shouldBe 0
+        orderItemDiscountMap.size shouldBe 0
     }
 
     @Test

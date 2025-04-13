@@ -2,6 +2,7 @@ package kr.hhplus.be.server.order.domain
 
 import jakarta.persistence.*
 import kr.hhplus.be.server.common.exception.AlreadyPaidOrderException
+import kr.hhplus.be.server.coupon.domain.model.Discount
 import kr.hhplus.be.server.coupon.domain.model.DiscountLine
 import kr.hhplus.be.server.order.application.OrderCommand
 import kr.hhplus.be.server.order.application.OrderItemCommand
@@ -86,6 +87,11 @@ class Order(
         if (discountedAmount > originalTotal) {
             discountedAmount = originalTotal
         }
+    }
+
+    fun applyDiscount(discount: Discount) {
+        val applicableItems = discount.applicableItems(this, userId)
+
     }
     
     /**

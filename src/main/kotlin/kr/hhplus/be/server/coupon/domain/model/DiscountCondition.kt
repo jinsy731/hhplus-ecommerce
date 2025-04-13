@@ -60,6 +60,19 @@ class SpecificProductCondition(
     }
 }
 
+/**
+ * 전체 상품 할인 조건
+ * @param productIds 상품 ID 리스트
+ */
+@Entity
+@DiscriminatorValue("ALL_PRODUCT")
+class AllProductCondition : DiscountCondition() {
+
+    override fun isSatisfiedBy(context: DiscountContext): Boolean {
+        return true
+    }
+}
+
 
 /**
  * 복합 할인 조건의 논리 연산 타입
