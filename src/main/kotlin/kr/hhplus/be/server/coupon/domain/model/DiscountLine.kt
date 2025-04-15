@@ -4,6 +4,7 @@ import jakarta.persistence.*
 import kr.hhplus.be.server.order.domain.OrderItem
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import kotlin.collections.map
 
 /**
  * 할인 유형
@@ -28,7 +29,7 @@ class DiscountLine(
     val type: DiscountMethod,
 
     @Column
-    val sourceId: Long?,
+    val sourceId: Long,
 
     @Column(nullable = false)
     val amount: BigDecimal,
@@ -41,9 +42,9 @@ class DiscountLine(
             now: LocalDateTime,
             sourceId: Long,
             discountMethod: DiscountMethod,
-            orderItemsDiscountMap: Map<OrderItem, BigDecimal>): List<DiscountLine> {
+            orderItemsDiscountMap: Map<DiscountContext.Item, BigDecimal>): List<DiscountLine> {
             return orderItemsDiscountMap.map { DiscountLine(
-                orderItemId = it.key.id,
+                orderItemId = it.key.orderItemId,
                 type = discountMethod,
                 sourceId = sourceId,
                 amount = it.value,

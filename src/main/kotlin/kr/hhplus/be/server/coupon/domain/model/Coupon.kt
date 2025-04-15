@@ -2,8 +2,6 @@ package kr.hhplus.be.server.coupon.domain.model
 
 import jakarta.persistence.*
 import kr.hhplus.be.server.common.exception.ExceededMaxCouponLimitException
-import kr.hhplus.be.server.order.domain.Order
-import kr.hhplus.be.server.order.domain.OrderItem
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -62,29 +60,24 @@ class Coupon(
     /**
      * 쿠폰 할인 금액 계산
      */
-    override fun calculateDiscount(now: LocalDateTime, order: Order, targetItems: List<OrderItem>): Map<OrderItem, BigDecimal> {
-        return if (isValid(now)) {
-            discountPolicy.calculateDiscount(order, targetItems)
+    override fun calculateDiscount(context: DiscountContext.Root, applicableItemIds: List<Long>): Map<DiscountContext.Item, BigDecimal> {
+        return if (isValid(context.timestamp)) {
+            val applicableItems = context.items.filter { applicableItemIds.contains(it.orderItemId) }
+            discountPolicy.calculateDiscount(context.copy(items = applicableItems))
         } else {
             mapOf()
         }
     }
 
-    override fun isApplicableTo(context: DiscountContext): Boolean {
+    override fun isApplicableTo(context: DiscountContext.Item): Boolean {
         return this.discountPolicy.discountCondition.isSatisfiedBy(context)
     }
 
-    override fun applicableItems(order: Order, userId: Long): List<OrderItem> {
-        return order.orderItems.filter {
-            isApplicableTo(
-                DiscountContext(
-                    userId = userId,
-                    productId = it.productId,
-                    variantId = it.variantId,
-                    orderAmount = order.originalTotal
-                )
-            )
-        }
+    override fun getApplicableItems(context: DiscountContext.Root): List<Long> {
+        return context.items
+            ?.filter { isApplicableTo(it) }
+            ?.map { it.orderItemId }
+            ?: emptyList()
     }
 
     fun issueTo(userId: Long, now: LocalDateTime = LocalDateTime.now()): UserCoupon {

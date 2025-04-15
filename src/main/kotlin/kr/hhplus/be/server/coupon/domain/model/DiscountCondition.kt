@@ -23,7 +23,7 @@ abstract class DiscountCondition {
      * @param context 할인 조건 검증에 필요한 컨텍스트 정보
      * @return 조건 충족 여부
      */
-    abstract fun isSatisfiedBy(context: DiscountContext): Boolean
+    abstract fun isSatisfiedBy(context: DiscountContext.Item): Boolean
 }
 
 
@@ -39,8 +39,8 @@ class MinOrderAmountCondition(
     val minAmount: BigDecimal
 ) : DiscountCondition() {
 
-    override fun isSatisfiedBy(context: DiscountContext): Boolean {
-        return context.orderAmount?.let { it >= minAmount } ?: false
+    override fun isSatisfiedBy(context: DiscountContext.Item): Boolean {
+        return context.totalAmount?.let { it >= minAmount } == true
     }
 }
 
@@ -55,7 +55,7 @@ class SpecificProductCondition(
     val productIds: Set<Long>
 ) : DiscountCondition() {
     
-    override fun isSatisfiedBy(context: DiscountContext): Boolean {
+    override fun isSatisfiedBy(context: DiscountContext.Item): Boolean {
         return productIds.contains(context.productId)
     }
 }
@@ -68,7 +68,7 @@ class SpecificProductCondition(
 @DiscriminatorValue("ALL_PRODUCT")
 class AllProductCondition : DiscountCondition() {
 
-    override fun isSatisfiedBy(context: DiscountContext): Boolean {
+    override fun isSatisfiedBy(context: DiscountContext.Item): Boolean {
         return true
     }
 }
@@ -116,7 +116,7 @@ abstract class CompositeCondition : DiscountCondition() {
 @DiscriminatorValue("AND")
 class AndCompositeCondition : CompositeCondition() {
     
-    override fun isSatisfiedBy(context: DiscountContext): Boolean {
+    override fun isSatisfiedBy(context: DiscountContext.Item): Boolean {
         return conditions.isNotEmpty() && conditions.all { it.isSatisfiedBy(context) }
     }
 }
@@ -129,7 +129,7 @@ class AndCompositeCondition : CompositeCondition() {
 @DiscriminatorValue("OR")
 class OrCompositeCondition : CompositeCondition() {
     
-    override fun isSatisfiedBy(context: DiscountContext): Boolean {
+    override fun isSatisfiedBy(context: DiscountContext.Item): Boolean {
         return conditions.isNotEmpty() && conditions.any { it.isSatisfiedBy(context) }
     }
 }

@@ -21,3 +21,6 @@ class ProductUnavailableException(): BusinessException(ErrorCode.PRODUCT_UNAVAIL
 // Point
 class InvalidChargeAmountException(): BusinessException(ErrorCode.INVALID_CHARGE_AMOUNT)
 class InsufficientPointException(): BusinessException(ErrorCode.INSUFFICIENT_POINT)
+
+// Common
+class ResourceNotFoundException(): BusinessException(ErrorCode.NOT_FOUND)

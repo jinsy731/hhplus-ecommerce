@@ -50,12 +50,16 @@ class Product(
         variant.product = this
     }
 
-    fun purchase(variantId: Long, quantity: Int) {
-        checkAvailableToOrder(variantId, quantity)
-        findVariant(variantId).deductStock(quantity)
+    /**
+     * 단순 수량에 대한 검증만 하는 것이 아니므로 네이밍을 purchase로 가져감.
+     * (상품이 구매 가능한 상태인지도 검증하기 때문에..)
+     */
+    fun reduceStockByPurchase(variantId: Long, quantity: Int) {
+        validatePurchasability(variantId, quantity)
+        findVariant(variantId).reduceStock(quantity)
     }
 
-    fun checkAvailableToOrder(variantId: Long, quantity: Int) {
+    fun validatePurchasability(variantId: Long, quantity: Int) {
         check(this.status in setOf(ProductStatus.ON_SALE, ProductStatus.PARTIALLY_OUT_OF_STOCK)) { throw ProductUnavailableException() }
         findVariant(variantId)?.checkAvailableToOrder(quantity)
     }

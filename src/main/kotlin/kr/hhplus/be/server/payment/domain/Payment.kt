@@ -1,10 +1,8 @@
 package kr.hhplus.be.server.payment.domain
 
 import jakarta.persistence.*
-import kr.hhplus.be.server.common.exception.AlreadyPaidException
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
-import kr.hhplus.be.server.order.domain.Order
-import kr.hhplus.be.server.payment.application.PaymentCommand
+import kr.hhplus.be.server.common.exception.AlreadyPaidException
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -58,30 +56,15 @@ class Payment(
 ) : BaseTimeEntity() {
 
     companion object {
-        fun create(cmd: PaymentCommand.Prepare): Payment {
+        fun create(context: PaymentContext.Prepare.Root): Payment {
             return Payment(
-                orderId = cmd.order.id,
-                originalAmount = cmd.order.originalTotal,
-                discountedAmount = cmd.order.discountedAmount,
-                timestamp = cmd.now,
-                details = createPaymentDetails(cmd.order),
-                methods = createPaymentMethods(cmd.payMethods)
+                orderId = context.order.id,
+                originalAmount = context.order.originalTotal,
+                discountedAmount = context.order.discountedAmount,
+                timestamp = context.timestamp,
+                details = PaymentItemDetail.create(context.order),
+                methods = PaymentMethod.create(context.payMethods)
             )
-        }
-
-        private fun createPaymentDetails(order: Order): MutableList<PaymentItemDetail> {
-            return order.orderItems.map { PaymentItemDetail(
-                orderItemId = it.id,
-                originalAmount = it.subTotalBeforeDiscount(),
-                discountedAmount = it.discountAmount,
-            ) }.toMutableList()
-        }
-
-        private fun createPaymentMethods(payMethods: List<PaymentCommand.PayMethod>): MutableList<PaymentMethod> {
-            return payMethods.map { PaymentMethod(
-                type = it.type,
-                amount = it.amount,
-            ) }.toMutableList()
         }
     }
 

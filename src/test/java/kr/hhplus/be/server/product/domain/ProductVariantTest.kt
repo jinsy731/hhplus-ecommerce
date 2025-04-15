@@ -41,7 +41,7 @@ class ProductVariantTest {
         // arrange
         val variant = ProductVariant(stock = 10, status = VariantStatus.ACTIVE)
         // act
-        variant.deductStock(5)
+        variant.reduceStock(5)
         // assert
         variant.stock shouldBe 5
     }
@@ -51,6 +51,6 @@ class ProductVariantTest {
         // arrange
         val variant = ProductVariant(stock = 10, status = VariantStatus.ACTIVE)
         // act, assert
-        shouldThrowExactly<VariantOutOfStockException> { variant.deductStock(15) }
+        shouldThrowExactly<VariantOutOfStockException> { variant.reduceStock(15) }
     }
 }

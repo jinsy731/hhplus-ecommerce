@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.order.application
 
 import jakarta.transaction.Transactional
-import kr.hhplus.be.server.coupon.domain.model.DiscountLine
+import kr.hhplus.be.server.coupon.application.DiscountInfo
 import kr.hhplus.be.server.order.domain.Order
 import kr.hhplus.be.server.order.domain.OrderRepository
 import org.springframework.stereotype.Service
@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service
 class OrderService(private val orderRepository: OrderRepository) {
 
     @Transactional
-    fun createOrder(cmd: OrderCommand.Create): Order {
-        val order = Order.create(cmd)
+    fun createOrder(cmd: OrderCommand.Create.Root): Order {
+        val order = Order.create(cmd.toOrderCreateContext())
         return orderRepository.save(order)
     }
 
@@ -23,9 +23,9 @@ class OrderService(private val orderRepository: OrderRepository) {
     }
 
     @Transactional
-    fun applyDiscount(orderId: Long, discountLines: List<DiscountLine>) {
-        val order = orderRepository.getById(orderId)
-        order.applyDiscount(discountLines)
+    fun applyDiscount(cmd: OrderCommand.ApplyDiscount) {
+        val order = orderRepository.getById(cmd.orderId)
+        order.applyDiscount(cmd.discountInfos)
         orderRepository.save(order)
     }
 }

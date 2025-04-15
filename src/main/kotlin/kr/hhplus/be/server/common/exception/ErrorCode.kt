@@ -19,6 +19,7 @@ enum class ErrorCode(
     PRODUCT_UNAVAILABLE(HttpStatus.CONFLICT, "P003", "해당 상품은 구매 불가합니다."),
     INSUFFICIENT_POINT(HttpStatus.CONFLICT, "UP001", "잔여 포인트가 부족합니다."),
     ALREADY_PAID(HttpStatus.CONFLICT, "PMT001", "이미 결제되었습니다."),
-    EXCEEDED_MAX_COUPON_LIMIT(HttpStatus.CONFLICT, "CP001", "발급 가능한 쿠폰 수량을 초과하였습니다.")
+    EXCEEDED_MAX_COUPON_LIMIT(HttpStatus.CONFLICT, "CP001", "발급 가능한 쿠폰 수량을 초과하였습니다."),
+    NOT_FOUND(HttpStatus.NOT_FOUND, "CM001", "존재하지 않는 리소스입니다.")
 
 }

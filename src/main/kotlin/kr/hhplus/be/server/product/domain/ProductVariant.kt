@@ -38,7 +38,7 @@ class ProductVariant(
         check(this.stock >= quantity) { throw VariantOutOfStockException() }
     }
 
-    fun deductStock(quantity: Int) {
+    fun reduceStock(quantity: Int) {
         check(this.stock > quantity) { throw VariantOutOfStockException()  }
         this.stock -= quantity
     }

@@ -17,6 +17,7 @@ class CouponService(
     fun issueCoupon(cmd: CouponCommand.Issue): CouponResult.Issue {
         val coupon = couponRepository.getById(cmd.couponId)
         val userCoupon = coupon.issueTo(cmd.userId)
+
         val savedUserCoupon = userCouponRepository.save(userCoupon)
 
         return CouponResult.Issue(
@@ -33,15 +34,16 @@ class CouponService(
      * 3. 각 대상에 할인 금액 분배 (물품별 할인 금액 계산을 위해)
      */
     @Transactional
-    fun calculateDiscountAndUse(cmd: CouponCommand.ApplyToOrder): CouponResult.ApplyToOrder {
+    fun use(cmd: CouponCommand.Use.Root): CouponResult.Use {
         val userCoupons = userCouponRepository.findAllByUserIdAndIdIsIn(cmd.userId, cmd.userCouponIds)
 
         val discountLines = userCoupons.flatMap {
-            it.calculateDiscountAndUse(cmd.order, cmd.userId, cmd.now)
+            it.calculateDiscountAndUse(cmd.toDiscountContext())
         }
 
         discountLineRepository.saveAll(discountLines)
+        userCouponRepository.saveAll(userCoupons)
 
-        return CouponResult.ApplyToOrder(discountLines)
+        return CouponResult.Use(discountLines.toDiscountInfoList())
     }
 }

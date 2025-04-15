@@ -1,8 +1,6 @@
 package kr.hhplus.be.server.coupon.domain.model
 
 import jakarta.persistence.*
-import kr.hhplus.be.server.order.domain.Order
-import kr.hhplus.be.server.order.domain.OrderItem
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -24,7 +22,7 @@ abstract class DiscountType {
      * @param price 상품 가격
      * @return 할인된 금액
      */
-    abstract fun calculateDiscount(order: Order, orderItems: List<OrderItem>): Map<OrderItem, BigDecimal>
+    abstract fun calculateDiscount(context: DiscountContext.Root): Map<DiscountContext.Item, BigDecimal>
 }
 
 /**
@@ -38,15 +36,15 @@ class FixedAmountTotalDiscountType(
     val amount: BigDecimal
 ) : DiscountType() {
     
-    override fun calculateDiscount(order: Order, targetItems: List<OrderItem>): Map<OrderItem, BigDecimal> {
-        val totalAmount = targetItems.sumOf { it.subTotal() }
+    override fun calculateDiscount(context: DiscountContext.Root): Map<DiscountContext.Item, BigDecimal> {
+        val totalAmount = context.items.sumOf { it.subTotal }
         val totalDiscount = amount
         val adjustedTotalDiscount = when {
             totalDiscount > totalAmount -> totalAmount
             else -> totalDiscount
         }
 
-        return calculateDiscountsWithCorrection(totalAmount, adjustedTotalDiscount, targetItems)
+        return calculateDiscountsWithCorrection(totalAmount, adjustedTotalDiscount, context.items)
     }
 }
 
@@ -62,10 +60,10 @@ class FixedAmountPerItemDiscountType(
     val amount: BigDecimal
 ) : DiscountType() {
 
-    override fun calculateDiscount(order: Order, targetItems: List<OrderItem>): Map<OrderItem, BigDecimal> {
-        return targetItems.associateWith {
+    override fun calculateDiscount(context: DiscountContext.Root): Map<DiscountContext.Item, BigDecimal> {
+        return context.items.associateWith {
             when {
-                amount > it.subTotal() -> it.subTotal()
+                amount > it.subTotal -> it.subTotal
                 else -> amount
             }
         }
@@ -87,15 +85,15 @@ class RateDiscountType(
     val maxDiscountAmount: BigDecimal? = null
 ) : DiscountType() {
     
-    override fun calculateDiscount(order: Order, targetItems: List<OrderItem>): Map<OrderItem, BigDecimal> {
-        val totalAmount = targetItems.sumOf { it.subTotal() }
+    override fun calculateDiscount(context: DiscountContext.Root): Map<DiscountContext.Item, BigDecimal> {
+        val totalAmount = context.items.sumOf { it.subTotal }
         val totalDiscount = totalAmount * rate
         val adjustedTotalDiscount = maxDiscountAmount?.let {
             if(totalDiscount > it) it else totalDiscount
         } ?: totalDiscount
 
-        return targetItems.associateWith {
-            adjustedTotalDiscount / targetItems.size.toBigDecimal()
+        return context.items.associateWith {
+            adjustedTotalDiscount / context.items.size.toBigDecimal()
         }
     }
 }
@@ -103,12 +101,12 @@ class RateDiscountType(
 fun calculateDiscountsWithCorrection(
     totalAmount: BigDecimal, // 전체 금액
     adjustedTotalDiscount: BigDecimal, // 총 할인액
-    items: List<OrderItem> // 각 주문 아이템
-): Map<OrderItem, BigDecimal> {
+    items: List<DiscountContext.Item> // 각 주문 아이템
+): Map<DiscountContext.Item, BigDecimal> {
 
     // 아이템별 비례 할인 금액 계산
     val initialDiscounts = items.associateWith { item ->
-        val ratio = item.subTotal().divide(totalAmount, 10, RoundingMode.HALF_UP)
+        val ratio = item.subTotal.divide(totalAmount, 10, RoundingMode.HALF_UP)
         ratio.multiply(adjustedTotalDiscount).setScale(2, RoundingMode.HALF_UP)
     }
 

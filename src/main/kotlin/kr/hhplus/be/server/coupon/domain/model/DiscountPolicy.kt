@@ -39,7 +39,7 @@ class DiscountPolicy {
      * @param context 할인 조건 검증에 필요한 컨텍스트 정보
      * @return 할인 금액 (조건을 만족하지 않으면 0)
      */
-    fun calculateDiscount(order: Order, targetItems: List<OrderItem>): Map<OrderItem, BigDecimal> {
-        return discountType.calculateDiscount(order, targetItems)
+    fun calculateDiscount(context: DiscountContext.Root): Map<DiscountContext.Item, BigDecimal> {
+        return discountType.calculateDiscount(context)
     }
 }

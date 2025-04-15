@@ -50,7 +50,7 @@ class OrderFacadeTest {
 
         every { productService.findAllById(any()) } returns products
         every { orderService.createOrder(any()) } returns order
-        every { couponService.calculateDiscountAndUse(any()) } returns applyCouponResult
+        every { couponService.use(any()) } returns applyCouponResult
         every { paymentService.preparePayment(any()) } returns payment
         every { paymentService.completePayment(any()) } just Runs
         every { userPointService.use(any()) } just Runs
@@ -64,7 +64,7 @@ class OrderFacadeTest {
         verifyOrder {
             productService.findAllById(any())
             orderService.createOrder(any())
-            couponService.calculateDiscountAndUse(any())
+            couponService.use(any())
             paymentService.preparePayment(any())
             paymentService.completePayment(any())
             orderService.completeOrder(any())
@@ -82,7 +82,7 @@ class OrderFacadeTest {
 
         every { productService.findAllById(any()) } returns products
         every { orderService.createOrder(any()) } returns order
-        every { couponService.calculateDiscountAndUse(any()) } throws RuntimeException("쿠폰 오류")
+        every { couponService.use(any()) } throws RuntimeException("쿠폰 오류")
 
         // when
         shouldThrow<RuntimeException> {
@@ -92,7 +92,7 @@ class OrderFacadeTest {
         // then
         verify(exactly = 1) { productService.findAllById(any()) }
         verify(exactly = 1) { orderService.createOrder(any()) }
-        verify(exactly = 1) { couponService.calculateDiscountAndUse(any()) }
+        verify(exactly = 1) { couponService.use(any()) }
 
         verify(exactly = 0) { paymentService.preparePayment(any()) }
         verify(exactly = 0) { userPointService.use(any()) }
@@ -108,7 +108,7 @@ class OrderFacadeTest {
 
         every { productService.findAllById(any()) } returns products
         every { orderService.createOrder(any()) } returns order
-        every { couponService.calculateDiscountAndUse(any()) } returns applyCouponResult
+        every { couponService.use(any()) } returns applyCouponResult
         every { paymentService.preparePayment(any()) } returns payment
         every { paymentService.completePayment(any()) } just Runs
         every { userPointService.use(any()) } just Runs
@@ -137,7 +137,7 @@ object Fixture {
 
     fun products() = listOf(Product(1L, "티셔츠", BigDecimal(10000)))
     fun order(finalTotal: BigDecimal = BigDecimal(10000)) = OrderTestFixture.createOrder(1L)
-    fun applyCouponResult() = CouponResult.ApplyToOrder(listOf(DiscountLine(1L,1L, DiscountMethod.COUPON, 1L,
+    fun applyCouponResult() = CouponResult.Use(listOf(DiscountLine(1L,1L, DiscountMethod.COUPON, 1L,
         BigDecimal(100), LocalDateTime.now())))
     fun payment() = Payment(
         orderId = 1L,

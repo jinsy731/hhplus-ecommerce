@@ -33,7 +33,14 @@ class OrderItem(
     @JoinColumn(name = "order_id", nullable = false)
     var order: Order? = null
 ) {
-
+    companion object {
+        fun from(itemContext: List<OrderContext.Create.Item>): MutableList<OrderItem> = itemContext.map { OrderItem(
+            productId = it.productId,
+            variantId = it.variantId,
+            quantity = it.quantity,
+            unitPrice = it.unitPrice
+        ) }.toMutableList()
+    }
 
     /**
      * 항목의 소계를 계산합니다.

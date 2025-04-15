@@ -1,23 +1,42 @@
 package kr.hhplus.be.server.order.application
 
-import kr.hhplus.be.server.coupon.domain.model.DiscountLine
-import kr.hhplus.be.server.order.domain.Order
-import kr.hhplus.be.server.product.domain.Product
+import kr.hhplus.be.server.coupon.application.DiscountInfo
+import kr.hhplus.be.server.order.application.dto.ProductInfo
+import kr.hhplus.be.server.order.domain.OrderContext
 import java.time.LocalDateTime
 
 class OrderCommand {
-    data class Create(
-        val userId: Long,
-        val products: List<Product>,
-        val orderItems: List<OrderItemCommand.Create>,
-        val now: LocalDateTime
-    )
+    class Create {
+        data class Root(
+            val userId: Long,
+            val products: List<ProductInfo.CreateOrder.Root>,
+            val orderItems: List<OrderItem>,
+            val timestamp: LocalDateTime
+        )
+        data class OrderItem(
+            val productId: Long,
+            val variantId: Long,
+            val quantity: Int
+        )
+    }
+
+    data class ApplyDiscount(val orderId: Long, val discountInfos: List<DiscountInfo>)
+
 }
 
-class OrderItemCommand {
-    data class Create(
-        val productId: Long,
-        val variantId: Long,
-        val quantity: Int
+fun OrderCommand.Create.Root.toOrderCreateContext(): OrderContext.Create.Root {
+    return OrderContext.Create.Root(
+        userId = this.userId,
+        timestamp = this.timestamp,
+        items = this.orderItems.map { item ->
+            val product = this.products.find { product -> product.productId == item.productId } ?: throw IllegalStateException()
+            val variant = product.variants.find { variant -> variant.variantId == item.variantId } ?: throw IllegalStateException()
+            OrderContext.Create.Item(
+                productId = product.productId,
+                variantId = item.variantId,
+                quantity = item.quantity,
+                unitPrice = variant.unitPrice
+            )
+        }
     )
 }

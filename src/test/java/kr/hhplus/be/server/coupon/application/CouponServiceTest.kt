@@ -67,7 +67,7 @@ class CouponServiceTest {
             now = now
         )
         // act
-        couponService.calculateDiscountAndUse(cmd)
+        couponService.use(cmd)
         
         // assert
         userCoupon.status shouldBe UserCouponStatus.USED
@@ -105,7 +105,7 @@ class CouponServiceTest {
             now = now
         )
         // act
-        couponService.calculateDiscountAndUse(cmd)
+        couponService.use(cmd)
 
         // assert
         userCoupon.status shouldBe UserCouponStatus.UNUSED
@@ -144,16 +144,16 @@ class CouponServiceTest {
         )
 
         // act
-        val result = couponService.calculateDiscountAndUse(cmd)
+        val result = couponService.use(cmd)
 
         // assert
-        result.discountLine shouldHaveSize 2
-        result.discountLine.sumOf { it.amount }.compareTo(BigDecimal(5000)) shouldBe 0
+        result.discountInfo shouldHaveSize 2
+        result.discountInfo.sumOf { it.amount }.compareTo(BigDecimal(5000)) shouldBe 0
 
         // 각 아이템에 대한 할인이 제대로 할당됐는지 확인
         val halfDiscount = BigDecimal(2500)
-        result.discountLine[0].amount.compareTo(halfDiscount) shouldBe 0
-        result.discountLine[1].amount.compareTo(halfDiscount) shouldBe 0
+        result.discountInfo[0].amount.compareTo(halfDiscount) shouldBe 0
+        result.discountInfo[1].amount.compareTo(halfDiscount) shouldBe 0
         
         // UserCoupon 상태가 USED로 변경되었는지 간접 확인
         verify(exactly = 1) { userCouponRepository.findAllByUserIdAndIdIsIn(userId, listOf(1L)) }
@@ -201,13 +201,13 @@ class CouponServiceTest {
         )
 
         // act
-        val result = couponService.calculateDiscountAndUse(cmd)
+        val result = couponService.use(cmd)
 
         // assert
-        result.discountLine.sumOf { it.amount }.compareTo(BigDecimal(10000)) shouldBe 0  // 두 개의 5000원 정액 할인 쿠폰 적용
+        result.discountInfo.sumOf { it.amount }.compareTo(BigDecimal(10000)) shouldBe 0  // 두 개의 5000원 정액 할인 쿠폰 적용
         
         // 두 개의 쿠폰이 적용되므로 각 아이템에 할인이 2번 적용됨 (총 4개의 할인 항목)
-        result.discountLine.size shouldBe 4
+        result.discountInfo.size shouldBe 4
         
         verify(exactly = 1) { userCouponRepository.findAllByUserIdAndIdIsIn(userId, listOf(1L, 2L)) }
     }
@@ -265,16 +265,16 @@ class CouponServiceTest {
         )
 
         // act
-        val result = couponService.calculateDiscountAndUse(cmd)
+        val result = couponService.use(cmd)
 
         // assert
-        result.discountLine.sumOf { it.amount }.compareTo(BigDecimal(5000)) shouldBe 0  // 5000원 정액 할인 적용
-        result.discountLine.size shouldBe 2
+        result.discountInfo.sumOf { it.amount }.compareTo(BigDecimal(5000)) shouldBe 0  // 5000원 정액 할인 적용
+        result.discountInfo.size shouldBe 2
         
         // 할인이 금액 비율대로 분배되어야 함
         // item1: 15000원 (75%), item2: 5000원 (25%)
-        val discount1 = result.discountLine.find { it.orderItemId == 1L }!!.amount
-        val discount2 = result.discountLine.find { it.orderItemId == 2L }!!.amount
+        val discount1 = result.discountInfo.find { it.orderItemId == 1L }!!.amount
+        val discount2 = result.discountInfo.find { it.orderItemId == 2L }!!.amount
         
         // 할인액의 비율 검증 (대략 75:25 비율로 3750:1250)
         discount1.compareTo(BigDecimal(3750)) shouldBe 0
@@ -304,11 +304,11 @@ class CouponServiceTest {
         )
 
         // act
-        val result = couponService.calculateDiscountAndUse(cmd)
+        val result = couponService.use(cmd)
 
         // assert
-        result.discountLine.sumOf { it.amount } shouldBe BigDecimal.ZERO
-        result.discountLine.size shouldBe 0
+        result.discountInfo.sumOf { it.amount } shouldBe BigDecimal.ZERO
+        result.discountInfo.size shouldBe 0
         
         verify(exactly = 1) { userCouponRepository.findAllByUserIdAndIdIsIn(userId, listOf()) }
     }

@@ -6,7 +6,7 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 
 interface Discount {
-    fun calculateDiscount(now: LocalDateTime, order: Order, targetItems: List<OrderItem>): Map<OrderItem, BigDecimal>
-    fun isApplicableTo(context: DiscountContext): Boolean
-    fun applicableItems(order: Order, userId: Long): List<OrderItem>
+    fun calculateDiscount(context: DiscountContext.Root, targetItems: List<Long>): Map<DiscountContext.Item, BigDecimal>
+    fun isApplicableTo(context: DiscountContext.Item): Boolean
+    fun getApplicableItems(context: DiscountContext.Root): List<Long>
 }

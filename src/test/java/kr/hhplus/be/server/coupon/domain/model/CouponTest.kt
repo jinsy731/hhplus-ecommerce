@@ -161,7 +161,7 @@ class CouponTest {
         val coupon = CouponTestFixture.createValidCoupon()
         val order = OrderTestFixture.createOrder(1L)
         // act
-        val result = coupon.applicableItems(order, 1L)
+        val result = coupon.getApplicableItems(order, 1L)
         // assert
         result shouldHaveSize 2
     }
@@ -172,7 +172,7 @@ class CouponTest {
         val coupon = CouponTestFixture.createValidCoupon()
         val order = OrderTestFixture.createOrder(1L).apply { this.originalTotal = BigDecimal(1000) }
         // act
-        val result = coupon.applicableItems(order, 1L)
+        val result = coupon.getApplicableItems(order, 1L)
         // assert
         result shouldHaveSize 0
     }

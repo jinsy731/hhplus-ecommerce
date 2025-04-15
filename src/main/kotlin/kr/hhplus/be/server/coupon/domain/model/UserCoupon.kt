@@ -58,18 +58,18 @@ class UserCoupon(
         this.status = UserCouponStatus.USED
     }
 
-    fun calculateDiscountAndUse(order: Order, userId: Long, now: LocalDateTime): List<DiscountLine> {
-        val applicableItems = coupon.applicableItems(order, userId)
+    fun calculateDiscountAndUse(context: DiscountContext.Root): List<DiscountLine> {
+        val applicableItems = coupon.getApplicableItems(context)
         if (applicableItems.isEmpty()) return emptyList()
 
-        use(now)
+        use(context.timestamp)
 
-        val orderItemsDiscountMap = coupon.calculateDiscount(now, order, applicableItems)
+        val orderItemsDiscountMap = coupon.calculateDiscount(context, applicableItems)
         return DiscountLine.from(
             sourceId = this.coupon.id!!,
             discountMethod = DiscountMethod.COUPON,
             orderItemsDiscountMap = orderItemsDiscountMap,
-            now = now)
+            now = context.timestamp)
     }
 }
 

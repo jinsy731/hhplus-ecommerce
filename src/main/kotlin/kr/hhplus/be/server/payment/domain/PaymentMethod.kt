@@ -12,7 +12,9 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
+import kr.hhplus.be.server.payment.application.PaymentCommand
 import java.math.BigDecimal
+import kotlin.collections.map
 
 
 /**
@@ -60,4 +62,12 @@ class PaymentMethod(
     @JoinColumn(name = "payment_id")
     var payment: Payment? = null
 ) : BaseTimeEntity() {
+    companion object {
+        fun create(payMethods: List<PaymentContext.Prepare.PayMethod>): MutableList<PaymentMethod> {
+            return payMethods.map { PaymentMethod(
+                type = it.type,
+                amount = it.amount,
+            ) }.toMutableList()
+        }
+    }
 }

@@ -19,7 +19,7 @@ class ProductTest {
         val product = ProductTestFixture.createValidProduct(id = 1L).apply { this.status = status }
 
         // act, assert
-        shouldNotThrowAny { product.checkAvailableToOrder(variantId = 1L, quantity = 1) }
+        shouldNotThrowAny { product.validatePurchasability(variantId = 1L, quantity = 1) }
     }
 
     @ParameterizedTest
@@ -32,7 +32,7 @@ class ProductTest {
             status = status
         )
         // act, assert
-        shouldThrowExactly<ProductUnavailableException> { product.checkAvailableToOrder(1L, 1) }
+        shouldThrowExactly<ProductUnavailableException> { product.validatePurchasability(1L, 1) }
     }
     
     @Test
