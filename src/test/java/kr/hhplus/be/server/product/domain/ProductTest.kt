@@ -5,6 +5,7 @@ import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.common.exception.ProductUnavailableException
 import kr.hhplus.be.server.product.ProductTestFixture
+import kr.hhplus.be.server.product.domain.product.ProductVariant
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -13,8 +14,8 @@ import java.math.BigDecimal
 class ProductTest {
     
     @ParameterizedTest
-    @EnumSource(value = ProductStatus::class, names = ["ON_SALE", "PARTIALLY_OUT_OF_STOCK"])
-    fun `✅주문 시 상품 검증 성공`(status: ProductStatus) {
+    @EnumSource(value = kr.hhplus.be.server.product.domain.product.ProductStatus::class, names = ["ON_SALE", "PARTIALLY_OUT_OF_STOCK"])
+    fun `✅주문 시 상품 검증 성공`(status: kr.hhplus.be.server.product.domain.product.ProductStatus) {
         // arrange
         val product = ProductTestFixture.createValidProduct(id = 1L).apply { this.status = status }
 
@@ -23,10 +24,10 @@ class ProductTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = ProductStatus::class, names = ["DRAFT", "OUT_OF_STOCK", "HIDDEN", "DISCONTINUED"])
-    fun `⛔️주문 시 상품 검증 실패`(status: ProductStatus) {
+    @EnumSource(value = kr.hhplus.be.server.product.domain.product.ProductStatus::class, names = ["DRAFT", "OUT_OF_STOCK", "HIDDEN", "DISCONTINUED"])
+    fun `⛔️주문 시 상품 검증 실패`(status: kr.hhplus.be.server.product.domain.product.ProductStatus) {
         // arrange
-        val product = Product(
+        val product = kr.hhplus.be.server.product.domain.product.Product(
             name = "상품 A",
             basePrice = BigDecimal(1000),
             status = status
@@ -38,15 +39,17 @@ class ProductTest {
     @Test
     fun `✅상품 옵션 가격 조회`() {
         // arrange
-        val product = Product(
+        val product = kr.hhplus.be.server.product.domain.product.Product(
             name = "상품 A",
             basePrice = BigDecimal(1000),
-            status = ProductStatus.ON_SALE,
-            variants = mutableListOf(ProductVariant(
-                id = 1L,
-                additionalPrice = BigDecimal(500),
-                stock = 10
-            ))
+            status = kr.hhplus.be.server.product.domain.product.ProductStatus.ON_SALE,
+            variants = mutableListOf(
+                ProductVariant(
+                    id = 1L,
+                    additionalPrice = BigDecimal(500),
+                    stock = 10
+                )
+            )
         )
         // act
         val variantPrice = product.getVariantPrice(1L)

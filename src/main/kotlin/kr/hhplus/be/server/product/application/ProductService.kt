@@ -3,8 +3,8 @@ package kr.hhplus.be.server.product.application
 import jakarta.transaction.Transactional
 import kr.hhplus.be.server.common.PaginationResult
 import kr.hhplus.be.server.common.exception.ResourceNotFoundException
-import kr.hhplus.be.server.product.domain.Product
-import kr.hhplus.be.server.product.domain.ProductRepository
+import kr.hhplus.be.server.product.domain.product.Product
+import kr.hhplus.be.server.product.domain.product.ProductRepository
 import org.springframework.stereotype.Service
 
 @Service

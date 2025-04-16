@@ -5,7 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import kr.hhplus.be.server.product.ProductTestFixture
-import kr.hhplus.be.server.product.domain.ProductRepository
+import kr.hhplus.be.server.product.domain.product.ProductRepository
 import org.junit.jupiter.api.Test
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest

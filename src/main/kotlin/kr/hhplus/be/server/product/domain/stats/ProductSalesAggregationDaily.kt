@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.product.domain
+package kr.hhplus.be.server.product.domain.stats
 
 import jakarta.persistence.Column
 import jakarta.persistence.Embeddable

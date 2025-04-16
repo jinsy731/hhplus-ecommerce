@@ -7,7 +7,7 @@ import kr.hhplus.be.server.order.application.toUseCouponCommandItem
 import kr.hhplus.be.server.product.application.toCreateOrderProductInfo
 import kr.hhplus.be.server.order.domain.Order
 import kr.hhplus.be.server.payment.application.PaymentCommand
-import kr.hhplus.be.server.product.domain.Product
+import kr.hhplus.be.server.product.domain.product.Product
 import java.math.BigDecimal
 import java.time.LocalDateTime
 

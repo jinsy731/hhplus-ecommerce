@@ -2,7 +2,7 @@ package kr.hhplus.be.server.product.entrypoint.http
 
 import io.swagger.v3.oas.annotations.media.Schema
 import kr.hhplus.be.server.common.PageInfo
-import kr.hhplus.be.server.product.domain.ProductStatus
+import kr.hhplus.be.server.product.domain.product.ProductStatus
 import java.math.BigDecimal
 
 class ProductResponse {

@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.product.domain
+package kr.hhplus.be.server.product.domain.product
 
 import jakarta.persistence.*
 import kr.hhplus.be.server.common.exception.VariantOutOfStockException

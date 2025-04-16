@@ -5,6 +5,8 @@ import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.common.exception.VariantOutOfStockException
 import kr.hhplus.be.server.common.exception.VariantUnavailableException
+import kr.hhplus.be.server.product.domain.product.ProductVariant
+import kr.hhplus.be.server.product.domain.product.VariantStatus
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
