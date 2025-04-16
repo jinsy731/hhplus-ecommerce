@@ -18,5 +18,10 @@ class ProductSalesAggregationDaily(
     @EmbeddedId
     val id: ProductSalesAggregationDailyId,
     @Column(nullable = false)
-    val salesCount: Long
-)
+    var salesCount: Long
+) {
+    fun accumulate(increment: Long): ProductSalesAggregationDaily {
+        this.salesCount += increment
+        return this
+    }
+}
