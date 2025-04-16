@@ -11,7 +11,6 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import kr.hhplus.be.server.common.exception.ExpiredCouponException
 import kr.hhplus.be.server.common.exception.InvalidCouponStatusException
-import kr.hhplus.be.server.order.domain.Order
 import java.time.LocalDateTime
 
 /**
@@ -48,7 +47,8 @@ class UserCoupon(
      * 쿠폰 사용 처리
      */
     fun use(now: LocalDateTime) {
-        check(status == UserCouponStatus.UNUSED && coupon.isValid(now)) { throw InvalidCouponStatusException() }
+        coupon.validate(now)
+        check(status == UserCouponStatus.UNUSED) { throw InvalidCouponStatusException() }
         check(expiredAt.isAfter(now)) {
             this.status = UserCouponStatus.EXPIRED
             throw ExpiredCouponException()
@@ -60,7 +60,6 @@ class UserCoupon(
 
     fun calculateDiscountAndUse(context: DiscountContext.Root): List<DiscountLine> {
         val applicableItems = coupon.getApplicableItems(context)
-        if (applicableItems.isEmpty()) return emptyList()
 
         use(context.timestamp)
 

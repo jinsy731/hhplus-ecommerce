@@ -16,7 +16,7 @@ data class DiscountInfo (
 
 fun List<DiscountLine>.toDiscountInfoList(): List<DiscountInfo> {
     return this.mapNotNull { DiscountInfo(
-        orderItemId = it.id,
+        orderItemId = it.orderItemId,
         amount = it.amount,
         sourceId = it.sourceId,
         sourceType = it.type.toString()

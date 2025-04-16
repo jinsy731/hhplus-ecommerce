@@ -59,7 +59,7 @@ class ProductTest {
         // arrange
         val product = ProductTestFixture.createValidProduct()
         // act
-        product.purchase(1L, 1)
+        product.reduceStockByPurchase(1L, 1)
         // assert
         product.variants.find { it.id == 1L }!!.stock shouldBe 9
     }

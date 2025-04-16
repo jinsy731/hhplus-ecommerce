@@ -41,9 +41,8 @@ class CouponService(
             it.calculateDiscountAndUse(cmd.toDiscountContext())
         }
 
-        discountLineRepository.saveAll(discountLines)
-        userCouponRepository.saveAll(userCoupons)
+        val savedDiscountLine = discountLineRepository.saveAll(discountLines)
 
-        return CouponResult.Use(discountLines.toDiscountInfoList())
+        return CouponResult.Use(savedDiscountLine.toDiscountInfoList())
     }
 }

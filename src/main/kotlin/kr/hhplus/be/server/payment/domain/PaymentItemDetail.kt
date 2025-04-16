@@ -39,8 +39,8 @@ class PaymentItemDetail(
         fun create(order: PaymentContext.Prepare.OrderInfo): MutableList<PaymentItemDetail> {
             return order.items.map { PaymentItemDetail(
                 orderItemId = it.id,
-                originalAmount = order.originalTotal,
-                discountedAmount = order.discountedAmount,
+                originalAmount = it.subTotal,
+                discountedAmount = it.discountedAmount,
             ) }.toMutableList()
         }
     }

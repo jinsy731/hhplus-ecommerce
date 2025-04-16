@@ -2,6 +2,8 @@ package kr.hhplus.be.server.order.facade
 
 import kr.hhplus.be.server.coupon.application.CouponCommand
 import kr.hhplus.be.server.order.application.OrderCommand
+import kr.hhplus.be.server.order.application.toPreparePaymentCommandItem
+import kr.hhplus.be.server.order.application.toUseCouponCommandItem
 import kr.hhplus.be.server.product.application.toCreateOrderProductInfo
 import kr.hhplus.be.server.order.domain.Order
 import kr.hhplus.be.server.payment.application.PaymentCommand
@@ -56,15 +58,7 @@ fun OrderCriteria.PlaceOrder.Root.toUseCouponCommand(order: Order): CouponComman
     return CouponCommand.Use.Root(
         userId = this.userId,
         userCouponIds = this.userCouponIds,
-        items = order.orderItems.map { item ->
-            CouponCommand.Use.Item(
-                orderItemId = item.id,
-                productId = item.productId,
-                variantId = item.variantId,
-                quantity = item.quantity,
-                subTotal = item.subTotal()
-            )
-        },
+        items = order.orderItems.toUseCouponCommandItem(),
         timestamp = this.timestamp,
         totalAmount = order.originalTotal
     )
@@ -76,13 +70,7 @@ fun OrderCriteria.PlaceOrder.Root.toPreparePaymentCommand(order: Order): Payment
         order = PaymentCommand.Prepare.OrderInfo(
             id = order.id,
             userId = this.userId,
-            items = order.orderItems.map { orderItem -> PaymentCommand.Prepare.OrderItemInfo(
-                id = orderItem.id,
-                productId = orderItem.productId,
-                variantId = orderItem.variantId,
-                quantity = orderItem.quantity,
-                unitPrice = orderItem.subTotal()
-            ) },
+            items = order.orderItems.toPreparePaymentCommandItem(),
             originalTotal = order.originalTotal,
             discountedAmount = order.discountedAmount
         ),

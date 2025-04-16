@@ -28,8 +28,8 @@ class PaymentContext {
             val id: Long,
             val productId: Long,
             val variantId: Long,
-            val quantity: Int,
-            val unitPrice: BigDecimal
+            val subTotal: BigDecimal,
+            val discountedAmount: BigDecimal
         )
     }
 

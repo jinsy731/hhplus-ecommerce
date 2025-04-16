@@ -31,8 +31,8 @@ class PaymentCommand {
             val id: Long,
             val productId: Long,
             val variantId: Long,
-            val quantity: Int,
-            val unitPrice: BigDecimal
+            val subTotal: BigDecimal,
+            val discountedAmount: BigDecimal,
         )
     }
 
@@ -63,6 +63,6 @@ fun List<PaymentCommand.Prepare.OrderItemInfo>.toContext() = this.map { item -> 
     id = item.id,
     productId = item.productId,
     variantId = item.variantId,
-    quantity = item.quantity,
-    unitPrice = item.unitPrice
+    subTotal = item.subTotal,
+    discountedAmount = item.discountedAmount,
 )}

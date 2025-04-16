@@ -14,7 +14,6 @@ enum class ProductStatus {
     DISCONTINUED
 }
 
-
 @Entity
 @Table(name = "products")
 class Product(
