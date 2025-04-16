@@ -22,6 +22,7 @@
 - [DiscountLine](#discountline)
 - [Payment](#payment)
 - [PaymentItemDetail](#paymentitemdetail)
+- [PaymentMethod](#paymentmethod)
 - [ProductSalesLog](#productsaleslog)
 - [ProductSalesAggregationDaily](#productsalesaggregationdaily)
 - [ProductSalesAggregationCheckpoint](#productsalesaggregationcheckpoint)
@@ -112,7 +113,7 @@ class OptionValue {
 class ProductVariant {
   +id: Long
   +productId: Long
-  +optionValues: List<OptionValue>
+  +optionValueIds: List<OptionValue>
   +additionalPrice: Int
   +stock: Int
   +checkHasEnoughStock(qty: Int)
@@ -197,10 +198,14 @@ class DiscountLine {
 class Payment {
   +id: Long
   +orderId: Long
-  +totalAmount: Int
+  +originalTotal: Int
+  +finalTotal: Int
+  +nonCashAmount: Int
+  +paidAmount: Int
   +refundedAmount: Int
   +status: PaymentStatus
   +details: List<PaymentItemDetail>
+  +methods: List<PaymentMethod>
   +create(order: Order) Payment
 }
 
@@ -208,8 +213,18 @@ class PaymentItemDetail {
   +id: Long
   +paymentId: Long
   +orderItemId: Long
-  +amount: Int
+  +originalPrice: Int
+  +discountedPrice: Int
+  +nonCashAmount: Int
+  +paidAmount: Int
   +refunded: Boolean
+}
+
+class PaymentMethod {
+	+id: Long
+	+paymentId: Long
+	+type: PaymentMethodType
+	+amount: Int
 }
 
 class ProductSalesLog {
@@ -243,6 +258,7 @@ Order --> DiscountLine
 Order --> Payment
 Payment --> PaymentItemDetail
 PaymentItemDetail --> OrderItem
+Payment --> PaymentMethod
 Order --> ProductSalesLog
 Product --> ProductSalesLog
 Product --> ProductSalesAggregationDaily
@@ -636,6 +652,21 @@ Order --> ProductSalesLog
 | `orderItemId` | `Long` | 주문 항목 ID |
 | `amount` | `Int` | 결제 금액 |
 | `refunded` | `Boolean` | 환불 여부 |
+
+---
+
+## `PaymentMethod`
+
+### 필드
+
+| 컬럼명           | 타입                  | 설명       |
+| ------------- | ------------------- | -------- |
+| `id`          | `Long`              | 상세 ID    |
+| `paymentId`   | `Long`              | 결제 ID    |
+| `orderItemId` | `Long`              | 주문 항목 ID |
+| `type`        | `PaymentMethodType` | 결제 수단    |
+| `amount`      | `Int`               | 결제 금액    |
+
 
 ---
 

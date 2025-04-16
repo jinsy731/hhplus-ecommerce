@@ -16,6 +16,7 @@
 - [✍️ 작성 정보](#✍️-작성-정보)
 
 
+
 ## 공통
 ### 요청 형식
 
@@ -172,14 +173,39 @@
 			{
 			  "productId": 1,
 			  "name": "티셔츠",
+			  "basePrice": 29000,
+			  "currency": "KRW",
+			  "status": "ON_SALE",
+			  "optionSpecs": [
+				  {
+					  "id": 1,
+					  "name": "색상",
+					  "displayOrder": 1,
+					  "values": [
+						  {"id": 11, "value": "검정"},
+						  {"id": 12, "value": "회색"},
+					  ]
+				  },
+				  {
+					  "id": 2,
+					  "name": "사이즈",
+					  "displayOrder": 2,
+					  "values": [
+						  {"id": 13, "value": "S"},
+						  {"id": 14, "value": "M"},
+					  ]
+				  },
+			  ],
 			  "variants": [
 				{
 				  "variantId": 101,
-				  "option": "검정 / L",
-				  "price": 20000,
+				  "optionValueIds": [1, 2],
+				  "additionalPrice": 1000,
+				  "status": "ACTIVE",
 				  "stock": 10
 				}
-			  ]
+			  ],
+			  "status": "ON_SALE"
 			}	
 		],
 		"pageInfo": {
@@ -192,20 +218,30 @@
 }
 ```
 
-| 필드                       | 타입       | 설명                 |
-| ------------------------ | -------- | ------------------ |
-| `productId`              | Long     | 유저 ID              |
-| `name `                  | Int      | 유저 잔액              |
-| `variants`               | Object[] | 옵션                 |
-| `variants[].variantId`   | Long     | 옵션 ID              |
-| `variants[].option`      | String   | 옵션 이름              |
-| `variants[].price`       | Int      | 가격                 |
-| `variants[].stock`       | Int      | 재고                 |
-| `pageInfo`               | Object   | 페이징 요청 시 페이지 관련 정보 |
-| `pageInfo.page`          | Int      | 현재 페이지 번호          |
-| `pageInfo.size`          | Int      | 요청한 페이지 크기         |
-| `pageInfo.totalElements` | Int      | 전체 항목 수            |
-| `pageInfo.totalPages`    | Int      | 전체 페이지 수           |
+| 필드                             | 타입       | 설명                   |
+| ------------------------------ | -------- | -------------------- |
+| `productId`                    | Long     | 유저 ID                |
+| `name `                        | Int      | 유저 잔액                |
+| `basePrice`                    | Int      | 기본 금액                |
+| `currency`                     | String   | 화폐 단위                |
+| `status`                       | String   | 상품 상태                |
+| `optionSpecs`                  | Object[] | 옵션 스펙 배열             |
+| `optionSpecs[].id`             | Long     | 옵션 스펙 ID             |
+| `optionSpecs[].name`           | String   | 옵션 스펙 이름             |
+| `optionSpecs[].displayOrder`   | Int      | 옵션 스펙 노출 순서          |
+| `optionSpecs[].values`         | Object[] | 옵션 값 배열              |
+| `optionSpecs[].values[].id`    | Long     | 옵션 값 ID              |
+| `optionSpecs[].values[].value` | String   | 옵션 값                 |
+| `variants`                     | Object[] | 옵션 조합                |
+| `variants[].variantId`         | Long     | 옵션 조합 ID             |
+| `variants[].optionValueIds`    | Long[]   | 옵션 조합에 포함된 옵션 스펙 IDs |
+| `variants[].additionalPrice`   | Int      | 옵션 조합에 따른 추가 가격      |
+| `variants[].stock`             | Int      | 해당 옵션 조합의 재고         |
+| `pageInfo`                     | Object   | 페이징 요청 시 페이지 관련 정보   |
+| `pageInfo.page`                | Int      | 현재 페이지 번호            |
+| `pageInfo.size`                | Int      | 요청한 페이지 크기           |
+| `pageInfo.totalElements`       | Int      | 전체 항목 수              |
+| `pageInfo.totalPages`          | Int      | 전체 페이지 수             |
 
 
 ---
@@ -398,6 +434,7 @@
 | `totalSold` | Int    | 총 판매수량 |
 
 ## ✍️ 작성 정보
-| 수정내역  | 작성자 | 작성일        |
-| ----- | --- | ---------- |
-| 최초 작성 | 진승연 | 2025-04-03 |
+| 수정내역            | 작성자 | 작성일        |
+| --------------- | --- | ---------- |
+| 최초 작성           | 진승연 | 2025-04-03 |
+| 주문 조회 API 응답 수정 | 진승연 | 2025-04-08 |

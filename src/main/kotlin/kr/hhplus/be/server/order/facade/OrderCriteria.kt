@@ -1,0 +1,31 @@
+package kr.hhplus.be.server.order.facade
+
+import kr.hhplus.be.server.coupon.application.CouponCommand
+import kr.hhplus.be.server.order.application.OrderCommand
+import kr.hhplus.be.server.order.application.OrderItemCommand
+import kr.hhplus.be.server.order.domain.Order
+import kr.hhplus.be.server.payment.application.PaymentCommand
+import kr.hhplus.be.server.product.domain.Product
+import java.time.LocalDateTime
+
+class OrderCriteria {
+    data class PlaceOrder(
+        val userId: Long,
+        val orderItem: List<OrderItem>,
+        val userCouponIds: List<Long>,
+        val payMethods: List<PaymentCommand.PayMethod>,
+        val now: LocalDateTime = LocalDateTime.now()
+    ) {
+        fun toOrderCommand(products: List<Product>) = OrderCommand.Create(userId, products, orderItem.map { it.toOrderItemCommand() }, now)
+        fun toCouponCommand(order: Order) = CouponCommand.ApplyToOrder(userId, order, userCouponIds, now)
+        fun toPreparePaymentCommand(order: Order) = PaymentCommand.Prepare(order, now, payMethods)
+    }
+
+    data class OrderItem(
+        val productId: Long,
+        val variantId: Long,
+        val quantity: Int
+    ) {
+        fun toOrderItemCommand() = OrderItemCommand.Create(productId, variantId, quantity)
+    }
+}

@@ -4,12 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(description = "공통 응답 포맷")
 data class CommonResponse<T>(
-    @Schema(description = "성공 코드", example = "SUCCESS")
-    val code: String,
-
-    @Schema(description = "응답 메시지", example = "요청이 성공적으로 처리되었습니다.")
-    val message: String,
-
     @Schema(description = "응답 데이터")
     val data: T? = null
 )

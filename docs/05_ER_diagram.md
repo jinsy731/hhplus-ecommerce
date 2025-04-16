@@ -25,6 +25,7 @@
     - [`PRODUCT_SALES_AGGREGATION_CHECKPOINT`](#product_sales_aggregation_checkpoint)
     - [`PAYMENT`](#payment)
     - [`PAYMENT_ITEM_DETAIL`](#payment_item_detail)
+    - [`PAYMENT_METHOD`](#payment_method)
 
 
 ## ER 다이어그램
@@ -46,6 +47,7 @@ erDiagram
     OPTION_SPEC {
         BIGINT id PK "옵션 사양 ID"
         BIGINT product_id "상품 ID (FK)"
+        INT display_order "옵션 노출 순서"
         VARCHAR(100) name "옵션 이름 (예: 색상, 크기)"
     }
 
@@ -62,9 +64,10 @@ erDiagram
         INT stock "재고 수량"
     }
 
-    VARIANT_OPTION {
-        BIGINT variant_id "상품 변형 ID (FK)"
-        BIGINT option_value_id "옵션 값 ID (FK)"
+    PRODUCT_VARIANT_OPTION_VALUE {
+        BIGINT variant_id "상품 변형 ID (PK, FK)"
+        BIGINT option_value_id "옵션 값 ID (PK, FK)"
+        INT display_order "옵션값 순서 보장을 위한 필드"
     }
 
     COUPON {
@@ -146,7 +149,10 @@ erDiagram
     PAYMENT {
         BIGINT id PK "결제 ID"
         BIGINT order_id "주문 ID (FK)"
-        INT total_amount "총 결제 금액"
+        INT original_total "기존 총액"
+        INT final_total "최종 총액"
+        INT non_cash_amount "비현금성 결제 수단으로 결제한 금액"
+        INT paid_amount "현금성 결제수단으로 결제한 금액"
         INT refunded_amount "환불된 금액"
         VARCHAR(255) status "enum(PENDING, PAID, FAILED, REFUND_REQUESTED, REFUND_PROCESSING, PARTIALLY_REFUNDED, REFUNDED) :: 결제 상태"
     }
@@ -155,8 +161,18 @@ erDiagram
         BIGINT id PK "결제 항목 상세 ID"
         BIGINT payment_id "결제 ID (FK)"
         BIGINT order_item_id "주문 항목 ID (FK)"
-        INT amount "결제 금액"
+        INT original_price "기존 가격"
+        INT discounted_price "할인된 가격"
+        INT non_cash_amount "포인트/예치금 등으로 결제한 금액"
+        INT paid_amount "현금/카드 등으로 결제한 금액"
         TINYINT(1) refunded "환불 여부 (0: 아니오, 1: 예)"
+    }
+
+    PAYMENT_METHOD {
+        BIGINT id PK "결제수단 항목 ID"
+        BIGINT payment_id "결제 ID (FK)"
+        BIGINT type "enum(POINT, CREDIT..) 결제수단"
+        INT amount "해당 결제수단으로 결제된 금액"
     }
 
     %% === 관계선 ===
@@ -181,6 +197,7 @@ erDiagram
     ORDER ||..|| PAYMENT : paid_with
     PAYMENT ||--|{ PAYMENT_ITEM_DETAIL : includes
     PAYMENT_ITEM_DETAIL ||--|| ORDER_ITEM : details
+    PAYMENT ||--|{ PAYMENT_METHOD: includes
 ```
 
 
@@ -190,8 +207,9 @@ erDiagram
 
 ### `USER_BALANCE`
 
->사용자의 보유 잔액을 관리하는 테이블.  
-`User`와 1:1 관계로 매핑된다.
+>[!info]
+>- 사용자의 보유 잔액을 관리하는 테이블.
+>- `User`와 1:1 관계로 매핑된다.
 
 | 컬럼명     | 타입      | 설명           | 제약조건   |
 |------------|-----------|----------------|------------|
@@ -202,8 +220,9 @@ erDiagram
 
 ### `PRODUCT`
 
->판매되는 상품의 기본 정보.  
-옵션 사양(`OPTION_SPEC`)과 옵션 조합(`PRODUCT_VARIANT`)을 통해 다양한 옵션을 가질 수 있다.
+>[!info]
+>- 판매되는 상품의 기본 정보.
+>- 옵션 사양(`OPTION_SPEC`)과 옵션 조합(`PRODUCT_VARIANT`)을 통해 다양한 옵션을 가질 수 있다.
 
 | 컬럼명        | 타입     | 설명    | 제약조건     |
 | ---------- | ------ | ----- | -------- |
@@ -214,14 +233,16 @@ erDiagram
 
 ### `OPTION_SPEC`
 
->`PRODUCT`에 속한 옵션의 분류(색상, 사이즈 등) 및 각 선택 가능한 값 정의 (검정, 흰색 등).  
-`OPTION_SPEC`1:N`OPTION_VALUE`
+>[!info]
+>- `PRODUCT`에 속한 옵션의 분류(색상, 사이즈 등) 및 각 선택 가능한 값 정의 (검정, 흰색 등)
+>- `OPTION_SPEC` 1:N `OPTION_VALUE`
 
-| 컬럼명     | 타입      | 설명          | 제약조건      |
-|------------|-----------|---------------|---------------|
-| id         | BIGINT    | 옵션 사양 ID  | PK            |
-| product_id | BIGINT    | 상품 ID       | FK → PRODUCT  |
-| name       | STRING    | 옵션 이름     | NOT NULL      |
+| 컬럼명           | 타입     | 설명       | 제약조건         |
+| ------------- | ------ | -------- | ------------ |
+| id            | BIGINT | 옵션 사양 ID | PK           |
+| product_id    | BIGINT | 상품 ID    | FK → PRODUCT |
+| name          | STRING | 옵션 이름    | NOT NULL     |
+| display_order | INT    | 옵션 노출 순서 | NOT NULL     |
 
 
 ### `OPTION_VALUE`
@@ -235,34 +256,39 @@ erDiagram
 
 ### `PRODUCT_VARIANT`
 
->실제 구매 가능한 상품 단위.  
-여러`OPTION_VALUE`의 조합으로 구성되며, 별도의 추가 가격과 재고를 가진다.
-`PRODUCT_VARIANT` → `PRODUCT`: 비식별
+>[!info]
+>- 실제 구매 가능한 상품 단위.
+>- 여러 `OPTION_VALUE`의 조합으로 구성되며, 별도의 추가 가격과 재고를 가진다.
+>- `PRODUCT_VARIANT` → `PRODUCT`: 비식별
 
-| 컬럼명          | 타입   | 설명           | 제약조건         |
-|------------------|--------|----------------|------------------|
-| id               | BIGINT | 변형 상품 ID   | PK               |
-| product_id       | BIGINT | 상품 ID        | FK → PRODUCT     |
-| additional_price | INT    | 추가 금액      | NOT NULL         |
-| stock            | INT    | 재고           | NOT NULL         |
+| 컬럼명              | 타입     | 설명         | 제약조건           |
+| ---------------- | ------ | ---------- | -------------- |
+| id               | BIGINT | 상품옵션 조합 ID | PK             |
+| product_id       | BIGINT | 상품 ID      | FK → PRODUCT   |
+| additional_price | INT    | 추가 금액      | NOT NULL       |
+| stock            | INT    | 재고         | NOT NULL       |
+| status           | STRING | 상태         | ENUM, NOT NULL |
 
 
-### `VARIANT_OPTION`
+### `PRODUCT_VARIANT_OPTION_VALUE`
 
->`PRODUCT_VARIANT`와`OPTION_VALUE`의 다대다 관계를 나타내는 조합 테이블.  
-하나의 구매 상품 단위는 여러 옵션 값으로 구성될 수 있음.
-`VARIANT_OPTION` → `OPTION_VALUE`: 비식별 M:N
+>[!info]
+>- `PRODUCT_VARIANT` 와 `OPTION_VALUE`의 다대다 관계를 나타내는 조합 테이블.
+>- 하나의 구매 상품 단위는 여러 옵션 값으로 구성될 수 있음.
+>- `VARIANT_OPTION` → `OPTION_VALUE`: 비식별 M:N
 
-| 컬럼명           | 타입   | 설명               | 제약조건                        |
-|------------------|--------|--------------------|---------------------------------|
-| variant_id       | BIGINT | 변형 상품 ID       | FK → PRODUCT_VARIANT, 복합 PK  |
-| option_value_id  | BIGINT | 옵션 값 ID         | FK → OPTION_VALUE, 복합 PK     |
+| 컬럼명             | 타입     | 설명        | 제약조건                        |
+| --------------- | ------ | --------- | --------------------------- |
+| variant_id      | BIGINT | 상품 조합 ID  | FK → PRODUCT_VARIANT, 복합 PK |
+| option_value_id | BIGINT | 옵션 값 ID   | FK → OPTION_VALUE, 복합 PK    |
+| display_order   | INT    | 옵션값 순서 보장 |                             |
 
 
 ### `COUPON`
 
->발급 가능한 쿠폰. 쿠폰에 대한 템플릿 역할을 함.
-잔여 수량이 존재할 경우 발급 가능.
+>[!info]
+>- 발급 가능한 쿠폰. 쿠폰에 대한 템플릿 역할을 함.
+>- 잔여 수량이 존재할 경우 발급 가능.
 
 | 컬럼명                | 타입     | 설명    | 제약조건     |
 | ------------------ | ------ | ----- | -------- |
@@ -272,9 +298,10 @@ erDiagram
 
 ### `RATE_DISCOUNT_POLICY`
 
-> 할인율에 따른 할인 정책을 위한 테이블.
-> 할인율과 할인 정책 타입으로 구성된다.
-> `RATE_DISCOUNT_POLICY` 1:1 `COUPON`
+> [!info]
+> - 할인율에 따른 할인 정책을 위한 테이블.
+> - 할인율과 할인 정책 타입으로 구성된다.
+> - `RATE_DISCOUNT_POLICY` 1:1 `COUPON`
 
 | 컬럼명       | 타입     | 설명       | 제약조건     |
 | --------- | ------ | -------- | -------- |
@@ -285,9 +312,10 @@ erDiagram
 
 ### `AMOUNT_DISCOUNT_POLICY`
 
-> 금액할인 기반의 할인 정책을 위한 테이블.
-> 할인금액과 할인 정책 타입으로 구성된다.
-> `AMOUNT_DISCOUNT_POLICY` 1:1 `COUPON`
+> [!info]
+> - 금액할인 기반의 할인 정책을 위한 테이블.
+> - 할인금액과 할인 정책 타입으로 구성된다.
+> - `AMOUNT_DISCOUNT_POLICY` 1:1 `COUPON`
 
 | 컬럼명       | 타입     | 설명       | 제약조건     |
 | --------- | ------ | -------- | -------- |
@@ -298,9 +326,10 @@ erDiagram
 
 ### `USER_COUPON`
 
->사용자가 발급받은 쿠폰에 대한 테이블.  
-`COUPON`과 연결되며, 상태, 만료일 등을 포함한다.
-`USER_COUPON` → `COUPON`, `USER`: 식별관계
+>[!info]
+>- 사용자가 발급받은 쿠폰에 대한 테이블.
+>- `COUPON` 과 연결되며, 상태, 만료일 등을 포함한다.
+>- `USER_COUPON` → `COUPON`, `USER`: 식별관계
 
 | 컬럼명        | 타입     | 설명        | 제약조건        |
 | ---------- | ------ | --------- | ----------- |
@@ -315,8 +344,9 @@ erDiagram
 
 ### `ORDER`
 
->주문의 루트 테이블.  
-주문 상태, 총 결제 금액 등을 보관하며, 주문아이템과 할인 내역, 결제, 판매 기록 등과 연결된다.
+>[!info]
+>- 주문의 루트 테이블.
+>- 주문 상태, 총 결제 금액 등을 보관하며, 주문아이템과 할인 내역, 결제, 판매 기록 등과 연결된다.
 
 | 컬럼명           | 타입   | 설명              | 제약조건 |
 |------------------|--------|-------------------|----------|
@@ -329,7 +359,9 @@ erDiagram
 
 ### `ORDER_ITEM`
 
->한 주문에 여러 개의 상품이 있을 수 있다. 구매한 상품별 수량, 개별 가격, 소계, 상태를 포함한다.
+>[!info]
+>- 한 주문에 여러 개의 상품이 있을 수 있다.
+>- 구매한 상품별 수량, 개별 가격, 소계, 상태를 포함한다.
 
 | 컬럼명     | 타입   | 설명          | 제약조건                |
 |------------|--------|---------------|--------------------------|
@@ -344,24 +376,26 @@ erDiagram
 
 ### `DISCOUNT_LINE`
 
->주문에 적용된 쿠폰을 기록.
->추후 다양한 할인수단으로 확장할 수 있도록 `source_id`는 쿠폰에 종속되지 않도록 설계함.
-할인 금액, 설명, 할인 출처 등을 통해 트래킹 가능하게 설계함.
+>[!info]
+>- 주문에 적용된 쿠폰을 기록.
+>- 추후 다양한 할인수단으로 확장할 수 있도록 `source_id`는 쿠폰에 종속되지 않도록 설계함.
+   할인 금액, 설명, 할인 출처 등을 통해 트래킹 가능하게 설계함.
 
-| 컬럼명     | 타입   | 설명               | 제약조건            |
-|------------|--------|--------------------|----------------------|
-| id         | BIGINT | 할인 라인 ID       | PK                   |
-| order_id   | BIGINT | 주문 ID            | FK → ORDER           |
-| type       | STRING | 할인 종류          | NOT NULL             |
-| source_id  | BIGINT | 출처 (쿠폰 등)     | NULLABLE             |
-| amount     | INT    | 할인 금액          | NOT NULL             |
-| description| STRING | 설명               | NOT NULL             |
+| 컬럼명         | 타입     | 설명        | 제약조건       |
+| ----------- | ------ | --------- | ---------- |
+| id          | BIGINT | 할인 라인 ID  | PK         |
+| order_id    | BIGINT | 주문 ID     | FK → ORDER |
+| type        | STRING | 할인 종류     | NOT NULL   |
+| source_id   | BIGINT | 출처 (쿠폰 등) | NULLABLE   |
+| amount      | INT    | 할인 금액     | NOT NULL   |
+| description | STRING | 설명        | NOT NULL   |
 
 
 ### `PRODUCT_SALES_LOG`
 
->주문 시점의 판매 이력을 기록하는 테이블.  
-집계를 위해 개별 상품별 판매 내역을 유지하며, 환불 시 제외할 수 있도록 사용됨.
+>[!info]
+>- 주문 시점의 판매 이력을 기록하는 테이블.
+>- 집계를 위해 개별 상품별 판매 내역을 유지하며, 환불 시 제외할 수 있도록 사용됨.
 
 | 컬럼명     | 타입   | 설명         | 제약조건                  |
 |------------|--------|--------------|----------------------------|
@@ -374,8 +408,9 @@ erDiagram
 
 ### `PRODUCT_SALES_AGGREGATION_DAILY`
 
->하루 단위로 집계된 상품별 판매 수량.  
-인기 상품 조회 등 통계 기반 기능에 사용되며,`sales_day`+`product_id`로 복합 PK 구성.
+>[!info]
+>- 하루 단위로 집계된 상품별 판매 수량.
+>- 인기 상품 조회 등 통계 기반 기능에 사용되며, `sales_day` + `product_id` 로 복합 PK 구성.
 
 | 컬럼명        | 타입      | 설명        | 제약조건                  |
 |---------------|-----------|-------------|----------------------------|
@@ -386,8 +421,9 @@ erDiagram
 
 ### `PRODUCT_SALES_AGGREGATION_CHECKPOINT`
 
->마지막 집계 완료 시점을 기록하는 테이블.  
-집계 배치에서 중복 계산을 방지하기 위한 기준 시각 관리.
+>[!info]
+>- 마지막 집계 완료 시점을 기록하는 테이블.
+>- 집계 배치에서 중복 계산을 방지하기 위한 기준 시각 관리.
 
 | 컬럼명           | 타입         | 설명              | 제약조건 |
 |------------------|--------------|-------------------|----------|
@@ -397,28 +433,47 @@ erDiagram
 
 ### `PAYMENT`
 
->결제 정보 관리 테이블.  
-주문에 대한 총 결제 금액, 환불 누적 금액, 결제 상태를 포함한다.
+>[!info]
+>- 결제 정보 관리 테이블.
+>- 주문에 대한 총 결제 금액, 환불 누적 금액, 결제 상태를 포함한다.
 
-| 컬럼명             | 타입     | 설명       | 제약조건       |
-| --------------- | ------ | -------- | ---------- |
-| id              | BIGINT | 결제 ID    | PK         |
-| order_id        | BIGINT | 주문 ID    | FK → ORDER |
-| total_amount    | INT    | 결제 총액    | NOT NULL   |
-| refunded_amount | INT    | 환불 누적 금액 | DEFAULT 0  |
-| status          | STRING | 결제 상태    | NOT NULL   |
+| 컬럼명             | 타입     | 설명         | 제약조건       |
+| --------------- | ------ | ---------- | ---------- |
+| id              | BIGINT | 결제 ID      | PK         |
+| order_id        | BIGINT | 주문 ID      | FK → ORDER |
+| original_total  | INT    | 기존 금액      | NOT NULL   |
+| final_total     | INT    | 최종 금액      | NOT NULL   |
+| non_cash_amount | INT    | 비현금성 결제 금액 | NOT NULL   |
+| paid_amount     | INT    | 현금성 결제 금액  | NOT NULL   |
+| refunded_amount | INT    | 환불 누적 금액   | DEFAULT 0  |
+| status          | STRING | 결제 상태      | NOT NULL   |
 
 
 ### `PAYMENT_ITEM_DETAIL`
 
->주문 항목별 결제 내역 상세 추적 테이블.  
-부분 취소 및 환불 처리를 지원하며,`refunded`여부로 상태 관리.
+>[!info]
+>- 주문 항목별 결제 내역 상세 추적 테이블.
+>- 부분 취소 및 환불 처리를 지원하며, `refunded` 여부로 상태 관리.
 
-| 컬럼명        | 타입    | 설명             | 제약조건                     |
-|---------------|---------|------------------|-------------------------------|
-| id            | BIGINT  | 상세 ID          | PK                            |
-| payment_id    | BIGINT  | 결제 ID          | FK → PAYMENT                  |
-| order_item_id | BIGINT  | 주문 항목 ID     | FK → ORDER_ITEM               |
-| amount        | INT     | 결제 금액        | NOT NULL                      |
-| refunded      | BOOLEAN | 환불 여부        | DEFAULT false                 |
+| 컬럼명              | 타입      | 설명                      | 제약조건               |
+| ---------------- | ------- | ----------------------- | ------------------ |
+| id               | BIGINT  | 상세 ID                   | PK                 |
+| payment_id       | BIGINT  | 결제 ID                   | FK → PAYMENT       |
+| order_item_id    | BIGINT  | 주문 항목 ID                | FK → ORDER_ITEM    |
+| original_price   | INT     | 기존 가격                   | NOT NULL           |
+| discounted_price |         | 할인된 가격                  | NOT NULL DEFAULT 0 |
+| non_cash_amount  | INT     | 포인트/예치금 등으로 결제한 금액      | NOT NULL           |
+| amount           | INT     | 결제 현금/카드 등으로 결제한 금액     | NOT NULL           |
+| refunded         | BOOLEAN | 환불 환불 여부 (0: 아니오, 1: 예) | DEFAULT false      |
 
+### `PAYMENT_METHOD`
+>[!info]
+>- 결제에 사용된 결제 수단별 내역을 추적하기 위한 테이블.
+>- 회계/정산 처리에 사용
+
+| 컬럼명        | 타입   | 설명         | 제약조건        |
+| ------------- | ------ | ------------ | --------------- |
+| id            | BIGINT | 상세 ID      | PK              |
+| payment_id    | BIGINT | 결제 ID      | FK → PAYMENT    |
+| order_item_id | BIGINT | 주문 항목 ID | FK → ORDER_ITEM |
+| amount        | INT    | 결제 금액    | NOT NULL        |
