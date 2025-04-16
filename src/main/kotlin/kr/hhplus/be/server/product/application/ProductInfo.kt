@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.order.application.dto
+package kr.hhplus.be.server.product.application
 
 import kr.hhplus.be.server.product.domain.Product
 import kr.hhplus.be.server.product.domain.ProductVariant

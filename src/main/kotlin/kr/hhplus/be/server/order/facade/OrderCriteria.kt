@@ -2,7 +2,7 @@ package kr.hhplus.be.server.order.facade
 
 import kr.hhplus.be.server.coupon.application.CouponCommand
 import kr.hhplus.be.server.order.application.OrderCommand
-import kr.hhplus.be.server.order.application.dto.toCreateOrderProductInfo
+import kr.hhplus.be.server.product.application.toCreateOrderProductInfo
 import kr.hhplus.be.server.order.domain.Order
 import kr.hhplus.be.server.payment.application.PaymentCommand
 import kr.hhplus.be.server.product.domain.Product

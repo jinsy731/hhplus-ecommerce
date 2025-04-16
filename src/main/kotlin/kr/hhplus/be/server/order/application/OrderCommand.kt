@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.order.application
 
 import kr.hhplus.be.server.coupon.application.DiscountInfo
-import kr.hhplus.be.server.order.application.dto.ProductInfo
+import kr.hhplus.be.server.product.application.ProductInfo
 import kr.hhplus.be.server.order.domain.OrderContext
 import java.time.LocalDateTime
 

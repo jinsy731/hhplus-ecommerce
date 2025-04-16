@@ -27,7 +27,6 @@ class OrderFacade(
     @Transactional
     fun placeOrder(cri: OrderCriteria.PlaceOrder.Root) {
         // 주문 생성
-        val products = productService.findAllById(cri.items.map { it.productId })
         productService.validatePurchasability(ProductCommand.ValidatePurchasability.Root(
             items = cri.items.map { ProductCommand.ValidatePurchasability.Item(
                 productId = it.productId,
@@ -35,6 +34,7 @@ class OrderFacade(
                 quantity = it.quantity
             ) }
         ))
+        val products = productService.findAllById(cri.items.map { it.productId })
         // TODO: 상품 검증(재고 + 상태)
         val order = orderService.createOrder(cri.toCreateOrderCommand(products))
         // 쿠폰 적용

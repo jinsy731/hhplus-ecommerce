@@ -18,6 +18,6 @@ class PaymentService(private val paymentRepository: PaymentRepository) {
     fun completePayment(cmd: PaymentCommand.Complete) {
         val payment = paymentRepository.getById(cmd.paymentId)
         payment.completePayment()
+        paymentRepository.save(payment)
     }
-
 }
