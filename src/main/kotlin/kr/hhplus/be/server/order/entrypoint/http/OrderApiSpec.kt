@@ -19,12 +19,12 @@ interface OrderApiSpec {
         summary = "주문 생성",
         description = "상품과 수량, 쿠폰을 입력받아 주문을 생성합니다.",
         responses = [
-            ApiResponse(responseCode = "200", description = "주문 성공", content = [Content(schema = Schema(implementation = CreateOrderResponse::class))]),
+            ApiResponse(responseCode = "200", description = "주문 성공", content = [Content(schema = Schema(implementation = OrderResponse.Create::class))]),
             ApiResponse(responseCode = "400", description = "잔액 부족, 쿠폰 만료, 재고 부족", content = [Content(schema = Schema(implementation = ErrorResponse::class))])
         ]
     )
     @PostMapping
     fun createOrder(
-        @RequestBody request: CreateOrderRequest
-    ): CommonResponse<CreateOrderResponse>
+        @RequestBody request: OrderRequest.Create.Root
+    ): CommonResponse<OrderResponse.Create>
 }

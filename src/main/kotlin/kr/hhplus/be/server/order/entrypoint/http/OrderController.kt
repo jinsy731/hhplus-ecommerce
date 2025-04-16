@@ -13,10 +13,10 @@ class OrderController: OrderApiSpec {
 
     @PostMapping
     override fun createOrder(
-        @RequestBody request: CreateOrderRequest
-    ): CommonResponse<CreateOrderResponse> {
+        @RequestBody request: OrderRequest.Create.Root
+    ): CommonResponse<OrderResponse.Create> {
         // 임시 응답 (실제 구현은 entrypoint.http 패키지의 클래스에서 확인)
-        val result = CreateOrderResponse(999, OrderStatus.PAID, 15000)
+        val result = OrderResponse.Create(999, OrderStatus.PAID, 15000)
         return CommonResponse(result)
     }
 }
