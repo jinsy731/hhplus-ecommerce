@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.product.domain
+package kr.hhplus.be.server.product.domain.product
 
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable

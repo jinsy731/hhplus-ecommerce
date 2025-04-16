@@ -8,6 +8,4 @@ class CouponRequest {
         @Schema(description = "쿠폰 ID", example = "12")
         val couponId: Long
     )
-
-
 }

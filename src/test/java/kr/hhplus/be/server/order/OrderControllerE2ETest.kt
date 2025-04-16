@@ -4,7 +4,7 @@ import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.common.CommonResponse
-import kr.hhplus.be.server.order.entrypoint.http.CreateOrderResponse
+import kr.hhplus.be.server.order.entrypoint.http.OrderResponse
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -36,7 +36,7 @@ internal class OrderControllerE2ETest {
             "/api/v1/orders",
             HttpMethod.POST,
             HttpEntity(request),
-            object : ParameterizedTypeReference<CommonResponse<CreateOrderResponse>>() {}
+            object : ParameterizedTypeReference<CommonResponse<OrderResponse.Create>>() {}
         )
 
         response.statusCode shouldBe HttpStatus.OK

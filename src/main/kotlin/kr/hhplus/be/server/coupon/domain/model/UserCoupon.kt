@@ -11,7 +11,6 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import kr.hhplus.be.server.common.exception.ExpiredCouponException
 import kr.hhplus.be.server.common.exception.InvalidCouponStatusException
-import kr.hhplus.be.server.order.domain.Order
 import java.time.LocalDateTime
 
 /**
@@ -48,7 +47,8 @@ class UserCoupon(
      * 쿠폰 사용 처리
      */
     fun use(now: LocalDateTime) {
-        check(status == UserCouponStatus.UNUSED && coupon.isValid(now)) { throw InvalidCouponStatusException() }
+        coupon.validate(now)
+        check(status == UserCouponStatus.UNUSED) { throw InvalidCouponStatusException() }
         check(expiredAt.isAfter(now)) {
             this.status = UserCouponStatus.EXPIRED
             throw ExpiredCouponException()
@@ -58,14 +58,17 @@ class UserCoupon(
         this.status = UserCouponStatus.USED
     }
 
-    fun applyTo(order: Order, userId: Long, now: LocalDateTime): List<DiscountLine> {
-        val applicableItems = coupon.applicableItems(order, userId)
-        if (applicableItems.isEmpty()) return emptyList()
+    fun calculateDiscountAndUse(context: DiscountContext.Root): List<DiscountLine> {
+        val applicableItems = coupon.getApplicableItems(context)
 
-        use(now)
+        use(context.timestamp)
 
-        val totalDiscount = coupon.calculateDiscount(now, applicableItems.sumOf { it.subTotal() })
-        return DiscountDistributor.distribute(applicableItems, this.id!!, now, totalDiscount)
+        val orderItemsDiscountMap = coupon.calculateDiscount(context, applicableItems)
+        return DiscountLine.from(
+            sourceId = this.coupon.id!!,
+            discountMethod = DiscountMethod.COUPON,
+            orderItemsDiscountMap = orderItemsDiscountMap,
+            now = context.timestamp)
     }
 }
 

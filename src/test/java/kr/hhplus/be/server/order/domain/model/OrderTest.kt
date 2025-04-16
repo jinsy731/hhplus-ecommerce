@@ -4,12 +4,13 @@ import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.common.exception.AlreadyPaidOrderException
 import kr.hhplus.be.server.common.exception.ErrorCode
+import kr.hhplus.be.server.coupon.application.DiscountInfo
 import kr.hhplus.be.server.coupon.domain.model.DiscountLine
+import kr.hhplus.be.server.coupon.domain.model.DiscountMethod
 import kr.hhplus.be.server.order.OrderTestFixture
-import kr.hhplus.be.server.order.application.OrderCommand
-import kr.hhplus.be.server.order.application.OrderItemCommand
 import kr.hhplus.be.server.order.domain.Order
-import kr.hhplus.be.server.product.ProductTestFixture
+import kr.hhplus.be.server.order.domain.OrderContext
+import kr.hhplus.be.server.order.domain.OrderStatus
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -20,19 +21,23 @@ class OrderTest {
     fun `✅주문 생성`() {
         // arrange
         val now = LocalDateTime.now()
-        val order = Order.create(OrderCommand.Create(
+        val order = Order.create(OrderContext.Create.Root(
             userId = 1L,
-            products = listOf(ProductTestFixture.createValidProduct(1L), ProductTestFixture.createValidProduct(2L)),
-            orderItems = listOf(OrderItemCommand.Create(1L, 1L, 1), OrderItemCommand.Create(1L, 2L, 1)), // 2600 포인트
-            now = now
+            timestamp = now,
+            items = listOf(OrderContext.Create.Item(
+                productId = 1L,
+                variantId = 1L,
+                quantity = 1,
+                unitPrice = BigDecimal(1000)
+            ))
         ))
 
         // act, assert
         order.userId shouldBe 1L
-        order.status shouldBe kr.hhplus.be.server.order.domain.OrderStatus.CREATED
-        order.originalTotal shouldBe BigDecimal(2600)
+        order.status shouldBe OrderStatus.CREATED
+        order.originalTotal shouldBe BigDecimal(1000)
         order.discountedAmount shouldBe BigDecimal.ZERO
-        order.orderItems.size shouldBe 2
+        order.orderItems.size shouldBe 1
         order.createdAt shouldBe now
         order.updatedAt shouldBe now
     }
@@ -59,8 +64,16 @@ class OrderTest {
         val now = LocalDateTime.now()
         val order = OrderTestFixture.createOrder(1L)
         val discountLines = listOf(
-            DiscountLine(1L, 1L, kr.hhplus.be.server.coupon.domain.model.DiscountMethod.COUPON, 1L, BigDecimal(1000)),
-            DiscountLine(2L, 2L, kr.hhplus.be.server.coupon.domain.model.DiscountMethod.COUPON, 2L, BigDecimal(1000)),
+            DiscountInfo(
+                orderItemId = 1L,
+                amount = BigDecimal(1000),
+                sourceId = 1L,
+                sourceType = "COUPON"),
+            DiscountInfo(
+                orderItemId = 2L,
+                amount = BigDecimal(1000),
+                sourceId = 1L,
+                sourceType = "COUPON")
         )
         // act
         order.applyDiscount(discountLines)
@@ -74,15 +87,23 @@ class OrderTest {
         // arrange
         val order = OrderTestFixture.createOrder(1L)
         val discountLines = listOf(
-            DiscountLine(1L, orderItemId = 1L, kr.hhplus.be.server.coupon.domain.model.DiscountMethod.COUPON, 1L, BigDecimal(1000)),
-            DiscountLine(2L, orderItemId = 2L, kr.hhplus.be.server.coupon.domain.model.DiscountMethod.COUPON, 2L, BigDecimal(1000)),
+            DiscountInfo(
+                orderItemId = 1L,
+                amount = BigDecimal(1000),
+                sourceId = 1L,
+                sourceType = "COUPON"),
+            DiscountInfo(
+                orderItemId = 2L,
+                amount = BigDecimal(1000),
+                sourceId = 1L,
+                sourceType = "COUPON")
         )
         // act
         order.applyDiscount(discountLines)
 
         // assert
-        order.orderItems[0].discountAmount shouldBe BigDecimal(1500)
-        order.orderItems[1].discountAmount shouldBe BigDecimal(1500)
+        order.orderItems[0].discountAmount shouldBe BigDecimal(1000)
+        order.orderItems[1].discountAmount shouldBe BigDecimal(1000)
     }
 
     @Test
@@ -90,8 +111,16 @@ class OrderTest {
         // arrange
         val order = OrderTestFixture.createOrder(1L)
         val discountLines = listOf(
-            DiscountLine(1L, orderItemId = 3L, kr.hhplus.be.server.coupon.domain.model.DiscountMethod.COUPON, 1L, BigDecimal(1000)),
-            DiscountLine(2L, orderItemId = 4L, kr.hhplus.be.server.coupon.domain.model.DiscountMethod.COUPON, 2L, BigDecimal(1000)),
+            DiscountInfo(
+                orderItemId = 3L,
+                amount = BigDecimal(1000),
+                sourceId = 1L,
+                sourceType = "COUPON"),
+            DiscountInfo(
+                orderItemId = 4L,
+                amount = BigDecimal(1000),
+                sourceId = 1L,
+                sourceType = "COUPON")
         )
         // act, assert
         shouldThrowExactly<IllegalStateException> { order.applyDiscount(discountLines) }
@@ -102,8 +131,16 @@ class OrderTest {
         // arrange
         val order = OrderTestFixture.createOrder(1L)
         val discountLines = listOf(
-            DiscountLine(1L, 1L, kr.hhplus.be.server.coupon.domain.model.DiscountMethod.COUPON, 1L, BigDecimal(10000)),
-            DiscountLine(2L, 2L, kr.hhplus.be.server.coupon.domain.model.DiscountMethod.COUPON, 2L, BigDecimal(10000)),
+            DiscountInfo(
+                orderItemId = 1L,
+                amount = BigDecimal(100000),
+                sourceId = 1L,
+                sourceType = "COUPON"),
+            DiscountInfo(
+                orderItemId = 2L,
+                amount = BigDecimal(100000),
+                sourceId = 1L,
+                sourceType = "COUPON")
         )
         // act
         order.applyDiscount(discountLines)
@@ -123,7 +160,7 @@ class OrderTest {
         order.completeOrder()
         
         // assert
-        order.status shouldBe kr.hhplus.be.server.order.domain.OrderStatus.PAID
+        order.status shouldBe OrderStatus.PAID
     }
 
 
@@ -133,7 +170,7 @@ class OrderTest {
         val order = Order(
             id = 1L,
             userId = 1L,
-            status = kr.hhplus.be.server.order.domain.OrderStatus.PAID
+            status = OrderStatus.PAID
         )
         // act, assert
         val ex = shouldThrowExactly<AlreadyPaidOrderException> { order.completeOrder() }

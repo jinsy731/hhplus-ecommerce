@@ -9,14 +9,15 @@ import org.springframework.stereotype.Service
 class PaymentService(private val paymentRepository: PaymentRepository) {
 
     @Transactional
-    fun preparePayment(cmd: PaymentCommand.Prepare): Payment {
-        return paymentRepository.save(Payment.create(cmd))
+    fun preparePayment(cmd: PaymentCommand.Prepare.Root): Payment {
+        val payment = Payment.create(cmd.toPreparePaymentContext())
+        return paymentRepository.save(payment)
     }
 
     @Transactional
     fun completePayment(cmd: PaymentCommand.Complete) {
         val payment = paymentRepository.getById(cmd.paymentId)
         payment.completePayment()
+        paymentRepository.save(payment)
     }
-
 }

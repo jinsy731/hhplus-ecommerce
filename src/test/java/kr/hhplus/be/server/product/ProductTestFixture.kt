@@ -1,8 +1,8 @@
 package kr.hhplus.be.server.product
 
-import kr.hhplus.be.server.product.domain.Product
-import kr.hhplus.be.server.product.domain.ProductStatus
-import kr.hhplus.be.server.product.domain.ProductVariant
+import kr.hhplus.be.server.product.domain.product.Product
+import kr.hhplus.be.server.product.domain.product.ProductStatus
+import kr.hhplus.be.server.product.domain.product.ProductVariant
 import java.math.BigDecimal
 
 object ProductTestFixture {

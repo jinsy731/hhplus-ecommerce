@@ -1,9 +1,10 @@
-package kr.hhplus.be.server.product.domain
+package kr.hhplus.be.server.product.domain.product
 
 import jakarta.persistence.*
 import kr.hhplus.be.server.common.exception.ProductUnavailableException
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
 import java.math.BigDecimal
+import kotlin.plus
 
 enum class ProductStatus {
     DRAFT,
@@ -13,7 +14,6 @@ enum class ProductStatus {
     HIDDEN,
     DISCONTINUED
 }
-
 
 @Entity
 @Table(name = "products")
@@ -50,12 +50,12 @@ class Product(
         variant.product = this
     }
 
-    fun purchase(variantId: Long, quantity: Int) {
-        checkAvailableToOrder(variantId, quantity)
-        findVariant(variantId).deductStock(quantity)
+    fun reduceStockByPurchase(variantId: Long, quantity: Int) {
+        validatePurchasability(variantId, quantity)
+        findVariant(variantId).reduceStock(quantity)
     }
 
-    fun checkAvailableToOrder(variantId: Long, quantity: Int) {
+    fun validatePurchasability(variantId: Long, quantity: Int) {
         check(this.status in setOf(ProductStatus.ON_SALE, ProductStatus.PARTIALLY_OUT_OF_STOCK)) { throw ProductUnavailableException() }
         findVariant(variantId)?.checkAvailableToOrder(quantity)
     }

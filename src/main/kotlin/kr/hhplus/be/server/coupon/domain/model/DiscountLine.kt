@@ -1,16 +1,10 @@
 package kr.hhplus.be.server.coupon.domain.model
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.Table
-import kr.hhplus.be.server.coupon.domain.model.DiscountMethod
+import jakarta.persistence.*
+import kr.hhplus.be.server.order.domain.OrderItem
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import kotlin.collections.map
 
 /**
  * 할인 유형
@@ -35,7 +29,7 @@ class DiscountLine(
     val type: DiscountMethod,
 
     @Column
-    val sourceId: Long?,
+    val sourceId: Long,
 
     @Column(nullable = false)
     val amount: BigDecimal,
@@ -43,5 +37,19 @@ class DiscountLine(
     @Column(nullable = false)
     val createdAt: LocalDateTime = LocalDateTime.now()
 ) {
-
+    companion object {
+        fun from(
+            now: LocalDateTime,
+            sourceId: Long,
+            discountMethod: DiscountMethod,
+            orderItemsDiscountMap: Map<DiscountContext.Item, BigDecimal>): List<DiscountLine> {
+            return orderItemsDiscountMap.map { DiscountLine(
+                orderItemId = it.key.orderItemId,
+                type = discountMethod,
+                sourceId = sourceId,
+                amount = it.value,
+                createdAt = now,
+            ) }
+        }
+    }
 }

@@ -2,7 +2,7 @@ package kr.hhplus.be.server.product.entrypoint.http
 
 import kr.hhplus.be.server.common.CommonResponse
 import kr.hhplus.be.server.common.PageInfo
-import kr.hhplus.be.server.product.domain.ProductStatus
+import kr.hhplus.be.server.product.domain.product.ProductStatus
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam

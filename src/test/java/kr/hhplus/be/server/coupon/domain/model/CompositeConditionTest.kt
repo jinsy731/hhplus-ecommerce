@@ -12,13 +12,21 @@ class CompositeConditionTest {
         // arrange
         val minOrderAmountCondition = MinOrderAmountCondition(BigDecimal(1000))
         val specificProductCondition = SpecificProductCondition(setOf(1L, 2L))
-        val context = DiscountContext(orderAmount = BigDecimal(999), productId = 1L)
+        val contextItem = DiscountContext.Item(
+            orderItemId = 1L,
+            productId = 1L,
+            variantId = 1L,
+            quantity = 1,
+            subTotal = BigDecimal(999),
+            totalAmount = BigDecimal(999)
+        )
+
         val compositeCondition = OrCompositeCondition()
             .addCondition(minOrderAmountCondition)
             .addCondition(specificProductCondition)
 
         // act
-        val result = compositeCondition.isSatisfiedBy(context)
+        val result = compositeCondition.isSatisfiedBy(contextItem)
 
         // assert
         result shouldBe true
@@ -29,13 +37,20 @@ class CompositeConditionTest {
         // arrange
         val minOrderAmountCondition = MinOrderAmountCondition(BigDecimal(1000))
         val specificProductCondition = SpecificProductCondition(setOf(1L, 2L))
-        val context = DiscountContext(orderAmount = BigDecimal(999), productId = 3L)
+        val contextItem = DiscountContext.Item(
+            orderItemId = 1L,
+            productId = 3L,
+            variantId = 1L,
+            quantity = 1,
+            subTotal = BigDecimal(999),
+            totalAmount = BigDecimal(999)
+        )
         val compositeCondition = OrCompositeCondition()
             .addCondition(minOrderAmountCondition)
             .addCondition(specificProductCondition)
 
         // act
-        val result = compositeCondition.isSatisfiedBy(context)
+        val result = compositeCondition.isSatisfiedBy(contextItem)
 
         // assert
         result shouldBe false
@@ -46,13 +61,20 @@ class CompositeConditionTest {
         // arrange
         val minOrderAmountCondition = MinOrderAmountCondition(BigDecimal(1000))
         val specificProductCondition = SpecificProductCondition(setOf(1L, 2L))
-        val context = DiscountContext(orderAmount = BigDecimal(1000), productId = 3L)
+        val contextItem = DiscountContext.Item(
+            orderItemId = 1L,
+            productId = 1L,
+            variantId = 1L,
+            quantity = 1,
+            subTotal = BigDecimal(999),
+            totalAmount = BigDecimal(999)
+        )
         val compositeCondition = AndCompositeCondition()
             .addCondition(minOrderAmountCondition)
             .addCondition(specificProductCondition)
 
         // act
-        val result = compositeCondition.isSatisfiedBy(context)
+        val result = compositeCondition.isSatisfiedBy(contextItem)
 
         // assert
         result shouldBe false
@@ -62,13 +84,20 @@ class CompositeConditionTest {
         // arrange
         val minOrderAmountCondition = MinOrderAmountCondition(BigDecimal(1000))
         val specificProductCondition = SpecificProductCondition(setOf(1L, 2L))
-        val context = DiscountContext(orderAmount = BigDecimal(1000), productId = 1L)
+        val contextItem = DiscountContext.Item(
+            orderItemId = 1L,
+            productId = 1L,
+            variantId = 1L,
+            quantity = 1,
+            subTotal = BigDecimal(1000),
+            totalAmount = BigDecimal(1000)
+        )
         val compositeCondition = AndCompositeCondition()
             .addCondition(minOrderAmountCondition)
             .addCondition(specificProductCondition)
 
         // act
-        val result = compositeCondition.isSatisfiedBy(context)
+        val result = compositeCondition.isSatisfiedBy(contextItem)
 
         // assert
         result shouldBe true

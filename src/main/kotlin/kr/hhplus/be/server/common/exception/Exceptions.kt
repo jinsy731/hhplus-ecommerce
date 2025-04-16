@@ -3,6 +3,9 @@ package kr.hhplus.be.server.common.exception
 // Coupon
 class InvalidCouponStatusException: BusinessException(ErrorCode.INVALID_COUPON_STATUS)
 class ExpiredCouponException: BusinessException(ErrorCode.EXPIRED_COUPON)
+class ExceededMaxCouponLimitException: BusinessException(ErrorCode.EXCEEDED_MAX_COUPON_LIMIT)
+class CouponTargetNotFoundException: BusinessException(ErrorCode.COUPON_TARGET_NOT_FOUND)
+
 
 // Payment
 class AlreadyPaidException: BusinessException(ErrorCode.ALREADY_PAID)
@@ -19,3 +22,6 @@ class ProductUnavailableException(): BusinessException(ErrorCode.PRODUCT_UNAVAIL
 // Point
 class InvalidChargeAmountException(): BusinessException(ErrorCode.INVALID_CHARGE_AMOUNT)
 class InsufficientPointException(): BusinessException(ErrorCode.INSUFFICIENT_POINT)
+
+// Common
+class ResourceNotFoundException(): BusinessException(ErrorCode.NOT_FOUND)

@@ -5,6 +5,8 @@ import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.common.exception.VariantOutOfStockException
 import kr.hhplus.be.server.common.exception.VariantUnavailableException
+import kr.hhplus.be.server.product.domain.product.ProductVariant
+import kr.hhplus.be.server.product.domain.product.VariantStatus
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -41,7 +43,7 @@ class ProductVariantTest {
         // arrange
         val variant = ProductVariant(stock = 10, status = VariantStatus.ACTIVE)
         // act
-        variant.deductStock(5)
+        variant.reduceStock(5)
         // assert
         variant.stock shouldBe 5
     }
@@ -51,6 +53,6 @@ class ProductVariantTest {
         // arrange
         val variant = ProductVariant(stock = 10, status = VariantStatus.ACTIVE)
         // act, assert
-        shouldThrowExactly<VariantOutOfStockException> { variant.deductStock(15) }
+        shouldThrowExactly<VariantOutOfStockException> { variant.reduceStock(15) }
     }
 }

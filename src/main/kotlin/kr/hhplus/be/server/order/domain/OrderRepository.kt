@@ -5,5 +5,6 @@ import org.springframework.stereotype.Repository
 import java.util.Optional
 
 interface OrderRepository{
+    fun getById(id: Long): Order
     fun save(order: Order): Order
 }

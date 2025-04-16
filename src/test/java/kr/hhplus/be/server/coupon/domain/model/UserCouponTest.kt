@@ -130,7 +130,6 @@ class UserCouponTest {
         val time = LocalDateTime.now()
         val expiredAt = time.plusMinutes(1)
         val coupon = CouponTestFixture.createValidCoupon()
-        val order = OrderTestFixture.createOrder(1L)
         val userCoupon = UserCoupon(
             id = 1L,
             userId = 1L,
@@ -139,8 +138,9 @@ class UserCouponTest {
             expiredAt = expiredAt,
             status = UserCouponStatus.UNUSED
         )
+        val context = CouponTestFixture.createDiscountContext(timestamp = time)
         // act
-        val discountLines = userCoupon.applyTo(order, 1L, time)
+        val discountLines = userCoupon.calculateDiscountAndUse(context)
         // assert
         discountLines shouldHaveSize 2
         discountLines.sumOf { it.amount }.compareTo(BigDecimal(5000)) shouldBe 0
@@ -156,25 +156,5 @@ class UserCouponTest {
         discountLines[1].type shouldBe DiscountMethod.COUPON
         discountLines[1].orderItemId shouldBe 2L
         discountLines[1].createdAt shouldBe time
-    }
-    
-    @Test
-    fun `⛔️할인 적용_적용가능한 상품이 없다면 빈 리스트를 반환해야 한다`() {
-        val time = LocalDateTime.now()
-        val expiredAt = time.plusMinutes(1)
-        val coupon = CouponTestFixture.createValidCoupon()
-        val order = OrderTestFixture.createOrder(1L).apply { this.orderItems.clear() }
-        val userCoupon = UserCoupon(
-            id = 1L,
-            userId = 1L,
-            coupon = coupon,
-            issuedAt = time,
-            expiredAt = expiredAt,
-            status = UserCouponStatus.UNUSED
-        )
-
-        val result = userCoupon.applyTo(order, 1L, time)
-
-        result shouldHaveSize 0
     }
 }

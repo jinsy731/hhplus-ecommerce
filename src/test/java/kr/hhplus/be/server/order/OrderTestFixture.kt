@@ -13,16 +13,46 @@ object OrderTestFixture {
      * 3. 총 2개의 상품 주문
      * 4. 각 상품은 1000 * 5 = 5000원 - 500원 할인
      */
-    fun createOrder(userId: Long) = Order(
+    fun createDiscountedOrder(userId: Long = 1L) = Order(
         id = 1L,
         userId = userId,
         status = OrderStatus.CREATED,
         originalTotal = BigDecimal(10000),
         discountedAmount = BigDecimal(9000),
+        orderItems = createDiscountedOrderItems()
+    )
+
+    fun createOrder(userId: Long = 1L) = Order(
+        id = 1L,
+        userId = userId,
+        status = OrderStatus.CREATED,
+        originalTotal = BigDecimal(10000),
+        discountedAmount = BigDecimal.ZERO,
         orderItems = createOrderItems()
     )
 
     fun createOrderItems() = mutableListOf(
+        OrderItem(
+            id = 1L,
+            productId = 1L,
+            variantId = 1L,
+            quantity = 5,
+            unitPrice = BigDecimal(1000),
+            discountAmount = BigDecimal.ZERO,
+            status = OrderItemStatus.ORDERED,
+        ),
+        OrderItem(
+            id = 2L,
+            productId = 1L,
+            variantId = 1L,
+            quantity = 5,
+            unitPrice = BigDecimal(1000),
+            discountAmount = BigDecimal.ZERO,
+            status = OrderItemStatus.ORDERED,
+        ),
+    )
+
+    fun createDiscountedOrderItems() = mutableListOf(
         OrderItem(
             id = 1L,
             productId = 1L,

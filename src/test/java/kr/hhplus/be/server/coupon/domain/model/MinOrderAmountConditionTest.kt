@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.coupon.domain.model
 
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.Assertions.*
+import kr.hhplus.be.server.coupon.CouponTestFixture
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
@@ -12,9 +12,10 @@ class MinOrderAmountConditionTest {
         // arrange
         val minAmount = BigDecimal(1000)
         val condition = MinOrderAmountCondition(minAmount)
-        val context = DiscountContext(orderAmount = BigDecimal(1000))
+        val contextItem = CouponTestFixture.createDiscountContextItem()
+
         // act
-        val result = condition.isSatisfiedBy(context)
+        val result = condition.isSatisfiedBy(contextItem)
         // assert
         result shouldBe true
     }
@@ -24,9 +25,9 @@ class MinOrderAmountConditionTest {
         // arrange
         val minAmount = BigDecimal(1000)
         val condition = MinOrderAmountCondition(minAmount)
-        val context = DiscountContext(orderAmount = BigDecimal(999))
+        val contextItem = CouponTestFixture.createDiscountContextItem(totalAmount = BigDecimal(999))
         // act
-        val result = condition.isSatisfiedBy(context)
+        val result = condition.isSatisfiedBy(contextItem)
         // assert
         result shouldBe false
     }

@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.product.domain
+package kr.hhplus.be.server.product.domain.product
 
 import jakarta.persistence.*
 import kr.hhplus.be.server.common.exception.VariantOutOfStockException
@@ -38,7 +38,7 @@ class ProductVariant(
         check(this.stock >= quantity) { throw VariantOutOfStockException() }
     }
 
-    fun deductStock(quantity: Int) {
+    fun reduceStock(quantity: Int) {
         check(this.stock > quantity) { throw VariantOutOfStockException()  }
         this.stock -= quantity
     }

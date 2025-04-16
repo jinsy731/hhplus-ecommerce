@@ -2,10 +2,7 @@ package kr.hhplus.be.server.order.domain
 
 import jakarta.persistence.*
 import kr.hhplus.be.server.common.exception.AlreadyPaidOrderException
-import kr.hhplus.be.server.coupon.domain.model.DiscountLine
-import kr.hhplus.be.server.order.application.OrderCommand
-import kr.hhplus.be.server.order.application.OrderItemCommand
-import kr.hhplus.be.server.product.domain.Product
+import kr.hhplus.be.server.coupon.application.DiscountInfo
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -38,27 +35,15 @@ class Order(
     @Column(nullable = false)
     val updatedAt: LocalDateTime = LocalDateTime.now(),
 ) {
-    companion object {
-        fun create(cmd: OrderCommand.Create): Order {
-            return Order(
-                userId = cmd.userId,
-                orderItems = createOrderItems(cmd.products, cmd.orderItems),
-                createdAt = cmd.now,
-                updatedAt = cmd.now
-            ).apply { this.originalTotal = calculateOriginalTotal()}
-        }
 
-        private fun createOrderItems(products: List<Product>, orderItemCmd: List<OrderItemCommand.Create>): MutableList<OrderItem> {
-            return orderItemCmd.map { orderItemReq -> with(orderItemReq) {
-                val product = products.find { it.id == productId } ?: throw IllegalArgumentException("존재하지 않는 상품입니다.")
-                product.purchase(variantId, quantity)
-                OrderItem(
-                    productId = product.id!!,
-                    variantId = variantId,
-                    quantity = quantity,
-                    unitPrice = product.getVariantPrice(variantId)
-                )
-            }}.toMutableList()
+    companion object {
+        fun create(context: OrderContext.Create.Root): Order {
+            return Order(
+                userId = context.userId,
+                orderItems = OrderItem.from(context.items),
+                createdAt = context.timestamp,
+                updatedAt = context.timestamp
+            ).apply { this.originalTotal = calculateOriginalTotal()}
         }
     }
 
@@ -74,20 +59,20 @@ class Order(
     /**
      * 할인 적용
      */
-    fun applyDiscount(discountLines: List<DiscountLine>) {
-        discountLines.forEach { discountLine ->
+    fun applyDiscount(discountInfos: List<DiscountInfo>) {
+        discountInfos.forEach { discountLine ->
             val orderItem = this.orderItems.find { orderItem -> orderItem.id == discountLine.orderItemId }
             orderItem?.applyDiscount(discountLine.amount) ?: throw IllegalStateException()
         }
 
-        discountedAmount = discountLines.sumOf { it.amount }
+        discountedAmount = discountInfos.sumOf { it.amount }
         
         // 할인액이 주문 총액을 초과하지 않도록 조정
         if (discountedAmount > originalTotal) {
             discountedAmount = originalTotal
         }
     }
-    
+
     /**
      * 결제 완료 처리
      */

@@ -1,8 +1,9 @@
 package kr.hhplus.be.server.coupon.domain.model
 
 import jakarta.persistence.*
-import kr.hhplus.be.server.order.domain.Order
-import kr.hhplus.be.server.order.domain.OrderItem
+import kr.hhplus.be.server.common.exception.CouponTargetNotFoundException
+import kr.hhplus.be.server.common.exception.ExceededMaxCouponLimitException
+import kr.hhplus.be.server.common.exception.InvalidCouponStatusException
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -31,10 +32,10 @@ class Coupon(
     val isActive: Boolean = true,
     
     @Column(nullable = false)
-    val maxIssueLimit: Int,
+    var maxIssueLimit: Int,
 
     @Column(nullable = false)
-    val issuedCount: Int = 0,
+    var issuedCount: Int = 0,
 
     @Column(nullable = false)
     val startAt: LocalDateTime,
@@ -50,39 +51,47 @@ class Coupon(
     
     @Column(nullable = false)
     val updatedAt: LocalDateTime = LocalDateTime.now()
-) {
+): Discount {
     /**
      * 쿠폰이 유효한지 확인
      */
-    fun isValid(now: LocalDateTime): Boolean {
-        return isActive && now.isAfter(startAt) && now.isBefore(endAt)
+    fun validate(now: LocalDateTime) {
+        if(!(isActive && now.isAfter(startAt) && now.isBefore(endAt)))
+            throw InvalidCouponStatusException()
     }
     
     /**
      * 쿠폰 할인 금액 계산
      */
-    fun calculateDiscount(now: LocalDateTime, price: BigDecimal): BigDecimal {
-        return if (isValid(now)) {
-            discountPolicy.calculateDiscount(price)
-        } else {
-            BigDecimal.ZERO
-        }
+    override fun calculateDiscount(context: DiscountContext.Root, applicableItemIds: List<Long>): Map<DiscountContext.Item, BigDecimal> {
+        validate(context.timestamp)
+        val applicableItems = context.items.filter { applicableItemIds.contains(it.orderItemId) }
+        return discountPolicy.calculateDiscount(context.copy(items = applicableItems))
     }
 
-    fun isApplicableTo(context: DiscountContext): Boolean {
+    override fun isApplicableTo(context: DiscountContext.Item): Boolean {
         return this.discountPolicy.discountCondition.isSatisfiedBy(context)
     }
 
-    fun applicableItems(order: Order, userId: Long): List<OrderItem> {
-        return order.orderItems.filter {
-            isApplicableTo(
-                DiscountContext(
-                    userId = userId,
-                    productId = it.productId,
-                    variantId = it.variantId,
-                    orderAmount = order.originalTotal
-                )
-            )
-        }
+    override fun getApplicableItems(context: DiscountContext.Root): List<Long> {
+        val applicableItemIds = context.items
+            .filter { isApplicableTo(it) }
+            .map { it.orderItemId }
+
+        if(applicableItemIds.isEmpty()) throw CouponTargetNotFoundException()
+
+        return applicableItemIds
+    }
+
+    fun issueTo(userId: Long, now: LocalDateTime = LocalDateTime.now()): UserCoupon {
+        check(this.issuedCount < this.maxIssueLimit) { throw ExceededMaxCouponLimitException() }
+        this.issuedCount++
+
+        return UserCoupon(
+            userId = userId,
+            coupon = this,
+            issuedAt = now,
+            expiredAt = now.plusDays(this.validDays.toLong()),
+        )
     }
 }
