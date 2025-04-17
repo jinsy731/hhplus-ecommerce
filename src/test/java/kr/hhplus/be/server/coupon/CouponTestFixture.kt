@@ -7,6 +7,8 @@ import kr.hhplus.be.server.coupon.domain.model.DiscountPolicy
 import kr.hhplus.be.server.coupon.domain.model.DiscountType
 import kr.hhplus.be.server.coupon.domain.model.FixedAmountTotalDiscountType
 import kr.hhplus.be.server.coupon.domain.model.MinOrderAmountCondition
+import kr.hhplus.be.server.coupon.domain.model.UserCoupon
+import kr.hhplus.be.server.coupon.domain.model.UserCouponStatus
 import kr.hhplus.be.server.order.OrderTestFixture
 import kr.hhplus.be.server.order.domain.OrderItem
 import java.math.BigDecimal
@@ -19,11 +21,12 @@ object CouponTestFixture {
      * 2. 할인 조건 10000원 이상 구매
      */
     fun createValidCoupon(
+        id: Long? = null,
         startAt: LocalDateTime = LocalDateTime.now().minusHours(1),
         endAt: LocalDateTime = LocalDateTime.now().plusHours(1),
         discountPolicy: DiscountPolicy = createFixedAmountDiscountPolicy()
         ) = Coupon(
-        id = 1L,
+        id = id ,
         name = "쿠폰 A",
         description = "신규 할인 쿠폰",
         discountPolicy = discountPolicy,
@@ -38,10 +41,11 @@ object CouponTestFixture {
     )
 
     fun createInvalidCoupon(
+        id: Long? = null,
         isActive: Boolean = false,
         startAt: LocalDateTime = LocalDateTime.now(),
         endAt: LocalDateTime = LocalDateTime.now().plusHours(1)) = Coupon(
-        id = 1L,
+        id = id,
         name = "쿠폰 A",
         description = "신규 할인 쿠폰",
         discountPolicy = createFixedAmountDiscountPolicy(),
@@ -93,5 +97,19 @@ object CouponTestFixture {
         quantity = quantity,
         subTotal = subTotal,
         totalAmount = totalAmount
+    )
+
+    fun createUserCoupon(
+        id: Long? = null,
+        userId: Long = 1L,
+        coupon: Coupon
+    ) = UserCoupon(
+        id = id,
+        userId = userId,
+        coupon = coupon,
+        issuedAt = LocalDateTime.now(),
+        expiredAt = LocalDateTime.now().plusDays(7),
+        usedAt = null,
+        status = UserCouponStatus.UNUSED
     )
 }

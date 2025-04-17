@@ -129,7 +129,7 @@ class UserCouponTest {
         // arrange
         val time = LocalDateTime.now()
         val expiredAt = time.plusMinutes(1)
-        val coupon = CouponTestFixture.createValidCoupon()
+        val coupon = CouponTestFixture.createValidCoupon(id = 1L)
         val userCoupon = UserCoupon(
             id = 1L,
             userId = 1L,

@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import kr.hhplus.be.server.common.CommonResponse
 import kr.hhplus.be.server.common.ErrorResponse
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -26,5 +27,5 @@ interface OrderApiSpec {
     @PostMapping
     fun createOrder(
         @RequestBody request: OrderRequest.Create.Root
-    ): CommonResponse<OrderResponse.Create>
+    ): ResponseEntity<CommonResponse<OrderResponse.Create>>
 }

@@ -23,6 +23,8 @@ abstract class DiscountType {
      * @return 할인된 금액
      */
     abstract fun calculateDiscount(context: DiscountContext.Root): Map<DiscountContext.Item, BigDecimal>
+
+    abstract fun getDiscountValue(): Number?
 }
 
 /**
@@ -46,6 +48,8 @@ class FixedAmountTotalDiscountType(
 
         return calculateDiscountsWithCorrection(totalAmount, adjustedTotalDiscount, context.items)
     }
+
+    override fun getDiscountValue(): Number? = this.amount
 }
 
 
@@ -68,6 +72,8 @@ class FixedAmountPerItemDiscountType(
             }
         }
     }
+
+    override fun getDiscountValue(): Number? = this.amount
 }
 
 /**
@@ -96,6 +102,8 @@ class RateDiscountType(
             adjustedTotalDiscount / context.items.size.toBigDecimal()
         }
     }
+
+    override fun getDiscountValue(): Number? = this.rate
 }
 
 fun calculateDiscountsWithCorrection(

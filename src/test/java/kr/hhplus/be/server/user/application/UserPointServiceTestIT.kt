@@ -2,11 +2,14 @@ package kr.hhplus.be.server.user.application
 
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.SpringBootTestWithMySQLContainer
+import kr.hhplus.be.server.user.UserPointTestFixture
 import kr.hhplus.be.server.user.domain.TransactionType
 import kr.hhplus.be.server.user.domain.UserPoint
 import kr.hhplus.be.server.user.domain.UserPointHistoryRepository
 import kr.hhplus.be.server.user.domain.UserPointRepository
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.math.BigDecimal
@@ -24,11 +27,19 @@ class UserPointServiceIntegrationTest {
     @Autowired
     lateinit var userPointHistoryRepository: UserPointHistoryRepository
 
+    @Autowired
+    private lateinit var databaseCleaner: MySqlDatabaseCleaner
+
+    @AfterEach
+    fun clean() {
+        databaseCleaner.clean()
+    }
+
     @Test
     fun `사용자의 포인트를 충전하면 잔액과 히스토리가 업데이트된다`() {
         // Arrange
         val userId = 1L
-        val initialPoint = UserPoint(userId = userId, balance = BigDecimal.ZERO, updatedAt = LocalDateTime.now())
+        val initialPoint = UserPointTestFixture.createUserPoint(userId = userId, balance = BigDecimal.ZERO)
         userPointRepository.save(initialPoint)
 
         val now = LocalDateTime.now()
@@ -61,11 +72,11 @@ class UserPointServiceIntegrationTest {
         // Arrange
         val userId = 2L
         val initialBalance = BigDecimal(10000)
-        val now = LocalDateTime.now()
-        val initialPoint = UserPoint(userId = userId, balance = initialBalance, updatedAt = now)
+        val initialPoint = UserPointTestFixture.createUserPoint(userId = userId, balance = initialBalance)
         userPointRepository.save(initialPoint)
 
         val useAmount = BigDecimal(3000)
+        val now = LocalDateTime.now()
         val command = UserPointCommand.Use(userId, useAmount, now)
 
         // Act
@@ -91,7 +102,7 @@ class UserPointServiceIntegrationTest {
         val userId = 3L
         val balance = BigDecimal(7000)
         val now = LocalDateTime.now()
-        val userPoint = UserPoint(userId = userId, balance = balance, updatedAt = now)
+        val userPoint = UserPointTestFixture.createUserPoint(userId = userId, balance = balance, updatedAt = now)
         userPointRepository.save(userPoint)
 
         val command = UserPointCommand.Retrieve(userId)

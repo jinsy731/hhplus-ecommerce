@@ -31,7 +31,7 @@ fun List<Product>.toCreateOrderProductInfo(): List<ProductInfo.CreateOrder.Root>
 
 fun List<ProductVariant>.toCreateOrderProductInfo(product: Product): List<ProductInfo.CreateOrder.Variant> {
     return this.map { variant -> ProductInfo.CreateOrder.Variant(
-        variantId = variant.id,
-        unitPrice = product.getVariantPrice(variant.id)
+        variantId = variant.id!!,
+        unitPrice = product.getVariantPrice(variant.id!!)
     ) }
 }

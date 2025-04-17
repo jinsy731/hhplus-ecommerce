@@ -15,7 +15,7 @@ import java.time.LocalDateTime
 @Table(name = "USER_POINT")
 class UserPoint(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0L,
+    val id: Long? = null,
     @Column(nullable = false)
     val userId: Long,
     @Column(nullable = false)

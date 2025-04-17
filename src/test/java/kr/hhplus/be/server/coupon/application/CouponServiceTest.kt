@@ -42,6 +42,7 @@ class CouponServiceTest {
         val now = LocalDateTime.now()
         val discountAmount = BigDecimal(1000)
         val coupon = CouponTestFixture.createValidCoupon(
+            id = 1L,
             discountPolicy = DiscountPolicy(
                 name = "",
                 discountType = FixedAmountTotalDiscountType(discountAmount),

@@ -18,7 +18,7 @@ data class PageInfo(
     val size: Int,
 
     @Schema(description = "전체 항목 수", example = "152")
-    val totalElement: Int,
+    val totalElement: Long,
 
     @Schema(description = "전체 페이지 수", example = "8")
     val totalPages: Int

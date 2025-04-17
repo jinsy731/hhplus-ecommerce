@@ -2,6 +2,7 @@ package kr.hhplus.be.server.product.infrastructure
 
 import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductRepository
+import kr.hhplus.be.server.product.domain.product.ProductVariant
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Repository
 @Repository
 class DefaultProductRepository(private val jpaRepository: ProductJpaRepository): ProductRepository {
     override fun searchByNameContaining(
-        keyword: String,
+        keyword: String?,
         pageable: Pageable
     ): Page<Product> {
         return jpaRepository.findByNameContaining(keyword, pageable)
@@ -26,5 +27,9 @@ class DefaultProductRepository(private val jpaRepository: ProductJpaRepository):
 }
 
 interface ProductJpaRepository: JpaRepository<Product, Long> {
-    fun findByNameContaining(name: String, pageable: Pageable): Page<Product>
+    fun findByNameContaining(name: String?, pageable: Pageable): Page<Product>
+}
+
+interface ProductVariantJpaRepository: JpaRepository<ProductVariant, Long> {
+
 }

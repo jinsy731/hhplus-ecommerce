@@ -1,35 +1,35 @@
 package kr.hhplus.be.server.product.application
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.SpringBootTestWithMySQLContainer
 import kr.hhplus.be.server.common.exception.ProductUnavailableException
 import kr.hhplus.be.server.common.exception.ResourceNotFoundException
 import kr.hhplus.be.server.common.exception.VariantOutOfStockException
-import kr.hhplus.be.server.common.exception.VariantUnavailableException
 import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductRepository
 import kr.hhplus.be.server.product.domain.product.ProductStatus
 import kr.hhplus.be.server.product.domain.product.ProductVariant
+import kr.hhplus.be.server.product.infrastructure.ProductVariantJpaRepository
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
+import kotlin.jvm.optionals.getOrNull
 
 @SpringBootTestWithMySQLContainer
-class ProductServiceTestIT {
-
-    @Autowired
-    lateinit var productService: ProductService
-
-    @Autowired
-    lateinit var productRepository: ProductRepository
-
+class ProductServiceTestIT @Autowired constructor(
+    private val productService: ProductService,
+    private val productRepository: ProductRepository,
+    private val databaseCleaner: MySqlDatabaseCleaner,
+    private val productVariantRepository: ProductVariantJpaRepository
+) {
     private val testProducts = mutableListOf<Product>()
 
     @BeforeEach
@@ -87,8 +87,12 @@ class ProductServiceTestIT {
         ))
     }
 
+    @AfterEach
+    fun clean() {
+        databaseCleaner.clean()
+    }
+
     @Test
-    @Transactional
     fun `✅상품 목록을 조회할 수 있다`() {
         // Arrange
         val pageable = PageRequest.of(0, 10)
@@ -100,11 +104,10 @@ class ProductServiceTestIT {
         // Assert
         result.products shouldHaveSize 2
         result.products.map { it.name } shouldContainExactlyInAnyOrder listOf("테스트 상품 1", "테스트 상품 2")
-        result.paginationResult.totalElements shouldBe 2
+        result.pageResult.totalElements shouldBe 2
     }
 
     @Test
-    @Transactional
     fun `✅ID 목록으로 상품들을 조회할 수 있다`() {
         // Arrange
         val ids = testProducts.map { it.id!! }
@@ -118,7 +121,6 @@ class ProductServiceTestIT {
     }
 
     @Test
-    @Transactional
     fun `✅구매 가능한 상품과 옵션은 검증을 통과한다`() {
         // Arrange
         val product = testProducts[0]
@@ -127,7 +129,7 @@ class ProductServiceTestIT {
             listOf(
                 ProductCommand.ValidatePurchasability.Item(
                     productId = product.id!!,
-                    variantId = variantId,
+                    variantId = variantId!!,
                     quantity = 5
                 )
             )
@@ -138,7 +140,6 @@ class ProductServiceTestIT {
     }
 
     @Test
-    @Transactional
     fun `❌품절된 상품(status=OUT_OF_STOCK)은 구매 불가능하다`() {
         // Arrange
         val outOfStockProduct = testProducts[2]
@@ -147,7 +148,7 @@ class ProductServiceTestIT {
             listOf(
                 ProductCommand.ValidatePurchasability.Item(
                     productId = outOfStockProduct.id!!,
-                    variantId = variantId,
+                    variantId = variantId!!,
                     quantity = 1
                 )
             )
@@ -160,7 +161,6 @@ class ProductServiceTestIT {
     }
 
     @Test
-    @Transactional
     fun `❌존재하지 않는 상품은 구매 검증 시 예외가 발생한다`() {
         // Arrange
         val nonExistentProductId = 9999L
@@ -181,7 +181,6 @@ class ProductServiceTestIT {
     }
 
     @Test
-    @Transactional
     fun `❌주문 수량이 재고보다 많으면 예외가 발생한다`() {
         // Arrange
         val product = testProducts[0]
@@ -190,7 +189,7 @@ class ProductServiceTestIT {
             listOf(
                 ProductCommand.ValidatePurchasability.Item(
                     productId = product.id!!,
-                    variantId = variant.id,
+                    variantId = variant.id!!,
                     quantity = 10 // 재고보다 많은 수량
                 )
             )
@@ -203,7 +202,6 @@ class ProductServiceTestIT {
     }
 
     @Test
-    @Transactional
     fun `✅구매로 재고를 감소시킬 수 있다`() {
         // Arrange
         val product = testProducts[0]
@@ -214,7 +212,7 @@ class ProductServiceTestIT {
             listOf(
                 ProductCommand.ReduceStockByPurchase.Item(
                     productId = product.id!!,
-                    variantId = variant.id,
+                    variantId = variant.id!!,
                     quantity = quantity
                 )
             )
@@ -224,8 +222,7 @@ class ProductServiceTestIT {
         productService.reduceStockByPurchase(cmd)
 
         // Assert
-        val updatedProduct = productRepository.findAll(listOf(product.id!!)).first()
-        val updatedVariant = updatedProduct.variants.find { it.id == variant.id }!!
+        val updatedVariant = productVariantRepository.findById(variant.id!!).getOrNull() ?: throw IllegalStateException()
         updatedVariant.stock shouldBe (initialStock - quantity)
     }
 }

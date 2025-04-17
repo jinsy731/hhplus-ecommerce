@@ -6,45 +6,39 @@ import kr.hhplus.be.server.product.domain.product.ProductVariant
 import java.math.BigDecimal
 
 object ProductTestFixture {
-    fun createValidProduct(id: Long = 1L) = Product(
+    fun createValidProduct(id: Long? = null, variantIds: List<Long?> = listOf(null, null)) = Product(
         id = id,
         name = "테스트 상품",
         basePrice = BigDecimal(1000),
-        variants = createValidVariants(),
         status = ProductStatus.ON_SALE
-    )
+    ).apply {
+        variantIds.forEach {
+            this.addVariant(createValidVariant(id = it, additionalPrice = BigDecimal(500)))
+            this.addVariant(createValidVariant(id = it, additionalPrice = BigDecimal(100)))
+        }
+    }
 
-    fun createInvalidProduct(id: Long = 1L, status: ProductStatus = ProductStatus.OUT_OF_STOCK) = Product(
+    fun createInvalidProduct(id: Long? = null, variantIds: List<Long?> = listOf(null, null), status: ProductStatus = ProductStatus.OUT_OF_STOCK) = Product(
         id = id,
         name = "구매 불가 상품",
         basePrice = BigDecimal(1000),
-        variants = createInvalidVariants(),
         status = status
+    ).apply {
+        variantIds.forEach {
+            this.addVariant(createInvalidVariant(id = it, additionalPrice = BigDecimal(500)))
+            this.addVariant(createInvalidVariant(id = it, additionalPrice = BigDecimal(100)))
+        }
+    }
+
+    private fun createValidVariant(id: Long? = null, additionalPrice: BigDecimal = BigDecimal(500)) = ProductVariant(
+        id = id,
+        additionalPrice = additionalPrice,
+        stock = 10,
     )
 
-    private fun createValidVariants() = mutableListOf(
-        ProductVariant(
-            id = 1L,
-            additionalPrice = BigDecimal(500),
-            stock = 10,
-        ),
-        ProductVariant(
-            id = 2L,
-            additionalPrice = BigDecimal(100),
-            stock = 5,
-        ),
-    )
-
-    private fun createInvalidVariants() = mutableListOf(
-        ProductVariant(
-            id = 1L,
-            additionalPrice = BigDecimal(500),
-            stock = 0,
-        ),
-        ProductVariant(
-            id = 2L,
-            additionalPrice = BigDecimal(100),
-            stock = 0,
-        ),
+    private fun createInvalidVariant(id: Long? = null, additionalPrice: BigDecimal = BigDecimal(500)) = ProductVariant(
+        id = id,
+        additionalPrice = additionalPrice,
+        stock = 0,
     )
 }

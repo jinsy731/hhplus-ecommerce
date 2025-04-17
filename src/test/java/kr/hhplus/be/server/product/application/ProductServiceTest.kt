@@ -19,7 +19,9 @@ class ProductServiceTest {
         // arrange
         val pageable = PageRequest.of(1, 10)
         val cmd = ProductCommand.RetrieveList(pageable, "keyword")
-        val products = listOf(ProductTestFixture.createValidProduct(1L), ProductTestFixture.createValidProduct(2L))
+        val products = listOf(
+            ProductTestFixture.createValidProduct(1L, variantIds = listOf(1,2)),
+            ProductTestFixture.createValidProduct(2L, variantIds = listOf(3,4)))
         val page = PageImpl(products, cmd.pageable, 100)
         every { productRepository.searchByNameContaining(any(), any()) } returns page
 
@@ -28,10 +30,10 @@ class ProductServiceTest {
 
         // assert
         result.products shouldHaveSize 2
-        result.paginationResult.page shouldBe 1
-        result.paginationResult.size shouldBe 10
-        result.paginationResult.totalElements shouldBe 100
-        result.paginationResult.totalPages shouldBe 10
+        result.pageResult.page shouldBe 1
+        result.pageResult.size shouldBe 10
+        result.pageResult.totalElements shouldBe 100
+        result.pageResult.totalPages shouldBe 10
     }
 
 }

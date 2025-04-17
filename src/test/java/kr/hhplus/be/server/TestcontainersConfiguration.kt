@@ -25,6 +25,7 @@ class TestcontainersConfiguration {
             System.setProperty("spring.datasource.url", mySqlContainer.getJdbcUrl() + "?characterEncoding=UTF-8&serverTimezone=UTC")
             System.setProperty("spring.datasource.username", mySqlContainer.username)
             System.setProperty("spring.datasource.password", mySqlContainer.password)
+            System.setProperty("jakarta.persistence.jdbc.url", mySqlContainer.jdbcUrl)
         }
     }
 }

@@ -23,6 +23,7 @@ import kr.hhplus.be.server.coupon.infrastructure.JpaUserCouponRepository
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.PageRequest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -172,6 +173,90 @@ class CouponServiceTestIT {
         val usedCoupon = jpaUserCouponRepository.findById(userCouponId).orElseThrow()
         usedCoupon.status shouldBe UserCouponStatus.USED
         usedCoupon.usedAt shouldNotBe null
+    }
+
+    @Test
+    @Transactional
+    fun `✅사용자의 쿠폰 목록을 페이징하여 조회한다`() {
+        // given
+        val userId = 10L
+        val now = LocalDateTime.now()
+        whenever(mockClockHolder.getNowInLocalDateTime()).thenReturn(now)
+
+        // 여러 개의 쿠폰 생성 및 저장
+        val coupons = mutableListOf<Coupon>()
+        for (i in 1..5) {
+            val coupon = Coupon(
+                id = null,
+                name = "테스트 쿠폰 $i",
+                description = "통합 테스트용 쿠폰 $i",
+                discountPolicy = DiscountPolicy(
+                    name = "${i}00원 정액 할인",
+                    discountType = FixedAmountTotalDiscountType(BigDecimal(i * 1000)),
+                    discountCondition = MinOrderAmountCondition(BigDecimal(5000))
+                ),
+                isActive = true,
+                maxIssueLimit = 10,
+                issuedCount = 0,
+                startAt = now.minusDays(1),
+                endAt = now.plusDays(30),
+                validDays = 7,
+                createdAt = now,
+                updatedAt = now
+            )
+            coupons.add(jpaCouponRepository.save(coupon))
+        }
+        
+        // 사용자에게 모든 쿠폰 발급
+        coupons.forEach { coupon ->
+            couponService.issueCoupon(
+                CouponCommand.Issue(
+                    userId = userId,
+                    couponId = coupon.id!!
+                )
+            )
+        }
+        
+        // 페이징 정보 설정 (1페이지, 3개 항목)
+        val pageable = PageRequest.of(0, 3)
+
+        // when
+        val result = couponService.retrieveLists(userId, pageable)
+
+        // then
+        // 반환된 쿠폰 수가 페이징 크기와 일치하는지 확인
+        result.coupons.size shouldBe 3
+        
+        // 페이징 정보 확인
+        result.pageResult.page shouldBe 0
+        result.pageResult.size shouldBe 3
+        result.pageResult.totalElements shouldBe 5
+        result.pageResult.totalPages shouldBe 2
+        
+        // 반환된 쿠폰이 올바른 정보를 가지는지 확인
+        result.coupons.forEach { userCouponData ->
+            userCouponData.couponId shouldNotBe null
+            userCouponData.couponName shouldNotBe null
+            userCouponData.description shouldNotBe null
+            userCouponData.status shouldBe UserCouponStatus.UNUSED.name
+            userCouponData.expiredAt shouldBe now.plusDays(7)
+        }
+    }
+
+    @Test
+    @Transactional
+    fun `✅쿠폰이 없는 사용자는 빈 목록을 반환한다`() {
+        // given
+        val nonExistentUserId = 999L
+        val pageable = PageRequest.of(0, 10)
+
+        // when
+        val result = couponService.retrieveLists(nonExistentUserId, pageable)
+
+        // then
+        result.coupons.size shouldBe 0
+        result.pageResult.totalElements shouldBe 0
+        result.pageResult.totalPages shouldBe 0
     }
 
     @Test
