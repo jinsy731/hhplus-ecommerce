@@ -6,12 +6,9 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 
 interface ProductRepository {
-
-    fun findByStatus(status: ProductStatus, pageable: Pageable): Page<Product>
+    fun save(entity: Product): Product
 
     fun searchByNameContaining(keyword: String, pageable: Pageable): Page<Product>
 
     fun findAll(ids: List<Long>): List<Product>
-
-    fun findByIdWithOptionSpecs(productId: Long): Product?
 }
