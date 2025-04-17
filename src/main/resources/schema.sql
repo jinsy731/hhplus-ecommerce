@@ -252,3 +252,13 @@ create table user_point_history
     transaction_type enum ('CHARGE', 'USE') not null,
     user_id          bigint                 not null
 );
+
+CREATE TABLE popular_products_daily (
+    sales_day DATE NOT NULL,
+    rank INT NOT NULL,
+    product_id BIGINT NOT NULL,
+    total_sales BIGINT NOT NULL,
+    PRIMARY KEY (sales_day, rank),
+    INDEX idx_sales_day_product_id (sales_day, product_id)
+);
+

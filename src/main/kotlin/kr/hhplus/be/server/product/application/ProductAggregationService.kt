@@ -73,19 +73,18 @@ class ProductAggregationService(
         return soldQty - returnQty
     }
 
-    private fun updateTopRankings(salesDay: LocalDate, topN: Int = 5) {
-        // 기존 데이터 삭제 (중복 방지)
+    private fun updateTopRankings(today: LocalDate, topN: Int = 5) {
+        val from = today.minusDays(2)
         popularProductsDailyRepository.deleteAllById(
-            (1..topN).map { PopularProductDailyId(salesDay, it) }
+            (1..topN).map { PopularProductDailyId(today, it) }
         )
 
-        // 상위 N개 가져오기
         val topProducts = productSalesAggregationDailyRepository
-            .findTopProductsByDay(salesDay, topN)
+            .findTopProductsForRange(from, today, topN)
 
         val rankEntities = topProducts.mapIndexed { index, row ->
             PopularProductsDaily(
-                id = PopularProductDailyId(salesDay, index + 1),
+                id = PopularProductDailyId(today, index + 1),
                 productId = (row["product_id"] as Number).toLong(),
                 totalSales = (row["sales_count"] as Number).toLong()
             )

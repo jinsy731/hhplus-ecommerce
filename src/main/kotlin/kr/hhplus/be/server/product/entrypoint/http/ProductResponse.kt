@@ -14,7 +14,7 @@ class ProductResponse {
         @Schema(description = "상품 목록 응답")
         data class Lists(
             @Schema(description = "상품 리스트")
-            val products: List<ProductDetail>,
+            val products: List<ProductSummary>,
 
             @Schema(description = "페이지 정보")
             val pageInfo: PageInfo
@@ -77,7 +77,7 @@ class ProductResponse {
     )
 
     @Schema(description = "상품 정보")
-    data class ProductDetail(
+    data class ProductSummary(
         @Schema(description = "상품 ID", example = "1")
         val productId: Long,
 
@@ -89,12 +89,6 @@ class ProductResponse {
 
         @Schema(description = "상품 상태", example = "ON_SALE")
         val status: ProductStatus,
-
-        @Schema(description = "옵션 스펙 배열")
-        val optionSpecs: List<OptionSpecDetail>,
-
-        @Schema(description = "옵션 조합 배열")
-        val variants: List<ProductVariantDetail>
     )
 }
 
@@ -103,13 +97,11 @@ fun ProductResult.RetrieveList.toProductResponse() = ProductResponse.Retrieve.Li
     pageInfo = this.pageResult.toResponse(),
 )
 
-fun List<ProductResult.ProductDetail>.toProductResponse() = this.map { ProductResponse.ProductDetail(
+fun List<ProductResult.ProductSummary>.toProductResponse() = this.map { ProductResponse.ProductSummary(
     productId = it.productId!!,
     name = it.name,
     basePrice = it.basePrice,
     status = it.status,
-    optionSpecs = it.optionSpecs.toOptionSpecResponse(),
-    variants = it.variants.toVaraintResponse()
 )}.toList()
 
 fun List<ProductResult.OptionValueDetail>.toOptionValueResponse() = this.map { ProductResponse.OptionValueDetail(
