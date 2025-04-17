@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.coupon
+package kr.hhplus.be.server.common
 
 import jakarta.persistence.AttributeConverter
 import jakarta.persistence.Converter
