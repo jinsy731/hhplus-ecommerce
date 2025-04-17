@@ -1,12 +1,20 @@
 package kr.hhplus.be.server.product.application
 
 import org.springframework.data.domain.Pageable
+import java.time.LocalDate
 
 class ProductCommand {
     data class RetrieveList(
         val pageable: Pageable,
         val keyword: String?
     )
+    
+    data class RetrievePopularProducts(
+        val fromDate: LocalDate,
+        val toDate: LocalDate,
+        val limit: Int
+    )
+    
     class ValidatePurchasability {
         data class Root(
             val items: List<Item>

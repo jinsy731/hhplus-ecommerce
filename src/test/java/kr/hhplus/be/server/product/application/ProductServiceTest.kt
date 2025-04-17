@@ -6,13 +6,16 @@ import io.mockk.every
 import io.mockk.mockk
 import kr.hhplus.be.server.product.ProductTestFixture
 import kr.hhplus.be.server.product.domain.product.ProductRepository
+import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyRepository
+import kr.hhplus.be.server.product.infrastructure.JpaProductSalesAggregationDailyRepository
 import org.junit.jupiter.api.Test
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 
 class ProductServiceTest {
     private val productRepository: ProductRepository = mockk()
-    private val productService = ProductService(productRepository)
+    private val productAggregationDailyRepository: JpaProductSalesAggregationDailyRepository = mockk()
+    private val productService = ProductService(productRepository, productAggregationDailyRepository)
     
     @Test
     fun `✅상품 목록 조회`() {

@@ -13,6 +13,9 @@ import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductRepository
 import kr.hhplus.be.server.product.domain.product.ProductStatus
 import kr.hhplus.be.server.product.domain.product.ProductVariant
+import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDaily
+import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyId
+import kr.hhplus.be.server.product.infrastructure.JpaProductSalesAggregationDailyRepository
 import kr.hhplus.be.server.product.infrastructure.ProductVariantJpaRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -21,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
+import java.time.LocalDate
 import kotlin.jvm.optionals.getOrNull
 
 @SpringBootTestWithMySQLContainer
@@ -28,7 +32,8 @@ class ProductServiceTestIT @Autowired constructor(
     private val productService: ProductService,
     private val productRepository: ProductRepository,
     private val databaseCleaner: MySqlDatabaseCleaner,
-    private val productVariantRepository: ProductVariantJpaRepository
+    private val productVariantRepository: ProductVariantJpaRepository,
+    private val productSalesAggregationDailyRepository: JpaProductSalesAggregationDailyRepository
 ) {
     private val testProducts = mutableListOf<Product>()
 
@@ -80,11 +85,138 @@ class ProductServiceTestIT @Autowired constructor(
             )
         }
 
+        val product4 = Product(
+            name = "인기 상품 1",
+            basePrice = BigDecimal(25000),
+            status = ProductStatus.ON_SALE
+        ).apply {
+            addVariant(
+                ProductVariant(
+                    additionalPrice = BigDecimal(1500),
+                    stock = 15
+                )
+            )
+        }
+
+        val product5 = Product(
+            name = "인기 상품 2",
+            basePrice = BigDecimal(30000),
+            status = ProductStatus.ON_SALE
+        ).apply {
+            addVariant(
+                ProductVariant(
+                    additionalPrice = BigDecimal(2500),
+                    stock = 20
+                )
+            )
+        }
+
         testProducts.addAll(listOf(
             productRepository.save(product1),
             productRepository.save(product2),
-            productRepository.save(product3)
+            productRepository.save(product3),
+            productRepository.save(product4),
+            productRepository.save(product5)
         ))
+        
+        // 판매량 데이터 추가
+        val today = LocalDate.now()
+        val yesterday = today.minusDays(1)
+        val dayBeforeYesterday = today.minusDays(2)
+        
+        // 인기 상품 1 (총 판매량: 50)
+        productSalesAggregationDailyRepository.save(
+            ProductSalesAggregationDaily(
+                id = ProductSalesAggregationDailyId(testProducts[3].id!!, today),
+                salesCount = 20
+            )
+        )
+        productSalesAggregationDailyRepository.save(
+            ProductSalesAggregationDaily(
+                id = ProductSalesAggregationDailyId(testProducts[3].id!!, yesterday),
+                salesCount = 15
+            )
+        )
+        productSalesAggregationDailyRepository.save(
+            ProductSalesAggregationDaily(
+                id = ProductSalesAggregationDailyId(testProducts[3].id!!, dayBeforeYesterday),
+                salesCount = 15
+            )
+        )
+        
+        // 인기 상품 2 (총 판매량: 40)
+        productSalesAggregationDailyRepository.save(
+            ProductSalesAggregationDaily(
+                id = ProductSalesAggregationDailyId(testProducts[4].id!!, today),
+                salesCount = 15
+            )
+        )
+        productSalesAggregationDailyRepository.save(
+            ProductSalesAggregationDaily(
+                id = ProductSalesAggregationDailyId(testProducts[4].id!!, yesterday),
+                salesCount = 15
+            )
+        )
+        productSalesAggregationDailyRepository.save(
+            ProductSalesAggregationDaily(
+                id = ProductSalesAggregationDailyId(testProducts[4].id!!, dayBeforeYesterday),
+                salesCount = 10
+            )
+        )
+        
+        // 테스트 상품 1 (총 판매량: 30)
+        productSalesAggregationDailyRepository.save(
+            ProductSalesAggregationDaily(
+                id = ProductSalesAggregationDailyId(testProducts[0].id!!, today),
+                salesCount = 10
+            )
+        )
+        productSalesAggregationDailyRepository.save(
+            ProductSalesAggregationDaily(
+                id = ProductSalesAggregationDailyId(testProducts[0].id!!, yesterday),
+                salesCount = 10
+            )
+        )
+        productSalesAggregationDailyRepository.save(
+            ProductSalesAggregationDaily(
+                id = ProductSalesAggregationDailyId(testProducts[0].id!!, dayBeforeYesterday),
+                salesCount = 10
+            )
+        )
+        
+        // 테스트 상품 2 (총 판매량: 20)
+        productSalesAggregationDailyRepository.save(
+            ProductSalesAggregationDaily(
+                id = ProductSalesAggregationDailyId(testProducts[1].id!!, today),
+                salesCount = 5
+            )
+        )
+        productSalesAggregationDailyRepository.save(
+            ProductSalesAggregationDaily(
+                id = ProductSalesAggregationDailyId(testProducts[1].id!!, yesterday),
+                salesCount = 10
+            )
+        )
+        productSalesAggregationDailyRepository.save(
+            ProductSalesAggregationDaily(
+                id = ProductSalesAggregationDailyId(testProducts[1].id!!, dayBeforeYesterday),
+                salesCount = 5
+            )
+        )
+        
+        // 품절 상품 (총 판매량: 10)
+        productSalesAggregationDailyRepository.save(
+            ProductSalesAggregationDaily(
+                id = ProductSalesAggregationDailyId(testProducts[2].id!!, yesterday),
+                salesCount = 5
+            )
+        )
+        productSalesAggregationDailyRepository.save(
+            ProductSalesAggregationDaily(
+                id = ProductSalesAggregationDailyId(testProducts[2].id!!, dayBeforeYesterday),
+                salesCount = 5
+            )
+        )
     }
 
     @AfterEach
@@ -116,7 +248,7 @@ class ProductServiceTestIT @Autowired constructor(
         val result = productService.findAllById(ids)
 
         // Assert
-        result shouldHaveSize 3
+        result shouldHaveSize 5
         result.map { it.id } shouldContainExactlyInAnyOrder ids
     }
 
@@ -224,5 +356,71 @@ class ProductServiceTestIT @Autowired constructor(
         // Assert
         val updatedVariant = productVariantRepository.findById(variant.id!!).getOrNull() ?: throw IllegalStateException()
         updatedVariant.stock shouldBe (initialStock - quantity)
+    }
+    
+    @Test
+    fun `✅최근 3일간 인기상품을 판매량 순으로 조회할 수 있다`() {
+        // Arrange
+        val today = LocalDate.now()
+        val fromDate = today.minusDays(2)
+        val limit = 5
+        
+        val cmd = ProductCommand.RetrievePopularProducts(
+            fromDate = fromDate,
+            toDate = today,
+            limit = limit
+        )
+        
+        // Act
+        val result = productService.getPopularProducts(cmd)
+        
+        // Assert
+        result shouldHaveSize 5
+        
+        // 판매량 순으로 정렬되어야 함
+        result[0].productId shouldBe testProducts[3].id // 인기 상품 1 (판매량 50)
+        result[0].name shouldBe "인기 상품 1"
+        result[0].totalSold shouldBe 50
+        
+        result[1].productId shouldBe testProducts[4].id // 인기 상품 2 (판매량 40)
+        result[1].name shouldBe "인기 상품 2"
+        result[1].totalSold shouldBe 40
+        
+        result[2].productId shouldBe testProducts[0].id // 테스트 상품 1 (판매량 30)
+        result[2].name shouldBe "테스트 상품 1"
+        result[2].totalSold shouldBe 30
+        
+        result[3].productId shouldBe testProducts[1].id // 테스트 상품 2 (판매량 20)
+        result[3].name shouldBe "테스트 상품 2"
+        result[3].totalSold shouldBe 20
+        
+        result[4].productId shouldBe testProducts[2].id // 품절 상품 (판매량 10)
+        result[4].name shouldBe "품절 상품"
+        result[4].totalSold shouldBe 10
+    }
+    
+    @Test
+    fun `✅인기상품 조회 시 limit 수만큼만 조회된다`() {
+        // Arrange
+        val today = LocalDate.now()
+        val fromDate = today.minusDays(2)
+        val limit = 3
+        
+        val cmd = ProductCommand.RetrievePopularProducts(
+            fromDate = fromDate,
+            toDate = today,
+            limit = limit
+        )
+        
+        // Act
+        val result = productService.getPopularProducts(cmd)
+        
+        // Assert
+        result shouldHaveSize 3
+        
+        // 상위 3개 상품만 조회되어야 함
+        result[0].productId shouldBe testProducts[3].id // 인기 상품 1 (판매량 50)
+        result[1].productId shouldBe testProducts[4].id // 인기 상품 2 (판매량 40)
+        result[2].productId shouldBe testProducts[0].id // 테스트 상품 1 (판매량 30)
     }
 }

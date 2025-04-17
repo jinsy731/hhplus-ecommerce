@@ -138,3 +138,12 @@ fun List<ProductResult.ProductVariantDetail>.toVaraintResponse() = this.map { Pr
     status = it.status,
     stock = it.stock
 )}
+
+/**
+ * ProductResult.PopularProduct를 ProductResponse.Retrieve.Popular로 변환합니다.
+ */
+fun ProductResult.PopularProduct.toPopularProductResponse() = ProductResponse.Retrieve.Popular(
+    productId = this.productId,
+    name = this.name,
+    totalSold = this.totalSold
+)

@@ -14,6 +14,12 @@ class ProductResult {
         val pageResult: PageResult
     )
 
+    data class PopularProduct(
+        val productId: Long,
+        val name: String,
+        val totalSold: Int
+    )
+
     data class OptionValueDetail(
         val id: Long,
         val value: String

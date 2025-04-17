@@ -4,12 +4,16 @@ import kr.hhplus.be.server.common.PageResult
 import kr.hhplus.be.server.common.exception.ResourceNotFoundException
 import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductRepository
+import kr.hhplus.be.server.product.infrastructure.JpaProductSalesAggregationDailyRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 @Transactional(readOnly = true)
-class ProductService(private val productRepository: ProductRepository) {
+class ProductService(
+    private val productRepository: ProductRepository,
+    private val productSalesAggregationDailyRepository: JpaProductSalesAggregationDailyRepository
+) {
 
 
     fun retrieveList(cmd: ProductCommand.RetrieveList): ProductResult.RetrieveList {
@@ -38,6 +42,23 @@ class ProductService(private val productRepository: ProductRepository) {
         cmd.items.forEach { item ->
             val product = products.find { it.id == item.productId } ?: throw ResourceNotFoundException()
             product.reduceStockByPurchase(item.variantId, item.quantity)
+        }
+    }
+    
+
+    fun getPopularProducts(cmd: ProductCommand.RetrievePopularProducts): List<ProductResult.PopularProduct> {
+        val salesAggregates = productSalesAggregationDailyRepository.findPopularProducts(
+            fromDate = cmd.fromDate,
+            toDate = cmd.toDate,
+            limit = cmd.limit
+        )
+        
+        return salesAggregates.map { aggregate ->
+            ProductResult.PopularProduct(
+                productId = aggregate.productId,
+                name = aggregate.productName,
+                totalSold = aggregate.totalSold.toInt()
+            )
         }
     }
 }
