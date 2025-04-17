@@ -3,10 +3,14 @@ package kr.hhplus.be.server.product
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.common.CommonResponse
+import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDaily
+import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyId
 import kr.hhplus.be.server.product.entrypoint.http.ProductResponse
+import kr.hhplus.be.server.product.infrastructure.JpaProductSalesAggregationDailyRepository
 import kr.hhplus.be.server.product.infrastructure.ProductJpaRepository
-import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -14,14 +18,17 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import java.time.LocalDate
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-internal class ProductControllerE2ETest {
-
-    @Autowired
-    lateinit var restTemplate: TestRestTemplate
-    @Autowired
-    lateinit var productJpaRepository: ProductJpaRepository
+internal class ProductControllerE2ETest @Autowired constructor(
+    private val restTemplate: TestRestTemplate,
+    private val productJpaRepository: ProductJpaRepository,
+    private val productAggregationDailyRepository: JpaProductSalesAggregationDailyRepository,
+    private val databaseCleaner: MySqlDatabaseCleaner
+) {
+    @AfterEach
+    fun clean() { databaseCleaner.clean() }
 
     @Test
     fun `상품 목록 조회 - 성공`() {
@@ -51,8 +58,16 @@ internal class ProductControllerE2ETest {
 
     @Test
     fun `인기 상품 조회 - 성공`() {
+        val products = (1..10).map { ProductTestFixture.createValidProduct() }
+        productJpaRepository.saveAll(products)
 
-
+        val agg = products.map { product ->
+            val id = ProductSalesAggregationDailyId(product.id!!, LocalDate.now())
+            ProductSalesAggregationDaily(id, product.id!! * 10)
+        }
+        productAggregationDailyRepository.saveAll(agg)
+        
+        // 인기 상품 API 호출
         val response = restTemplate.exchange(
             "/api/v1/products/popular",
             HttpMethod.GET,
@@ -60,7 +75,13 @@ internal class ProductControllerE2ETest {
             object : ParameterizedTypeReference<CommonResponse<List<ProductResponse.Retrieve.Popular>>>() {}
         )
 
+        // 응답 검증
         response.statusCode shouldBe HttpStatus.OK
-        response.body?.data.shouldNotBeNull().shouldNotBeEmpty()
+        
+        // 데이터 존재 여부 확인
+        val popularProducts = response.body?.data.shouldNotBeNull()
+        
+        // 최대 5개의 인기 상품이 반환되어야 함
+        popularProducts.size shouldBe 5
     }
 }

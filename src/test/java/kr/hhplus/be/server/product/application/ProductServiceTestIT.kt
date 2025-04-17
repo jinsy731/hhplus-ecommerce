@@ -22,7 +22,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
-import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.jvm.optionals.getOrNull
@@ -372,7 +371,7 @@ class ProductServiceTestIT @Autowired constructor(
         )
         
         // Act
-        val result = productService.getPopularProducts(cmd)
+        val result = productService.retrievePopular(cmd)
         
         // Assert
         result shouldHaveSize 5
@@ -380,23 +379,23 @@ class ProductServiceTestIT @Autowired constructor(
         // 판매량 순으로 정렬되어야 함
         result[0].productId shouldBe testProducts[3].id // 인기 상품 1 (판매량 50)
         result[0].name shouldBe "인기 상품 1"
-        result[0].totalSold shouldBe 50
+        result[0].totalSales shouldBe 50
         
         result[1].productId shouldBe testProducts[4].id // 인기 상품 2 (판매량 40)
         result[1].name shouldBe "인기 상품 2"
-        result[1].totalSold shouldBe 40
+        result[1].totalSales shouldBe 40
         
         result[2].productId shouldBe testProducts[0].id // 테스트 상품 1 (판매량 30)
         result[2].name shouldBe "테스트 상품 1"
-        result[2].totalSold shouldBe 30
+        result[2].totalSales shouldBe 30
         
         result[3].productId shouldBe testProducts[1].id // 테스트 상품 2 (판매량 20)
         result[3].name shouldBe "테스트 상품 2"
-        result[3].totalSold shouldBe 20
+        result[3].totalSales shouldBe 20
         
         result[4].productId shouldBe testProducts[2].id // 품절 상품 (판매량 10)
         result[4].name shouldBe "품절 상품"
-        result[4].totalSold shouldBe 10
+        result[4].totalSales shouldBe 10
     }
     
     @Test
@@ -413,7 +412,7 @@ class ProductServiceTestIT @Autowired constructor(
         )
         
         // Act
-        val result = productService.getPopularProducts(cmd)
+        val result = productService.retrievePopular(cmd)
         
         // Assert
         result shouldHaveSize 3

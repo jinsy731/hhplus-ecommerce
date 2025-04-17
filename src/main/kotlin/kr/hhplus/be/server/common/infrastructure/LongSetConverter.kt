@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.common
+package kr.hhplus.be.server.common.infrastructure
 
 import jakarta.persistence.AttributeConverter
 import jakarta.persistence.Converter

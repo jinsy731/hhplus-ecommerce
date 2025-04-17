@@ -4,14 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import kr.hhplus.be.server.common.PageInfo
 import kr.hhplus.be.server.common.toResponse
 import kr.hhplus.be.server.product.application.ProductResult
-import kr.hhplus.be.server.product.domain.product.OptionSpec
-import kr.hhplus.be.server.product.domain.product.OptionValue
-import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductStatus
-import kr.hhplus.be.server.product.domain.product.ProductVariant
-import kr.hhplus.be.server.product.entrypoint.http.toOptionSpecResponse
-import kr.hhplus.be.server.product.entrypoint.http.toOptionValueResponse
-import kr.hhplus.be.server.product.entrypoint.http.toVaraintResponse
 import java.math.BigDecimal
 import kotlin.collections.map
 
@@ -145,5 +138,5 @@ fun List<ProductResult.ProductVariantDetail>.toVaraintResponse() = this.map { Pr
 fun ProductResult.PopularProduct.toPopularProductResponse() = ProductResponse.Retrieve.Popular(
     productId = this.productId,
     name = this.name,
-    totalSold = this.totalSold
+    totalSold = this.totalSales
 )

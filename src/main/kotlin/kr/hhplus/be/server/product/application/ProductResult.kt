@@ -17,7 +17,7 @@ class ProductResult {
     data class PopularProduct(
         val productId: Long,
         val name: String,
-        val totalSold: Int
+        val totalSales: Int
     )
 
     data class OptionValueDetail(

@@ -38,5 +38,5 @@ interface ProductApiSpec {
         ]
     )
     @GetMapping("/popular")
-    fun getPopularProducts(): ResponseEntity<CommonResponse<List<ProductResponse.Retrieve.Popular>>>
+    fun retrievePopular(): ResponseEntity<CommonResponse<List<ProductResponse.Retrieve.Popular>>>
 }

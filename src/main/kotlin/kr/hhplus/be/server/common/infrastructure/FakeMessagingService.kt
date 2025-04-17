@@ -1,5 +1,6 @@
-package kr.hhplus.be.server.common
+package kr.hhplus.be.server.common.infrastructure
 
+import kr.hhplus.be.server.common.MessagingService
 import kr.hhplus.be.server.order.domain.Order
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component

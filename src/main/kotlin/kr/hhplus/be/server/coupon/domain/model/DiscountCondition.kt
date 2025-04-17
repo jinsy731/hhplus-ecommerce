@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.coupon.domain.model
 
 import jakarta.persistence.*
-import kr.hhplus.be.server.common.LongSetConverter
+import kr.hhplus.be.server.common.infrastructure.LongSetConverter
 import java.math.BigDecimal
 
 /**

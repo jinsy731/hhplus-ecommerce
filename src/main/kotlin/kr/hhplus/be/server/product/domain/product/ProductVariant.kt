@@ -4,7 +4,7 @@ import jakarta.persistence.*
 import kr.hhplus.be.server.common.exception.VariantOutOfStockException
 import kr.hhplus.be.server.common.exception.VariantUnavailableException
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
-import kr.hhplus.be.server.common.LongSetConverter
+import kr.hhplus.be.server.common.infrastructure.LongSetConverter
 import java.math.BigDecimal
 
 @Entity

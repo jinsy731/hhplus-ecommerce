@@ -2,7 +2,6 @@ package kr.hhplus.be.server.product.entrypoint.http
 
 import kr.hhplus.be.server.common.CommonResponse
 import kr.hhplus.be.server.product.application.ProductCommand
-import kr.hhplus.be.server.product.application.ProductResult
 import kr.hhplus.be.server.product.application.ProductService
 import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
@@ -26,13 +25,13 @@ class ProductController(private val productService: ProductService): ProductApiS
     }
 
     @GetMapping("/popular")
-    override fun getPopularProducts(): ResponseEntity<CommonResponse<List<ProductResponse.Retrieve.Popular>>> {
+    override fun retrievePopular(): ResponseEntity<CommonResponse<List<ProductResponse.Retrieve.Popular>>> {
         val fromDate = LocalDate.now().minusDays(3)
         val toDate = LocalDate.now()
         val limit = 5
         
         val cmd = ProductCommand.RetrievePopularProducts(fromDate, toDate, limit)
-        val result = productService.getPopularProducts(cmd)
+        val result = productService.retrievePopular(cmd)
         
         return ResponseEntity.ok(CommonResponse(result.map { it.toPopularProductResponse() }))
     }

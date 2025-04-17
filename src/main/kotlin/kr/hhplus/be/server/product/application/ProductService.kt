@@ -7,6 +7,7 @@ import kr.hhplus.be.server.product.domain.product.ProductRepository
 import kr.hhplus.be.server.product.infrastructure.JpaProductSalesAggregationDailyRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.lang.IllegalStateException
 
 @Service
 @Transactional(readOnly = true)
@@ -46,18 +47,19 @@ class ProductService(
     }
     
 
-    fun getPopularProducts(cmd: ProductCommand.RetrievePopularProducts): List<ProductResult.PopularProduct> {
+    fun retrievePopular(cmd: ProductCommand.RetrievePopularProducts): List<ProductResult.PopularProduct> {
         val salesAggregates = productSalesAggregationDailyRepository.findPopularProducts(
             fromDate = cmd.fromDate,
             toDate = cmd.toDate,
             limit = cmd.limit
         )
+        val products = productRepository.findAll(salesAggregates.map { it.getProductId() })
         
         return salesAggregates.map { aggregate ->
             ProductResult.PopularProduct(
-                productId = aggregate.productId,
-                name = aggregate.productName,
-                totalSold = aggregate.totalSold.toInt()
+                productId = aggregate.getProductId(),
+                name = products.find { it.id == aggregate.getProductId() }?.name ?: throw IllegalStateException(),
+                totalSales = aggregate.getTotalSales().toInt()
             )
         }
     }

@@ -31,17 +31,19 @@ class DefaultProductAggregationDailyRepository(
 }
 
 interface JpaProductSalesAggregationDailyRepository: JpaRepository<ProductSalesAggregationDaily, ProductSalesAggregationDailyId> {
-    @Query("""
-        SELECT new kr.hhplus.be.server.product.domain.stats.ProductSalesAggregate(
-            p.id, p.name, SUM(psa.salesCount)
-        )
-        FROM Product p
-        JOIN ProductSalesAggregationDaily psa ON p.id = psa.id.productId
-        WHERE psa.id.salesDay BETWEEN :fromDate AND :toDate
-        GROUP BY p.id, p.name
-        ORDER BY SUM(psa.salesCount) DESC
-        LIMIT :limit
-    """)
+    @Query(
+        value = """
+            SELECT 
+                product_id AS productId,
+                SUM(sales_count) AS totalSales
+            FROM p_sales_agg_day
+            WHERE sales_day BETWEEN :fromDate AND :toDate
+            GROUP BY product_id
+            ORDER BY totalSales DESC
+            LIMIT :limit
+    """,
+        nativeQuery = true
+    )
     fun findPopularProducts(
         @Param("fromDate") fromDate: LocalDate,
         @Param("toDate") toDate: LocalDate,
