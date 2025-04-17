@@ -11,6 +11,7 @@ import java.time.LocalDateTime
 class Order(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column
     val id: Long = 0L,
 
     @Column(nullable = false)
@@ -38,13 +39,23 @@ class Order(
 
     companion object {
         fun create(context: OrderContext.Create.Root): Order {
-            return Order(
+            val order = Order(
                 userId = context.userId,
-                orderItems = OrderItem.from(context.items),
                 createdAt = context.timestamp,
-                updatedAt = context.timestamp
-            ).apply { this.originalTotal = calculateOriginalTotal()}
+                updatedAt = context.timestamp,
+            )
+
+            val items = OrderItem.from(context.items)
+            items.forEach { order.addItem(it) }
+            order.originalTotal = order.calculateOriginalTotal()
+
+            return order
         }
+    }
+
+    fun addItem(orderItem: OrderItem) {
+        this.orderItems.add(orderItem)
+        orderItem.order = this
     }
 
     private fun calculateOriginalTotal(): BigDecimal {

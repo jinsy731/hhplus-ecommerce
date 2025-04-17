@@ -8,6 +8,7 @@ import java.math.BigDecimal
 class OrderItem(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column
     val id: Long = 0L,
 
     @Column(nullable = false)
@@ -29,7 +30,7 @@ class OrderItem(
     @Enumerated(EnumType.STRING)
     var status: OrderItemStatus = OrderItemStatus.ORDERED,
 
-    @ManyToOne(cascade = [CascadeType.ALL], optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "order_id", nullable = false)
     var order: Order? = null
 ) {
@@ -38,7 +39,7 @@ class OrderItem(
             productId = it.productId,
             variantId = it.variantId,
             quantity = it.quantity,
-            unitPrice = it.unitPrice
+            unitPrice = it.unitPrice,
         ) }.toMutableList()
     }
 
