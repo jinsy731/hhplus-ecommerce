@@ -3,6 +3,7 @@ package kr.hhplus.be.server.user.application
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.SpringBootTestWithMySQLContainer
+import kr.hhplus.be.server.user.domain.TransactionType
 import kr.hhplus.be.server.user.domain.UserPoint
 import kr.hhplus.be.server.user.domain.UserPointHistoryRepository
 import kr.hhplus.be.server.user.domain.UserPointRepository
@@ -39,15 +40,19 @@ class UserPointServiceIntegrationTest {
 
         // Assert
         val updatedPoint = userPointRepository.getByUserId(userId)
-        updatedPoint.balance shouldBe chargeAmount
+        updatedPoint.balance.compareTo(chargeAmount) shouldBe 0
         updatedPoint.updatedAt shouldBe now
+
+        result.userId shouldBe 1L
+        result.pointAfterCharge.compareTo(updatedPoint.balance) shouldBe 0
+        result.updatedAt shouldBe now
 
         val historyList = userPointHistoryRepository.findAllByUserId(userId)
         historyList shouldHaveSize 1
         with(historyList.first()) {
-            amount shouldBe chargeAmount
+            amount.compareTo(chargeAmount) shouldBe 0
             createdAt shouldBe now
-            transactionType shouldBe "CHARGE"
+            transactionType shouldBe TransactionType.CHARGE
         }
     }
 
@@ -68,15 +73,15 @@ class UserPointServiceIntegrationTest {
 
         // Assert
         val updatedPoint = userPointRepository.getByUserId(userId)
-        updatedPoint.balance shouldBe (initialBalance - useAmount)
+        updatedPoint.balance.compareTo((initialBalance - useAmount)) shouldBe 0
         updatedPoint.updatedAt shouldBe now
 
         val historyList = userPointHistoryRepository.findAllByUserId(userId)
         historyList shouldHaveSize 1
         with(historyList.first()) {
-            amount shouldBe useAmount
+            amount.compareTo(useAmount) shouldBe 0
             createdAt shouldBe now
-            transactionType shouldBe "USE"
+            transactionType shouldBe TransactionType.USE
         }
     }
 
@@ -96,7 +101,7 @@ class UserPointServiceIntegrationTest {
 
         // Assert
         result.userId shouldBe userId
-        result.point shouldBe balance
+        result.point.compareTo(balance) shouldBe 0
         result.updatedAt shouldBe now
     }
 }

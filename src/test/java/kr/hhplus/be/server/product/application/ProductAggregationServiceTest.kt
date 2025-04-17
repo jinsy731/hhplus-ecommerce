@@ -34,8 +34,8 @@ class ProductAggregationServiceTest {
         // arrange
         val day = LocalDate.of(2025, 5, 1)
         val lastCheckpointId = 1L
-        val lastCheckpoint = ProductSalesAggregationDailyCheckpoint(lastCheckpointId)
-        val newCheckpoint = ProductSalesAggregationDailyCheckpoint(5L)
+        val lastCheckpoint = ProductSalesAggregationDailyCheckpoint(lastAggregatedLogId = lastCheckpointId)
+        val newCheckpoint = ProductSalesAggregationDailyCheckpoint(lastAggregatedLogId = 5L)
         val checkpointSlot = slot<ProductSalesAggregationDailyCheckpoint>()
         val product1AggregationSlot = slot<ProductSalesAggregationDaily>()
         val product2AggregationSlot = slot<ProductSalesAggregationDaily>()
