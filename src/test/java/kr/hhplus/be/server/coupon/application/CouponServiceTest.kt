@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kr.hhplus.be.server.common.ClockHolder
 import kr.hhplus.be.server.coupon.CouponTestFixture
 import kr.hhplus.be.server.coupon.domain.model.*
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
@@ -23,13 +24,15 @@ class CouponServiceTest {
     private lateinit var userCouponRepository: UserCouponRepository
     private lateinit var discountLineRepository: DiscountLineRepository
     private lateinit var couponService: CouponService
+    private lateinit var clockHolder: ClockHolder
 
     @BeforeEach
     fun setUp() {
         couponRepository = mockk()
         userCouponRepository = mockk()
         discountLineRepository = mockk()
-        couponService = CouponService(couponRepository, userCouponRepository, discountLineRepository)
+        clockHolder = mockk()
+        couponService = CouponService(couponRepository, userCouponRepository, discountLineRepository, clockHolder)
     }
     
     @Test
@@ -65,6 +68,8 @@ class CouponServiceTest {
         // 모든 주문 상품이 할인 조건을 만족한다고 가정
         every { userCouponRepository.findAllByUserIdAndIdIsIn(userId, listOf(1L)) } returns listOf(userCoupon)
         every { discountLineRepository.saveAll(any()) } returns discountLine
+        every { clockHolder.getNowInLocalDateTime() } returns now
+
 
         val cmd = CouponCommand.Use.Root(
             userId = userId,
@@ -131,11 +136,13 @@ class CouponServiceTest {
     @Test
     fun `✅쿠폰 발급`() {
         // arrange
+        val now = LocalDateTime.now()
         val coupon = CouponTestFixture.createValidCoupon()
         val userCoupon = coupon.issueTo(1L)
         val cmd = CouponCommand.Issue(1L, 1L)
         every { couponRepository.getById(1L) } returns coupon
         every { userCouponRepository.save(any()) } returns userCoupon
+        every { clockHolder.getNowInLocalDateTime() } returns now
         // act
         val result = couponService.issueCoupon(cmd)
         // assert

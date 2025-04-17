@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.coupon.application
 
 import jakarta.transaction.Transactional
+import kr.hhplus.be.server.common.ClockHolder
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.DiscountLineRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
@@ -11,12 +12,13 @@ class CouponService(
     private val couponRepository: CouponRepository,
     private val userCouponRepository: UserCouponRepository,
     private val discountLineRepository: DiscountLineRepository,
+    private val clockHolder: ClockHolder
     ) {
 
     @Transactional
     fun issueCoupon(cmd: CouponCommand.Issue): CouponResult.Issue {
         val coupon = couponRepository.getById(cmd.couponId)
-        val userCoupon = coupon.issueTo(cmd.userId)
+        val userCoupon = coupon.issueTo(cmd.userId, clockHolder.getNowInLocalDateTime())
 
         val savedUserCoupon = userCouponRepository.save(userCoupon)
 
