@@ -16,7 +16,7 @@ spring:
     generate-ddl: true
     show-sql: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     properties:
       hibernate.timezone.default_storage: NORMALIZE_UTC
       hibernate.jdbc.time_zone: UTC
@@ -24,6 +24,13 @@ spring:
       hibernate.highlight_sql: true
       hibernate.use_sql_comments: true
       hibernate.default_batch_fetch_size: 100
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+      continue-on-error: true
+
 
 ---
 spring.config.activate.on-profile: local, test
