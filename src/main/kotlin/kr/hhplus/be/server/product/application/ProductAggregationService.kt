@@ -1,6 +1,9 @@
 package kr.hhplus.be.server.product.application
 
 import kr.hhplus.be.server.product.domain.product.Product
+import kr.hhplus.be.server.product.infrastructure.JpaPopularProductsDailyRepository
+import kr.hhplus.be.server.product.domain.stats.PopularProductDailyId
+import kr.hhplus.be.server.product.domain.stats.PopularProductsDaily
 import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDaily
 import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyCheckpoint
 import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyCheckpointRepository
@@ -17,7 +20,8 @@ import java.time.LocalDateTime
 class ProductAggregationService(
     private val productSalesLogRepository: ProductSalesLogRepository,
     private val productSalesAggregationDailyRepository: ProductSalesAggregationDailyRepository,
-    private val productSalesAggregationDailyCheckpointRepository: ProductSalesAggregationDailyCheckpointRepository
+    private val productSalesAggregationDailyCheckpointRepository: ProductSalesAggregationDailyCheckpointRepository,
+    private val popularProductsDailyRepository: JpaPopularProductsDailyRepository
 ) {
     fun aggregateSinceLastSummary(batchSize: Long, now: LocalDate) {
         val lastCheckpoint = productSalesAggregationDailyCheckpointRepository.findLast()
@@ -34,6 +38,7 @@ class ProductAggregationService(
         }
 
         saveNewCheckpointIfAnyLogs(productSalesLogs)
+        updateTopRankings(now)
     }
 
     private fun saveNewCheckpointIfAnyLogs(productSalesLogs: List<ProductSalesLog>) {
@@ -66,5 +71,26 @@ class ProductAggregationService(
         val returnQty = logList.filter { it.type == TransactionType.RETURN }.sumOf { it.quantity }
 
         return soldQty - returnQty
+    }
+
+    private fun updateTopRankings(salesDay: LocalDate, topN: Int = 5) {
+        // 기존 데이터 삭제 (중복 방지)
+        popularProductsDailyRepository.deleteAllById(
+            (1..topN).map { PopularProductDailyId(salesDay, it) }
+        )
+
+        // 상위 N개 가져오기
+        val topProducts = productSalesAggregationDailyRepository
+            .findTopProductsByDay(salesDay, topN)
+
+        val rankEntities = topProducts.mapIndexed { index, row ->
+            PopularProductsDaily(
+                id = PopularProductDailyId(salesDay, index + 1),
+                productId = (row["product_id"] as Number).toLong(),
+                totalSales = (row["sales_count"] as Number).toLong()
+            )
+        }
+
+        popularProductsDailyRepository.saveAll(rankEntities)
     }
 }
