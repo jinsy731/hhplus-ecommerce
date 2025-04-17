@@ -20,14 +20,15 @@ export let options = {
       startVUs: 5,
       stages: [
         { duration: '30s', target: 30 },
-        { duration: '1m', target: 30 },
-        { duration: '30s', target: 0 }
+        { duration: '30s', target: 500 },
+        { duration: '30s', target: 300 },
+        { duration: '30s', target: 60 },
       ],
       gracefulRampDown: '10s'
     }
   },
   thresholds: {
-    http_req_duration: ['p(95)<1000'], // 95%의 요청이 1초 이내에 완료되어야 함
+    http_req_duration: ['p(95)<300', 'p(99)<500'], // 95%의 요청이 1초 이내에 완료되어야 함
     'popular_product_trend': ['p(95)<800'],  // 인기 상품 조회 95%가 800ms 이내
     'api_call_errors': ['rate<0.05']      // API 호출 오류 5% 미만
   }

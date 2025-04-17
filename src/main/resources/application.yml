@@ -10,7 +10,7 @@ spring:
       maximum-pool-size: 3
       connection-timeout: 10000
       max-lifetime: 60000
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
   jpa:
     open-in-view: false
     generate-ddl: true
@@ -20,13 +20,13 @@ spring:
     properties:
       hibernate.timezone.default_storage: NORMALIZE_UTC
       hibernate.jdbc.time_zone: UTC
-      hibernate.format_sql: true
-      hibernate.highlight_sql: true
-      hibernate.use_sql_comments: true
+      hibernate.format_sql: false
+      hibernate.highlight_sql: false
+      hibernate.use_sql_comments: false
       hibernate.default_batch_fetch_size: 100
   sql:
     init:
-      mode: always
+      mode: never
       schema-locations: classpath:schema.sql
       data-locations: classpath:data.sql
       continue-on-error: true
@@ -37,6 +37,6 @@ spring.config.activate.on-profile: local, test
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/hhplus?characterEncoding=UTF-8&serverTimezone=UTC
+    url: jdbc:p6spy:mysql://localhost:3306/hhplus?characterEncoding=UTF-8&serverTimezone=UTC
     username: application
     password: application
