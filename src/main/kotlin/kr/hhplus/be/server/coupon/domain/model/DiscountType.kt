@@ -30,7 +30,7 @@ abstract class DiscountType {
  * @param amount 할인 금액
  */
 @Entity
-@DiscriminatorValue("FIXED_AMOUNT")
+@DiscriminatorValue("FIXED_AMOUNT_TOTAL")
 class FixedAmountTotalDiscountType(
     @Column(name = "discount_amount")
     val amount: BigDecimal
@@ -54,7 +54,7 @@ class FixedAmountTotalDiscountType(
  * @param amount 할인 금액
  */
 @Entity
-@DiscriminatorValue("FIXED_AMOUNT")
+@DiscriminatorValue("FIXED_AMOUNT_PER_ITEM")
 class FixedAmountPerItemDiscountType(
     @Column(name = "discount_amount")
     val amount: BigDecimal
