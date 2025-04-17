@@ -4,6 +4,7 @@ import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductRepository
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -22,4 +23,8 @@ class DefaultProductRepository(private val jpaRepository: ProductJpaRepository):
     override fun save(entity: Product): Product {
         return jpaRepository.save(entity)
     }
+}
+
+interface ProductJpaRepository: JpaRepository<Product, Long> {
+    fun findByNameContaining(name: String, pageable: Pageable): Page<Product>
 }
