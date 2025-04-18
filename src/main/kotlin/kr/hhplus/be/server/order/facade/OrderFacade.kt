@@ -6,6 +6,7 @@ import kr.hhplus.be.server.common.MessagingService
 import kr.hhplus.be.server.order.application.OrderService
 import kr.hhplus.be.server.coupon.application.toDiscountInfoList
 import kr.hhplus.be.server.order.application.OrderCommand
+import kr.hhplus.be.server.order.domain.Order
 import kr.hhplus.be.server.payment.application.PaymentCommand
 import kr.hhplus.be.server.payment.application.PaymentService
 import kr.hhplus.be.server.product.application.ProductCommand
@@ -25,7 +26,7 @@ class OrderFacade(
     ) {
 
     @Transactional
-    fun placeOrder(cri: OrderCriteria.PlaceOrder.Root) {
+    fun placeOrder(cri: OrderCriteria.PlaceOrder.Root): Order {
         // 주문 생성
         productService.validatePurchasability(ProductCommand.ValidatePurchasability.Root(
             items = cri.items.map { ProductCommand.ValidatePurchasability.Item(
@@ -35,11 +36,12 @@ class OrderFacade(
             ) }
         ))
         val products = productService.findAllById(cri.items.map { it.productId })
-        // TODO: 상품 검증(재고 + 상태)
         val order = orderService.createOrder(cri.toCreateOrderCommand(products))
+
         // 쿠폰 적용
         val applyCouponResult = couponService.use(cri.toUseCouponCommand(order))
         orderService.applyDiscount(OrderCommand.ApplyDiscount(order.id, applyCouponResult.discountInfo))
+
         // 결제 시작
         val payment = paymentService.preparePayment(cri.toPreparePaymentCommand(order))
         paymentService.completePayment(PaymentCommand.Complete(payment.id))
@@ -51,9 +53,9 @@ class OrderFacade(
                 quantity = it.quantity
             ) }
         ))
-        // TODO: 재고 차감
         userPointService.use(UserPointCommand.Use(cri.userId, order.finalTotal(), cri.timestamp))
-        // 주문 메시지 전송
         messagingService.publish(order)
+
+        return order
     }
 }

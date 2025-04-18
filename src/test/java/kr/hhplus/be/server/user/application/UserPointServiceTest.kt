@@ -45,7 +45,7 @@ class UserPointServiceTest {
         
         every { userPointRepository.getByUserId(userId) } returns userPoint
         every { userPointRepository.save(any()) } returns userPoint
-        every { userPointHistoryRepository.save(any()) } returns mockk<UserPointHistory>()
+        every { userPointHistoryRepository.save(any()) } returns expectedHistory
         
         val cmd = UserPointCommand.Charge(
             userId = userId,
@@ -61,7 +61,14 @@ class UserPointServiceTest {
         result.pointAfterCharge shouldBe finalBalance
         result.updatedAt shouldBe time
         verify(exactly = 1) { userPointRepository.save(userPoint) }
-        verify(exactly = 1) { userPointHistoryRepository.save(expectedHistory) }
+        verify(exactly = 1) {
+            userPointHistoryRepository.save(match {
+                it.userId == userId &&
+                        it.amount == chargeAmount &&
+                        it.transactionType == TransactionType.CHARGE &&
+                        it.createdAt == time
+            })
+        }
     }
     
     @Test
@@ -110,7 +117,7 @@ class UserPointServiceTest {
 
         every { userPointRepository.getByUserId(userId) } returns userPoint
         every { userPointRepository.save(any()) } returns userPoint
-        every { userPointHistoryRepository.save(expectedHistory) } returns mockk<UserPointHistory>()
+        every { userPointHistoryRepository.save(any()) } returns expectedHistory
 
         val cmd = UserPointCommand.Use(
             userId = userId,
@@ -124,7 +131,14 @@ class UserPointServiceTest {
         //assert
         userPoint.balance shouldBe finalBalance
         verify(exactly = 1) { userPointRepository.save(userPoint) }
-        verify(exactly = 1) { userPointHistoryRepository.save(expectedHistory) }
+        verify(exactly = 1) {
+            userPointHistoryRepository.save(match {
+                it.userId == userId &&
+                        it.amount == useAmount &&
+                        it.transactionType == TransactionType.USE &&
+                        it.createdAt == time
+            })
+        }
     }
 
     @Test

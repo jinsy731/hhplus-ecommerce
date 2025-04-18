@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import kr.hhplus.be.server.common.CommonResponse
 import kr.hhplus.be.server.common.ErrorResponse
+import org.springframework.data.domain.Pageable
 import org.springframework.web.bind.annotation.*
 
 @RequestMapping("/api/v1/users")
@@ -32,12 +33,13 @@ interface UserCouponApiSpec {
         summary = "보유 쿠폰 목록 조회",
         description = "사용자가 보유한 쿠폰 목록을 페이징으로 조회합니다.",
         responses = [
-            ApiResponse(responseCode = "200", description = "조회 성공", content = [Content(schema = Schema(implementation = CouponResponse.Retrieve::class))]),
+            ApiResponse(responseCode = "200", description = "조회 성공", content = [Content(schema = Schema(implementation = CouponResponse.RetrieveLists::class))]),
             ApiResponse(responseCode = "404", description = "사용자 없음", content = [Content(schema = Schema(implementation = ErrorResponse::class))])
         ]
     )
     @GetMapping("/{userId}/coupons")
-    fun getCoupons(
-        @PathVariable userId: Long
-    ): CommonResponse<CouponResponse.Retrieve>
+    fun retrieveLists(
+        @PathVariable userId: Long,
+        pageable: Pageable,
+    ): CommonResponse<CouponResponse.RetrieveLists>
 }

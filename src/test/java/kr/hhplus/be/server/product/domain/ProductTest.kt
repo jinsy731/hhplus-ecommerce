@@ -17,7 +17,7 @@ class ProductTest {
     @EnumSource(value = kr.hhplus.be.server.product.domain.product.ProductStatus::class, names = ["ON_SALE", "PARTIALLY_OUT_OF_STOCK"])
     fun `✅주문 시 상품 검증 성공`(status: kr.hhplus.be.server.product.domain.product.ProductStatus) {
         // arrange
-        val product = ProductTestFixture.createValidProduct(id = 1L).apply { this.status = status }
+        val product = ProductTestFixture.createValidProduct(id = 1L, variantIds = listOf(1,2)).apply { this.status = status }
 
         // act, assert
         shouldNotThrowAny { product.validatePurchasability(variantId = 1L, quantity = 1) }
@@ -60,7 +60,7 @@ class ProductTest {
     @Test
     fun `✅상품 구매_검증이 통과하면 상품옵션별 재고가 감소해야한다`() {
         // arrange
-        val product = ProductTestFixture.createValidProduct()
+        val product = ProductTestFixture.createValidProduct(variantIds = listOf(1,2))
         // act
         product.reduceStockByPurchase(1L, 1)
         // assert

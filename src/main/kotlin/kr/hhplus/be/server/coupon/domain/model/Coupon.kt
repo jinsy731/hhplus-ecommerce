@@ -4,6 +4,7 @@ import jakarta.persistence.*
 import kr.hhplus.be.server.common.exception.CouponTargetNotFoundException
 import kr.hhplus.be.server.common.exception.ExceededMaxCouponLimitException
 import kr.hhplus.be.server.common.exception.InvalidCouponStatusException
+import org.hibernate.engine.internal.Cascade
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -24,7 +25,7 @@ class Coupon(
     @Column(nullable = false)
     val description: String,
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = [CascadeType.PERSIST])
     @JoinColumn(name = "discount_policy_id", nullable = false)
     val discountPolicy: DiscountPolicy,
     

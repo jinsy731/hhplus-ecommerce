@@ -4,6 +4,7 @@ import java.math.BigDecimal
 import jakarta.persistence.*
 import kr.hhplus.be.server.order.domain.Order
 import kr.hhplus.be.server.order.domain.OrderItem
+import org.hibernate.engine.internal.Cascade
 
 /**
  * 할인 정책 인터페이스
@@ -19,11 +20,11 @@ class DiscountPolicy {
     @Column(nullable = false)
     val name: String
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = [CascadeType.PERSIST])
     @JoinColumn(name = "discount_type_id", nullable = false)
     val discountType: DiscountType
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = [CascadeType.PERSIST])
     @JoinColumn(name = "discount_condition_id", nullable = false)
     val discountCondition: DiscountCondition
 

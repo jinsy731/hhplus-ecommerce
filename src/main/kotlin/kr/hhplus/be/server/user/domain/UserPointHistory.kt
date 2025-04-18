@@ -1,13 +1,28 @@
 package kr.hhplus.be.server.user.domain
 
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.Table
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
-data class UserPointHistory(
-    val id: Long? = null,
+@Entity
+@Table(name = "USER_POINT_HISTORY")
+class UserPointHistory(
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long = 0L,
+    @Column(nullable = false)
     val userId: Long,
+    @Column(nullable = false) @Enumerated(EnumType.STRING)
     val transactionType: TransactionType,
+    @Column(nullable = false)
     val amount: BigDecimal,
+    @Column(nullable = false)
     val createdAt: LocalDateTime? = null
 ) {
     companion object {

@@ -4,7 +4,7 @@ import jakarta.persistence.*
 import kr.hhplus.be.server.common.exception.VariantOutOfStockException
 import kr.hhplus.be.server.common.exception.VariantUnavailableException
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
-import kr.hhplus.be.server.coupon.LongSetConverter
+import kr.hhplus.be.server.common.infrastructure.LongSetConverter
 import java.math.BigDecimal
 
 @Entity
@@ -13,7 +13,7 @@ class ProductVariant(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "variant_id")
-    val id: Long = 0L,
+    val id: Long? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
@@ -39,7 +39,7 @@ class ProductVariant(
     }
 
     fun reduceStock(quantity: Int) {
-        check(this.stock > quantity) { throw VariantOutOfStockException()  }
+        check(this.stock >= quantity) { throw VariantOutOfStockException()  }
         this.stock -= quantity
     }
 }

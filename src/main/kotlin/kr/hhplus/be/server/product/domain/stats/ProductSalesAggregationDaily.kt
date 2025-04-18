@@ -4,6 +4,7 @@ import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
 import jakarta.persistence.EmbeddedId
 import jakarta.persistence.Entity
+import jakarta.persistence.Table
 import java.io.Serializable
 import java.time.LocalDate
 
@@ -14,6 +15,7 @@ data class ProductSalesAggregationDailyId(
 ): Serializable
 
 @Entity
+@Table(name = "P_SALES_AGG_DAY")
 class ProductSalesAggregationDaily(
     @EmbeddedId
     val id: ProductSalesAggregationDailyId,
