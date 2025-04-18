@@ -12,6 +12,10 @@ class DefaultOrderRepository(private val jpaRepository: JpaOrderRepository): Ord
         return jpaRepository.findById(id).getOrElse { throw ResourceNotFoundException() }
     }
 
+    override fun findAll(): List<Order> {
+        return jpaRepository.findAll()
+    }
+
     override fun save(order: Order): Order {
         return jpaRepository.save(order)
     }

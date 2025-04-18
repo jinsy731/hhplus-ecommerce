@@ -4,10 +4,14 @@ import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
+import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.common.CommonResponse
+import kr.hhplus.be.server.product.domain.stats.PopularProductDailyId
+import kr.hhplus.be.server.product.domain.stats.PopularProductsDaily
 import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDaily
 import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyId
 import kr.hhplus.be.server.product.entrypoint.http.ProductResponse
+import kr.hhplus.be.server.product.infrastructure.JpaPopularProductsDailyRepository
 import kr.hhplus.be.server.product.infrastructure.JpaProductSalesAggregationDailyRepository
 import kr.hhplus.be.server.product.infrastructure.ProductJpaRepository
 import org.junit.jupiter.api.AfterEach
@@ -15,6 +19,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.context.annotation.Import
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
@@ -24,7 +29,7 @@ import java.time.LocalDate
 internal class ProductControllerE2ETest @Autowired constructor(
     private val restTemplate: TestRestTemplate,
     private val productJpaRepository: ProductJpaRepository,
-    private val productAggregationDailyRepository: JpaProductSalesAggregationDailyRepository,
+    private val popularProductsDailyRepository: JpaPopularProductsDailyRepository,
     private val databaseCleaner: MySqlDatabaseCleaner
 ) {
     @AfterEach
@@ -46,13 +51,6 @@ internal class ProductControllerE2ETest @Autowired constructor(
 
         val data = response.body?.data.shouldNotBeNull()
         val products = data.products.shouldNotBeEmpty()
-
-        // 페이지 정보 검증
-        val pageInfo = data.pageInfo.shouldNotBeNull()
-        pageInfo.page shouldBe 0
-        pageInfo.size shouldBe 20
-        pageInfo.totalElement shouldBe 20
-        pageInfo.totalPages shouldBe 1
     }
 
 
@@ -61,11 +59,24 @@ internal class ProductControllerE2ETest @Autowired constructor(
         val products = (1..10).map { ProductTestFixture.createValidProduct() }
         productJpaRepository.saveAll(products)
 
-        val agg = products.map { product ->
-            val id = ProductSalesAggregationDailyId(product.id!!, LocalDate.now())
-            ProductSalesAggregationDaily(id, product.id!! * 10)
-        }
-        productAggregationDailyRepository.saveAll(agg)
+
+        popularProductsDailyRepository.saveAll(listOf(
+            PopularProductsDaily(
+                id = PopularProductDailyId(LocalDate.now(), 1),
+                productId = 1L,
+                totalSales = 1000
+            ),
+            PopularProductsDaily(
+                id = PopularProductDailyId(LocalDate.now(), 2),
+                productId = 2L,
+                totalSales = 500
+            ),
+            PopularProductsDaily(
+                id = PopularProductDailyId(LocalDate.now(), 3),
+                productId = 3L,
+                totalSales = 300
+            ),
+        ))
         
         // 인기 상품 API 호출
         val response = restTemplate.exchange(
@@ -82,6 +93,6 @@ internal class ProductControllerE2ETest @Autowired constructor(
         val popularProducts = response.body?.data.shouldNotBeNull()
         
         // 최대 5개의 인기 상품이 반환되어야 함
-        popularProducts.size shouldBe 5
+        popularProducts.size shouldBe 3
     }
 }

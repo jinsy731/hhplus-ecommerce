@@ -5,15 +5,20 @@ import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Index
 import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import kr.hhplus.be.server.common.exception.InsufficientPointException
 import kr.hhplus.be.server.common.exception.InvalidChargeAmountException
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "USER_POINT")
-class UserPoint(
+@Table(
+    name = "USER_POINT",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["user_id"])],
+    indexes = [Index(name = "idx_user_id", columnList = "user_id")]
+)class UserPoint(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
     @Column(nullable = false)

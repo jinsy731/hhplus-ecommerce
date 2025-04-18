@@ -4,6 +4,7 @@ import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
+import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.common.CommonResponse
 import kr.hhplus.be.server.coupon.CouponTestFixture
 import kr.hhplus.be.server.coupon.domain.model.CouponTest
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.context.annotation.Import
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
@@ -49,7 +51,9 @@ internal class OrderControllerE2ETest @Autowired constructor(
 
     @Test
     fun `주문 생성 - 성공`() {
-        val userId = 1L
+        val userId = 32912L
+        val existingUserPoint = userPointRepository.findByUserId(userId)
+        existingUserPoint?.let { println("existingUserPoint = $existingUserPoint") }
         val userPoint = userPointRepository.save(UserPointTestFixture.createUserPoint(userId = userId, balance = BigDecimal(100000)))
         val coupon = couponRepository.save(CouponTestFixture.createValidCoupon())
         val userCoupon = userCouponRepository.save(CouponTestFixture.createUserCoupon(userId = userId, coupon = coupon))

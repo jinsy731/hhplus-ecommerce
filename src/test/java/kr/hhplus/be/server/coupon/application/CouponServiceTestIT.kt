@@ -1,36 +1,27 @@
 package kr.hhplus.be.server.coupon.application
 
-import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.mockk.every
-import kr.hhplus.be.server.SpringBootTestWithMySQLContainer
+import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.common.ClockHolder
 import kr.hhplus.be.server.common.exception.CouponTargetNotFoundException
 import kr.hhplus.be.server.common.exception.InvalidCouponStatusException
-import kr.hhplus.be.server.coupon.CouponTestFixture
-import kr.hhplus.be.server.coupon.domain.model.Coupon
-import kr.hhplus.be.server.coupon.domain.model.DiscountPolicy
-import kr.hhplus.be.server.coupon.domain.model.FixedAmountTotalDiscountType
-import kr.hhplus.be.server.coupon.domain.model.MinOrderAmountCondition
-import kr.hhplus.be.server.coupon.domain.model.UserCouponStatus
+import kr.hhplus.be.server.coupon.domain.model.*
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
-import kr.hhplus.be.server.coupon.domain.port.DiscountLineRepository
-import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
 import kr.hhplus.be.server.coupon.infrastructure.JpaCouponRepository
 import kr.hhplus.be.server.coupon.infrastructure.JpaUserCouponRepository
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
-import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 
-@SpringBootTestWithMySQLContainer
+@SpringBootTest
 class CouponServiceTestIT {
 
     @Autowired
@@ -48,8 +39,15 @@ class CouponServiceTestIT {
     @MockitoBean
     private lateinit var mockClockHolder: ClockHolder
 
+    @Autowired
+    private lateinit var databaseCleaner: MySqlDatabaseCleaner
+
+    @AfterEach
+    fun clean() {
+        databaseCleaner.clean()
+    }
+
     @Test
-    @Transactional
     fun `✅쿠폰 발급을 하면 사용자 쿠폰이 생성된다`() {
         // given
         val userId = 1L
@@ -101,7 +99,6 @@ class CouponServiceTestIT {
     }
 
     @Test
-    @Transactional
     fun `✅쿠폰을 사용하면 할인 정보가 생성된다`() {
         // given
         val userId = 2L
@@ -176,7 +173,6 @@ class CouponServiceTestIT {
     }
 
     @Test
-    @Transactional
     fun `✅사용자의 쿠폰 목록을 페이징하여 조회한다`() {
         // given
         val userId = 10L
@@ -244,7 +240,6 @@ class CouponServiceTestIT {
     }
 
     @Test
-    @Transactional
     fun `✅쿠폰이 없는 사용자는 빈 목록을 반환한다`() {
         // given
         val nonExistentUserId = 999L
@@ -260,7 +255,6 @@ class CouponServiceTestIT {
     }
 
     @Test
-    @Transactional
     fun `❌최소 주문 금액을 충족하지 않는 경우 쿠폰 적용에 실패한다`() {
         // given
         val userId = 3L
@@ -328,7 +322,6 @@ class CouponServiceTestIT {
     }
 
     @Test
-    @Transactional
     fun `❌이미 사용된 쿠폰으로는 할인을 적용할 수 없다`() {
         // given
         val userId = 4L

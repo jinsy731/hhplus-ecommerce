@@ -4,7 +4,6 @@ import io.kotest.matchers.longs.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import kr.hhplus.be.server.SpringBootTestWithMySQLContainer
 import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyCheckpoint
 import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyCheckpointRepository
 import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyId
@@ -15,12 +14,13 @@ import kr.hhplus.be.server.product.domain.stats.TransactionType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-@SpringBootTestWithMySQLContainer
+@SpringBootTest
 class ProductAggregationServiceTestIT {
 
     @Autowired

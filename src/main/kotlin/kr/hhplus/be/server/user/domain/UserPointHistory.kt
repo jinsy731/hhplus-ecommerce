@@ -7,13 +7,16 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Index
 import jakarta.persistence.Table
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "USER_POINT_HISTORY")
-class UserPointHistory(
+@Table(
+    name = "USER_POINT_HISTORY",
+    indexes = [Index(name = "idx_user_point_history_user_id", columnList = "user_id")]
+)class UserPointHistory(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L,
     @Column(nullable = false)

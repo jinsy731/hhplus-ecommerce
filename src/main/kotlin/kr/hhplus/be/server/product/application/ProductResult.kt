@@ -6,12 +6,12 @@ import kr.hhplus.be.server.product.domain.product.OptionValue
 import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductStatus
 import kr.hhplus.be.server.product.domain.product.ProductVariant
+import kr.hhplus.be.server.product.infrastructure.ProductListDto
 import java.math.BigDecimal
 
 class ProductResult {
     data class RetrieveList(
-        val products: List<ProductDetail>,
-        val pageResult: PageResult
+        val products: List<ProductSummary>,
     )
 
     data class PopularProduct(
@@ -40,24 +40,20 @@ class ProductResult {
         val stock: Int
     )
 
-    data class ProductDetail(
+    data class ProductSummary(
         val productId: Long,
         val name: String,
         val basePrice: BigDecimal,
         val status: ProductStatus,
-        val optionSpecs: List<OptionSpecDetail>,
-        val variants: List<ProductVariantDetail>
     )
 }
 
-fun Product.toProductDetail(): ProductResult.ProductDetail {
-    return ProductResult.ProductDetail(
+fun ProductListDto.toProductDetail(): ProductResult.ProductSummary {
+    return ProductResult.ProductSummary(
         productId = this.id ?: throw IllegalStateException("Product ID is null"),
         name = this.name,
         basePrice = this.basePrice,
         status = this.status,
-        optionSpecs = this.optionSpecs.sortedBy { it.displayOrder }.map { it.toOptionSpecDetail() },
-        variants = this.variants.sortedBy { it.id }.map { it.toProductVariantDetail() }
     )
 }
 

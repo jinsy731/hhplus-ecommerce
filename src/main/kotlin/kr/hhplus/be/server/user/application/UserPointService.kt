@@ -1,10 +1,10 @@
 package kr.hhplus.be.server.user.application
 
-import jakarta.transaction.Transactional
 import kr.hhplus.be.server.user.domain.UserPointHistory
 import kr.hhplus.be.server.user.domain.UserPointHistoryRepository
 import kr.hhplus.be.server.user.domain.UserPointRepository
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class UserPointService(
@@ -37,7 +37,7 @@ class UserPointService(
         userPointHistoryRepository.save(history)
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     fun retrievePoint(cmd: UserPointCommand.Retrieve): UserPointResult.Retrieve {
         val userPoint = userPointRepository.getByUserId(cmd.userId)
 

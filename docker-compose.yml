@@ -11,6 +11,9 @@ services:
       - MYSQL_DATABASE=hhplus
     volumes:
       - ./data/mysql/:/var/lib/mysql
+      - ./data/mysql/log/:/var/log/mysql
+      - ./data/mysql/conf.d/:/etc/mysql/conf.d/
+
 
 networks:
   default:

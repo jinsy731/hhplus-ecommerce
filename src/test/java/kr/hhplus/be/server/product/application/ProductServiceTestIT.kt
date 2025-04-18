@@ -5,7 +5,6 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.SpringBootTestWithMySQLContainer
 import kr.hhplus.be.server.common.exception.ProductUnavailableException
 import kr.hhplus.be.server.common.exception.ResourceNotFoundException
 import kr.hhplus.be.server.common.exception.VariantOutOfStockException
@@ -13,26 +12,31 @@ import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductRepository
 import kr.hhplus.be.server.product.domain.product.ProductStatus
 import kr.hhplus.be.server.product.domain.product.ProductVariant
+import kr.hhplus.be.server.product.domain.stats.PopularProductDailyId
+import kr.hhplus.be.server.product.domain.stats.PopularProductsDaily
 import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDaily
 import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyId
+import kr.hhplus.be.server.product.infrastructure.JpaPopularProductsDailyRepository
 import kr.hhplus.be.server.product.infrastructure.JpaProductSalesAggregationDailyRepository
 import kr.hhplus.be.server.product.infrastructure.ProductVariantJpaRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
 import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.jvm.optionals.getOrNull
 
-@SpringBootTestWithMySQLContainer
+@SpringBootTest
 class ProductServiceTestIT @Autowired constructor(
     private val productService: ProductService,
     private val productRepository: ProductRepository,
     private val databaseCleaner: MySqlDatabaseCleaner,
     private val productVariantRepository: ProductVariantJpaRepository,
-    private val productSalesAggregationDailyRepository: JpaProductSalesAggregationDailyRepository
+    private val productSalesAggregationDailyRepository: JpaProductSalesAggregationDailyRepository,
+    private val popularProductsDailyRepository: JpaPopularProductsDailyRepository
 ) {
     private val testProducts = mutableListOf<Product>()
 
@@ -216,6 +220,24 @@ class ProductServiceTestIT @Autowired constructor(
                 salesCount = 5
             )
         )
+
+        popularProductsDailyRepository.saveAll(listOf(
+            PopularProductsDaily(
+                id = PopularProductDailyId(LocalDate.now(), 1),
+                productId = testProducts[3].id!!,
+                totalSales = 1000
+            ),
+            PopularProductsDaily(
+                id = PopularProductDailyId(LocalDate.now(), 2),
+                productId = testProducts[4].id!!,
+                totalSales = 500
+            ),
+            PopularProductsDaily(
+                id = PopularProductDailyId(LocalDate.now(), 3),
+                productId = testProducts[0].id!!,
+                totalSales = 300
+            ),
+        ))
     }
 
     @AfterEach
@@ -227,7 +249,7 @@ class ProductServiceTestIT @Autowired constructor(
     fun `✅상품 목록을 조회할 수 있다`() {
         // Arrange
         val pageable = PageRequest.of(0, 10)
-        val cmd = ProductCommand.RetrieveList(pageable, "테스트")
+        val cmd = ProductCommand.RetrieveList(pageable, null, "테스트")
 
         // Act
         val result = productService.retrieveList(cmd)
@@ -235,7 +257,6 @@ class ProductServiceTestIT @Autowired constructor(
         // Assert
         result.products shouldHaveSize 2
         result.products.map { it.name } shouldContainExactlyInAnyOrder listOf("테스트 상품 1", "테스트 상품 2")
-        result.pageResult.totalElements shouldBe 2
     }
 
     @Test
@@ -374,28 +395,20 @@ class ProductServiceTestIT @Autowired constructor(
         val result = productService.retrievePopular(cmd)
         
         // Assert
-        result shouldHaveSize 5
+        result shouldHaveSize 3
         
         // 판매량 순으로 정렬되어야 함
         result[0].productId shouldBe testProducts[3].id // 인기 상품 1 (판매량 50)
         result[0].name shouldBe "인기 상품 1"
-        result[0].totalSales shouldBe 50
+        result[0].totalSales shouldBe 1000
         
         result[1].productId shouldBe testProducts[4].id // 인기 상품 2 (판매량 40)
         result[1].name shouldBe "인기 상품 2"
-        result[1].totalSales shouldBe 40
+        result[1].totalSales shouldBe 500
         
         result[2].productId shouldBe testProducts[0].id // 테스트 상품 1 (판매량 30)
         result[2].name shouldBe "테스트 상품 1"
-        result[2].totalSales shouldBe 30
-        
-        result[3].productId shouldBe testProducts[1].id // 테스트 상품 2 (판매량 20)
-        result[3].name shouldBe "테스트 상품 2"
-        result[3].totalSales shouldBe 20
-        
-        result[4].productId shouldBe testProducts[2].id // 품절 상품 (판매량 10)
-        result[4].name shouldBe "품절 상품"
-        result[4].totalSales shouldBe 10
+        result[2].totalSales shouldBe 300
     }
     
     @Test

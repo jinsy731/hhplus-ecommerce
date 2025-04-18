@@ -22,7 +22,6 @@ import org.springframework.http.HttpStatus
 import java.math.BigDecimal
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(TestcontainersConfiguration::class)
 class UserPointControllerE2ETest {
 
     @Autowired
@@ -41,7 +40,7 @@ class UserPointControllerE2ETest {
 
     @Test
     fun `잔액 충전 - 성공`() {
-        val userId = 1L
+        val userId = 10L
         val userPoint = UserPointTestFixture.createUserPoint(userId = userId, balance = BigDecimal(1000))
         userPointRepository.save(userPoint)
 
