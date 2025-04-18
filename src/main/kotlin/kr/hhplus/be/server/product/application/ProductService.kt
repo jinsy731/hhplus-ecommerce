@@ -49,9 +49,9 @@ class ProductService(
     
 
     fun retrievePopular(cmd: ProductCommand.RetrievePopularProducts): List<ProductResult.PopularProduct> {
-        val today = LocalDate.now()
+        // 지정된 날짜로부터 랭킹 조회 (fromDate ~ toDate까지)
         val salesAggregates = popularProductsDailyRepository.findAllById(
-            (1..5).map { PopularProductDailyId(today, it) }
+            (1..cmd.limit).map { PopularProductDailyId(cmd.toDate, it) }
         )
         val products = productRepository.findAll(salesAggregates.map { it.productId })
         

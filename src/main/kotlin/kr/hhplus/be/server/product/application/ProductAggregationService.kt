@@ -86,7 +86,7 @@ class ProductAggregationService(
             PopularProductsDaily(
                 id = PopularProductDailyId(today, index + 1),
                 productId = (row["product_id"] as Number).toLong(),
-                totalSales = (row["sales_count"] as Number).toLong()
+                totalSales = (row["total_sales"] as Number).toLong()
             )
         }
 

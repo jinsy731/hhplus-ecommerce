@@ -7,6 +7,8 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import kr.hhplus.be.server.product.domain.stats.PopularProductDailyId
+import kr.hhplus.be.server.product.domain.stats.PopularProductsDaily
 import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDaily
 import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyCheckpoint
 import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyCheckpointRepository
@@ -92,6 +94,12 @@ class ProductAggregationServiceTest {
         every { mockProductSalesAggregationDailyRepository.findAll(any())} returns listOf(product1AggregationDaily, product2AggregationDaily)
         every { mockProductSalesAggregationDailyRepository.save(capture(product1AggregationSlot)) } returns mockk()
         every { mockPopularProductDailyRepository.deleteAllById(any())} just Runs
+        every { mockProductSalesAggregationDailyRepository.findTopProductsForRange(any(), any(), any()) } returns listOf(mapOf(
+            "product_id" to 1L,
+            "total_sales" to 100
+        ))
+        every { mockPopularProductDailyRepository.saveAll(any<List<PopularProductsDaily>>()) } returns emptyList()
+        
         // act
         sut.aggregateSinceLastSummary(10, day)
         // assert
@@ -109,6 +117,11 @@ class ProductAggregationServiceTest {
         every { mockProductSalesAggregationCheckpointRepository.findLast() } returns null
         every { mockProductSalesLogRepository.findForBatch(any(), any()) } returns emptyList()
         every { mockPopularProductDailyRepository.deleteAllById(any())} just Runs
+        every { mockProductSalesAggregationDailyRepository.findTopProductsForRange(any(), any(), any()) } returns listOf(mapOf(
+            "product_id" to 1L,
+            "total_sales" to 100
+        ))
+        every { mockPopularProductDailyRepository.saveAll(any<List<PopularProductsDaily>>()) } returns emptyList()
 
         // act
         sut.aggregateSinceLastSummary(10, today)
@@ -141,6 +154,11 @@ class ProductAggregationServiceTest {
         every { mockProductSalesAggregationDailyRepository.save(capture(newAggSlot)) } returns mockk()
         every { mockProductSalesAggregationCheckpointRepository.save(capture(checkpointSlot)) } returns mockk()
         every { mockPopularProductDailyRepository.deleteAllById(any())} just Runs
+        every { mockProductSalesAggregationDailyRepository.findTopProductsForRange(any(), any(), any()) } returns listOf(mapOf(
+            "product_id" to 1L,
+            "total_sales" to 100
+        ))
+        every { mockPopularProductDailyRepository.saveAll(any<List<PopularProductsDaily>>()) } returns emptyList()
 
         // act
         sut.aggregateSinceLastSummary(10, today)
@@ -168,6 +186,11 @@ class ProductAggregationServiceTest {
         every { mockProductSalesAggregationDailyRepository.save(capture(savedAggSlot)) } returns mockk()
         every { mockProductSalesAggregationCheckpointRepository.save(capture(checkpointSlot)) } returns mockk()
         every { mockPopularProductDailyRepository.deleteAllById(any())} just Runs
+        every { mockProductSalesAggregationDailyRepository.findTopProductsForRange(any(), any(), any()) } returns listOf(mapOf(
+            "product_id" to 1L,
+            "total_sales" to 100
+        ))
+        every { mockPopularProductDailyRepository.saveAll(any<List<PopularProductsDaily>>()) } returns emptyList()
 
         // act
         sut.aggregateSinceLastSummary(10, today)
