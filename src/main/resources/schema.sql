@@ -233,14 +233,15 @@ create table user_coupons
         foreign key (coupon_id) references coupons (id)
 );
 
-create table user_point
-(
-    id         bigint auto_increment
-        primary key,
-    balance    decimal(38, 2) not null,
-    created_at datetime(6)    not null,
-    updated_at datetime(6)    not null,
-    user_id    bigint         not null
+CREATE TABLE USER_POINT (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    balance DECIMAL(38, 2) NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+
+    UNIQUE KEY uq_user_point_user_id (user_id),
+    INDEX idx_user_id (user_id)
 );
 
 create table user_point_history
