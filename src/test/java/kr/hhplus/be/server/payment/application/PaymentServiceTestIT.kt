@@ -4,7 +4,6 @@ import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
-import kr.hhplus.be.server.SpringBootTestWithMySQLContainer
 import kr.hhplus.be.server.common.exception.AlreadyPaidException
 import kr.hhplus.be.server.common.exception.ResourceNotFoundException
 import kr.hhplus.be.server.payment.domain.PaymentMethodType
@@ -12,11 +11,12 @@ import kr.hhplus.be.server.payment.domain.PaymentRepository
 import kr.hhplus.be.server.payment.domain.PaymentStatus
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
-@SpringBootTestWithMySQLContainer
+@SpringBootTest
 class PaymentServiceTestIT {
 
     @Autowired

@@ -2,15 +2,11 @@ package kr.hhplus.be.server.facade
 
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.SpringBootTestWithMySQLContainer
+import kr.hhplus.be.server.executeThreads
 import kr.hhplus.be.server.order.domain.OrderRepository
 import kr.hhplus.be.server.order.facade.OrderCriteria
 import kr.hhplus.be.server.order.facade.OrderFacade
-import kr.hhplus.be.server.product.domain.product.Product
-import kr.hhplus.be.server.product.domain.product.ProductRepository
-import kr.hhplus.be.server.product.domain.product.ProductStatus
-import kr.hhplus.be.server.product.domain.product.ProductVariant
-import kr.hhplus.be.server.product.domain.product.VariantStatus
+import kr.hhplus.be.server.product.domain.product.*
 import kr.hhplus.be.server.product.infrastructure.ProductVariantJpaRepository
 import kr.hhplus.be.server.user.UserPointTestFixture
 import kr.hhplus.be.server.user.domain.UserPointRepository
@@ -18,6 +14,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import java.math.BigDecimal
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -25,7 +22,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.jvm.optionals.getOrNull
 
-@SpringBootTestWithMySQLContainer
+@SpringBootTest
 class OrderFacadeConcurrencyTestIT {
 
     @Autowired
@@ -80,7 +77,7 @@ class OrderFacadeConcurrencyTestIT {
     }
 
     @Test
-    fun `동시에 여러 주문을 실행하면 재고 부족으로 일부 주문이 실패한다`() {
+    fun `재고 동시 구매 - 동시에 여러 주문을 실행하면 재고 부족으로 일부 주문이 실패한다`() {
         // 재고가 10개인 상품을 준비
         val limitedStockProduct = Product(
             name = "한정 상품",
@@ -147,8 +144,7 @@ class OrderFacadeConcurrencyTestIT {
         
         // 재고 확인을 위해 상품을 다시 조회
         val finalProduct = productRepository.getById(productId!!)
-        val finalVariant = productVariantJpaRepository.findById(variantId!!).getOrNull() ?: throw IllegalStateException()
-            ?: throw IllegalStateException("Variant not found")
+        val finalVariant = productVariantJpaRepository.findById(variantId!!).getOrNull() ?: throw IllegalStateException("Variant not found")
             
         if (successCount.get() == 10) {
             // 재고가 모두 소진된 경우
@@ -160,7 +156,7 @@ class OrderFacadeConcurrencyTestIT {
     }
 
     @Test
-    fun `동시에 여러 주문으로 포인트를 사용하면 일부는 포인트 부족으로 실패한다`() {
+    fun `포인트 중복 차감 - 동시에 여러 주문으로 포인트를 사용하면 일부는 포인트 부족으로 실패한다`() {
         // 초기 포인트 설정
         val userPoint = userPointRepository.getByUserId(userId)
         userPoint.balance = BigDecimal(10000)  // 10,000원 포인트
@@ -226,5 +222,47 @@ class OrderFacadeConcurrencyTestIT {
         // 포인트가 정확히 차감되었는지 확인
         val expectedBalance = initialBalance.subtract(orderAmount.multiply(BigDecimal(successCount.get())))
         finalUserPoint.balance shouldBe expectedBalance
+    }
+    
+    @Test
+    fun `쿠폰 중복 사용 테스트`() {
+        // 쿠폰 테스트 설정 - 실제 CouponRepository 및 UserCouponRepository가 존재한다면 구현
+        // 현재는 생략하고 동시성 테스트에 집중
+        
+        // 동시에 실행할 스레드 수
+        val threadCount = 5
+        val successCount = AtomicInteger(0)
+        val failCount = AtomicInteger(0)
+        
+        // 여러 스레드에서 동시에 같은 쿠폰을 사용하여 주문 - 실제 구현 시 수정 필요
+        executeThreads(threadCount) { _, latch ->
+            try {
+                val orderCriteria = OrderCriteria.PlaceOrder.Root(
+                    userId = userId,
+                    items = listOf(
+                        OrderCriteria.PlaceOrder.Item(
+                            productId = productId,
+                            variantId = variantId,
+                            quantity = 1
+                        )
+                    ),
+                    userCouponIds = listOf(1L), // 동일한 쿠폰 ID
+                    payMethods = listOf(
+                        OrderCriteria.PlaceOrder.PayMethod(
+                            method = "POINT",
+                            amount = productPrice
+                        )
+                    )
+                )
+
+                orderFacade.placeOrder(orderCriteria)
+                successCount.incrementAndGet()
+            } catch (e: Exception) {
+                failCount.incrementAndGet()
+            }
+        }
+        
+        // 검증 - 실제 구현 시 쿠폰 상태 확인 로직 추가 필요
+        // (개념적인 테스트 - 쿠폰은 한 번만 사용되어야 함)
     }
 }

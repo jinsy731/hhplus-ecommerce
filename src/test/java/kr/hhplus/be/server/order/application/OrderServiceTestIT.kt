@@ -3,22 +3,21 @@ package kr.hhplus.be.server.order.application
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
-import kr.hhplus.be.server.SpringBootTestWithMySQLContainer
 import kr.hhplus.be.server.common.exception.AlreadyPaidOrderException
 import kr.hhplus.be.server.coupon.application.DiscountInfo
 import kr.hhplus.be.server.order.domain.Order
 import kr.hhplus.be.server.order.domain.OrderRepository
 import kr.hhplus.be.server.order.domain.OrderStatus
-import kr.hhplus.be.server.order.infrastructure.JpaOrderRepository
 import kr.hhplus.be.server.product.application.ProductInfo
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
-@SpringBootTestWithMySQLContainer
+@SpringBootTest
 class OrderServiceTestIT {
 
     @Autowired

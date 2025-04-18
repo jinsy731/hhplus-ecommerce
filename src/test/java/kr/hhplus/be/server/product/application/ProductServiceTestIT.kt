@@ -5,7 +5,6 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.SpringBootTestWithMySQLContainer
 import kr.hhplus.be.server.common.exception.ProductUnavailableException
 import kr.hhplus.be.server.common.exception.ResourceNotFoundException
 import kr.hhplus.be.server.common.exception.VariantOutOfStockException
@@ -24,12 +23,13 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
 import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.jvm.optionals.getOrNull
 
-@SpringBootTestWithMySQLContainer
+@SpringBootTest
 class ProductServiceTestIT @Autowired constructor(
     private val productService: ProductService,
     private val productRepository: ProductRepository,

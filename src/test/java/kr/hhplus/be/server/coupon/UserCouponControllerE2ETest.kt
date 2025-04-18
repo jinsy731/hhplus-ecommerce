@@ -23,7 +23,6 @@ import org.springframework.test.context.jdbc.Sql
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = ["spring.profiles.active=test"]
 )
-@Import(TestcontainersConfiguration::class)
 @Sql("/db/coupon-test-data.sql") // 쿠폰 테스트 데이터 파일 적용
 internal class UserCouponControllerE2ETest {
 

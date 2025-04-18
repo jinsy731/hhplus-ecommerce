@@ -3,6 +3,7 @@ package kr.hhplus.be.server
 import jakarta.annotation.PreDestroy
 import org.springframework.context.annotation.Configuration
 import org.testcontainers.containers.MySQLContainer
+import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.utility.DockerImageName
 
 @Configuration

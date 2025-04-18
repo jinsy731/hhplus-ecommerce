@@ -3,7 +3,6 @@ package kr.hhplus.be.server.user.application
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.SpringBootTestWithMySQLContainer
 import kr.hhplus.be.server.user.UserPointTestFixture
 import kr.hhplus.be.server.user.domain.TransactionType
 import kr.hhplus.be.server.user.domain.UserPoint
@@ -12,10 +11,11 @@ import kr.hhplus.be.server.user.domain.UserPointRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
-@SpringBootTestWithMySQLContainer
+@SpringBootTest
 class UserPointServiceIntegrationTest {
 
     @Autowired

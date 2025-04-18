@@ -2,7 +2,6 @@ package kr.hhplus.be.server.user.application
 
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.SpringBootTestWithMySQLContainer
 import kr.hhplus.be.server.common.exception.InsufficientPointException
 import kr.hhplus.be.server.user.UserPointTestFixture
 import kr.hhplus.be.server.user.domain.UserPointRepository
@@ -10,6 +9,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.concurrent.CountDownLatch
@@ -17,7 +17,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
-@SpringBootTestWithMySQLContainer
+@SpringBootTest
 class UserPointServiceConcurrencyTestIT {
 
     @Autowired
