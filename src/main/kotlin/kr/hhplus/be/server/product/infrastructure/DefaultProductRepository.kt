@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.product.infrastructure
 
+import kr.hhplus.be.server.common.exception.ResourceNotFoundException
 import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductRepository
 import kr.hhplus.be.server.product.domain.product.ProductStatus
@@ -11,6 +12,8 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
+import kotlin.jvm.optionals.getOrDefault
+import kotlin.jvm.optionals.getOrNull
 
 @Repository
 class DefaultProductRepository(private val jpaRepository: ProductJpaRepository): ProductRepository {
@@ -28,6 +31,10 @@ class DefaultProductRepository(private val jpaRepository: ProductJpaRepository):
 
     override fun save(entity: Product): Product {
         return jpaRepository.save(entity)
+    }
+
+    override fun getById(id: Long): Product {
+        return jpaRepository.findById(id).getOrNull() ?: throw ResourceNotFoundException()
     }
 }
 

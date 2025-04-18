@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.product.application
 
+import jakarta.transaction.Transactional
 import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.infrastructure.JpaPopularProductsDailyRepository
 import kr.hhplus.be.server.product.domain.stats.PopularProductDailyId
@@ -23,6 +24,7 @@ class ProductAggregationService(
     private val productSalesAggregationDailyCheckpointRepository: ProductSalesAggregationDailyCheckpointRepository,
     private val popularProductsDailyRepository: JpaPopularProductsDailyRepository
 ) {
+    @Transactional
     fun aggregateSinceLastSummary(batchSize: Long, now: LocalDate) {
         val lastCheckpoint = productSalesAggregationDailyCheckpointRepository.findLast()
         val lastDailyLogId = lastCheckpoint?.lastAggregatedLogId ?: 0L

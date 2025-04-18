@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query
 interface ProductRepository {
     fun save(entity: Product): Product
 
+    fun getById(id: Long): Product
+
     fun searchByNameContaining(keyword: String?, lastId: Long?, pageable: Pageable): List<ProductListDto>
 
     fun findAll(ids: List<Long>): List<Product>
