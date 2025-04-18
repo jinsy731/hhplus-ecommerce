@@ -227,7 +227,7 @@ class ProductServiceTestIT @Autowired constructor(
     fun `✅상품 목록을 조회할 수 있다`() {
         // Arrange
         val pageable = PageRequest.of(0, 10)
-        val cmd = ProductCommand.RetrieveList(pageable, "테스트")
+        val cmd = ProductCommand.RetrieveList(pageable, null, "테스트")
 
         // Act
         val result = productService.retrieveList(cmd)
@@ -235,7 +235,6 @@ class ProductServiceTestIT @Autowired constructor(
         // Assert
         result.products shouldHaveSize 2
         result.products.map { it.name } shouldContainExactlyInAnyOrder listOf("테스트 상품 1", "테스트 상품 2")
-        result.pageResult.totalElements shouldBe 2
     }
 
     @Test

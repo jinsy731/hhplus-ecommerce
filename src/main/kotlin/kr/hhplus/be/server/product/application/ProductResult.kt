@@ -12,7 +12,6 @@ import java.math.BigDecimal
 class ProductResult {
     data class RetrieveList(
         val products: List<ProductSummary>,
-        val pageResult: PageResult
     )
 
     data class PopularProduct(

@@ -15,9 +15,6 @@ class ProductResponse {
         data class Lists(
             @Schema(description = "상품 리스트")
             val products: List<ProductSummary>,
-
-            @Schema(description = "페이지 정보")
-            val pageInfo: PageInfo
         )
 
         @Schema(description = "인기 상품 정보")
@@ -93,8 +90,7 @@ class ProductResponse {
 }
 
 fun ProductResult.RetrieveList.toProductResponse() = ProductResponse.Retrieve.Lists(
-    products = this.products.toProductResponse(),
-    pageInfo = this.pageResult.toResponse(),
+    products = this.products.toProductResponse()
 )
 
 fun List<ProductResult.ProductSummary>.toProductResponse() = this.map { ProductResponse.ProductSummary(

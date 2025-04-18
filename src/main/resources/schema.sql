@@ -255,7 +255,7 @@ create table user_point_history
 
 CREATE TABLE popular_products_daily (
     sales_day DATE NOT NULL,
-    rank INT NOT NULL,
+    `rank` INT NOT NULL,
     product_id BIGINT NOT NULL,
     total_sales BIGINT NOT NULL,
     PRIMARY KEY (sales_day, rank),

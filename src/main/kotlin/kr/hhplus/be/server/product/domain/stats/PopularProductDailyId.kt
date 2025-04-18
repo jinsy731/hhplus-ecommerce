@@ -10,7 +10,9 @@ import java.time.LocalDate
 
 @Embeddable
 data class PopularProductDailyId(
+    @Column(name = "`sales_day`")
     val salesDay: LocalDate,
+    @Column(name = "`rank`")
     val rank: Int
 ): Serializable
 

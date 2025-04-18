@@ -27,7 +27,8 @@ interface ProductApiSpec {
     @GetMapping
     fun retrieveLists(
         pageable: Pageable,
-        @RequestParam keyword: String? = ""
+        @RequestParam keyword: String? = "",
+        @RequestParam lastId: Long?,
     ): ResponseEntity<CommonResponse<ProductResponse.Retrieve.Lists>>
 
     @Operation(

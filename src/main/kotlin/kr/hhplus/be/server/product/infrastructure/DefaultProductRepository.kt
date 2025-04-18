@@ -16,9 +16,10 @@ import java.math.BigDecimal
 class DefaultProductRepository(private val jpaRepository: ProductJpaRepository): ProductRepository {
     override fun searchByNameContaining(
         keyword: String?,
+        lastId: Long?,
         pageable: Pageable
-    ): Page<ProductListDto> {
-        return jpaRepository.findDtoByNameContaining(keyword, pageable)
+    ): List<ProductListDto> {
+        return jpaRepository.findByNameWithNoOffset(keyword, lastId,pageable)
     }
 
     override fun findAll(ids: List<Long>): List<Product> {
@@ -32,16 +33,19 @@ class DefaultProductRepository(private val jpaRepository: ProductJpaRepository):
 
 interface ProductJpaRepository: JpaRepository<Product, Long> {
     @Query("""
-        SELECT new kr.hhplus.be.server.product.infrastructure.ProductListDto(
-            p.id, p.name, p.basePrice, p.status
-        )
-        FROM Product p
-        WHERE (:name IS NULL OR p.name LIKE %:name%)
-    """)
-    fun findDtoByNameContaining(
+    SELECT new kr.hhplus.be.server.product.infrastructure.ProductListDto(
+        p.id, p.name, p.basePrice, p.status
+    )
+    FROM Product p
+    WHERE (:name IS NULL OR p.name LIKE CONCAT('%', :name, '%'))
+      AND (:lastId IS NULL OR p.id < :lastId)
+    ORDER BY p.id DESC
+""")
+    fun findByNameWithNoOffset(
         @Param("name") name: String?,
-        pageable: Pageable
-    ): Page<ProductListDto>
+        @Param("lastId") lastId: Long?,
+        pageable: Pageable  // 혹은 그냥 size만 직접 LIMIT 설정
+    ): List<ProductListDto>
 }
 
 interface ProductVariantJpaRepository: JpaRepository<ProductVariant, Long> {

@@ -20,10 +20,9 @@ class ProductService(
 
 
     fun retrieveList(cmd: ProductCommand.RetrieveList): ProductResult.RetrieveList {
-        val productPage = productRepository.searchByNameContaining(cmd.keyword, cmd.pageable) // TODO: pageable 말고 Spring 의존적이지 않은 파라미터를 써야하나 ?
+        val products = productRepository.searchByNameContaining(cmd.keyword, cmd.lastId, cmd.pageable) // TODO: pageable 말고 Spring 의존적이지 않은 파라미터를 써야하나 ?
         return ProductResult.RetrieveList(
-            products = productPage.content.map { it.toProductDetail() },
-            pageResult = PageResult.of(productPage)
+            products = products.map { it.toProductDetail() },
         )
     }
 

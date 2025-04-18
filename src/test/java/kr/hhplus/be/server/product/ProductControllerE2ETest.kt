@@ -46,13 +46,6 @@ internal class ProductControllerE2ETest @Autowired constructor(
 
         val data = response.body?.data.shouldNotBeNull()
         val products = data.products.shouldNotBeEmpty()
-
-        // 페이지 정보 검증
-        val pageInfo = data.pageInfo.shouldNotBeNull()
-        pageInfo.page shouldBe 0
-        pageInfo.size shouldBe 20
-        pageInfo.totalElement shouldBe 20
-        pageInfo.totalPages shouldBe 1
     }
 
 

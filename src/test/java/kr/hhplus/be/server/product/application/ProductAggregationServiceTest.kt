@@ -1,7 +1,9 @@
 package kr.hhplus.be.server.product.application
 
 import io.kotest.matchers.shouldBe
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
@@ -13,6 +15,7 @@ import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyRepo
 import kr.hhplus.be.server.product.domain.stats.ProductSalesLog
 import kr.hhplus.be.server.product.domain.stats.ProductSalesLogRepository
 import kr.hhplus.be.server.product.domain.stats.TransactionType
+import kr.hhplus.be.server.product.infrastructure.JpaPopularProductsDailyRepository
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -23,10 +26,13 @@ class ProductAggregationServiceTest {
     private val mockProductSalesLogRepository = mockk<ProductSalesLogRepository>()
     private val mockProductSalesAggregationDailyRepository = mockk<ProductSalesAggregationDailyRepository>()
     private val mockProductSalesAggregationCheckpointRepository = mockk<ProductSalesAggregationDailyCheckpointRepository>()
+    private val mockPopularProductDailyRepository = mockk<JpaPopularProductsDailyRepository>()
     private val sut = ProductAggregationService(
         mockProductSalesLogRepository,
         mockProductSalesAggregationDailyRepository,
-        mockProductSalesAggregationCheckpointRepository
+        mockProductSalesAggregationCheckpointRepository,
+        mockPopularProductDailyRepository
+
     )
     
     @Test
@@ -85,6 +91,7 @@ class ProductAggregationServiceTest {
         every { mockProductSalesAggregationCheckpointRepository.save(capture(checkpointSlot)) } returns newCheckpoint
         every { mockProductSalesAggregationDailyRepository.findAll(any())} returns listOf(product1AggregationDaily, product2AggregationDaily)
         every { mockProductSalesAggregationDailyRepository.save(capture(product1AggregationSlot)) } returns mockk()
+        every { mockPopularProductDailyRepository.deleteAllById(any())} just Runs
         // act
         sut.aggregateSinceLastSummary(10, day)
         // assert
@@ -101,6 +108,7 @@ class ProductAggregationServiceTest {
         every { mockProductSalesAggregationDailyRepository.findAll(any()) } returns emptyList()
         every { mockProductSalesAggregationCheckpointRepository.findLast() } returns null
         every { mockProductSalesLogRepository.findForBatch(any(), any()) } returns emptyList()
+        every { mockPopularProductDailyRepository.deleteAllById(any())} just Runs
 
         // act
         sut.aggregateSinceLastSummary(10, today)
@@ -132,6 +140,7 @@ class ProductAggregationServiceTest {
         every { mockProductSalesAggregationDailyRepository.findAll(any()) } returns emptyList()
         every { mockProductSalesAggregationDailyRepository.save(capture(newAggSlot)) } returns mockk()
         every { mockProductSalesAggregationCheckpointRepository.save(capture(checkpointSlot)) } returns mockk()
+        every { mockPopularProductDailyRepository.deleteAllById(any())} just Runs
 
         // act
         sut.aggregateSinceLastSummary(10, today)
@@ -158,6 +167,7 @@ class ProductAggregationServiceTest {
         every { mockProductSalesAggregationDailyRepository.findAll(any()) } returns emptyList()
         every { mockProductSalesAggregationDailyRepository.save(capture(savedAggSlot)) } returns mockk()
         every { mockProductSalesAggregationCheckpointRepository.save(capture(checkpointSlot)) } returns mockk()
+        every { mockPopularProductDailyRepository.deleteAllById(any())} just Runs
 
         // act
         sut.aggregateSinceLastSummary(10, today)

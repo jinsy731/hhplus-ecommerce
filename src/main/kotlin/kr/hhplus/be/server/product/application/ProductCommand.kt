@@ -6,6 +6,7 @@ import java.time.LocalDate
 class ProductCommand {
     data class RetrieveList(
         val pageable: Pageable,
+        val lastId: Long?,
         val keyword: String?
     )
     
