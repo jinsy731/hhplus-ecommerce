@@ -3,7 +3,7 @@ package kr.hhplus.be.server.facade
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.common.domain.Money
-import kr.hhplus.be.server.executeThreads
+import kr.hhplus.be.server.executeConcurrently
 import kr.hhplus.be.server.order.domain.OrderRepository
 import kr.hhplus.be.server.order.facade.OrderCriteria
 import kr.hhplus.be.server.order.facade.OrderFacade
@@ -235,7 +235,7 @@ class OrderFacadeConcurrencyTestIT {
         val failCount = AtomicInteger(0)
         
         // 여러 스레드에서 동시에 같은 쿠폰을 사용하여 주문 - 실제 구현 시 수정 필요
-        executeThreads(threadCount) { _, latch ->
+        executeConcurrently(threadCount) {
             try {
                 val orderCriteria = OrderCriteria.PlaceOrder.Root(
                     userId = userId,
