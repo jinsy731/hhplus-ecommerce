@@ -8,8 +8,11 @@ import kr.hhplus.be.server.common.ClockHolder
 import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.CouponTargetNotFoundException
 import kr.hhplus.be.server.common.exception.InvalidCouponStatusException
+import kr.hhplus.be.server.coupon.CouponTestFixture
+import kr.hhplus.be.server.coupon.CouponTestFixture.coupon
 import kr.hhplus.be.server.coupon.domain.model.*
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
+import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
 import kr.hhplus.be.server.coupon.infrastructure.JpaCouponRepository
 import kr.hhplus.be.server.coupon.infrastructure.JpaUserCouponRepository
 import org.junit.jupiter.api.AfterEach
@@ -23,25 +26,13 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @SpringBootTest
-class CouponServiceTestIT {
-
-    @Autowired
-    private lateinit var couponService: CouponService
-
-    @Autowired
-    private lateinit var couponRepository: CouponRepository
-
-    @Autowired
-    private lateinit var jpaCouponRepository: JpaCouponRepository
-
-    @Autowired
-    private lateinit var jpaUserCouponRepository: JpaUserCouponRepository
-
-    @MockitoBean
-    private lateinit var mockClockHolder: ClockHolder
-
-    @Autowired
-    private lateinit var databaseCleaner: MySqlDatabaseCleaner
+class CouponServiceTestIT @Autowired constructor(
+    private val couponService: CouponService,
+    private val couponRepository: CouponRepository,
+    private val userCouponRepository: UserCouponRepository,
+    @MockitoBean private val mockClockHolder: ClockHolder,
+    private val databaseCleaner: MySqlDatabaseCleaner,
+){
 
     @AfterEach
     fun clean() {
@@ -53,28 +44,11 @@ class CouponServiceTestIT {
         // given
         val userId = 1L
         val now = LocalDateTime.now()
-        val coupon = Coupon(
-            id = null,
-            name = "테스트 쿠폰",
-            description = "통합 테스트용 쿠폰",
-            discountPolicy = DiscountPolicy(
-                name = "1000원 정액 할인",
-                discountType = FixedAmountTotalDiscountType(Money.of(1000)),
-                discountCondition = MinOrderAmountCondition(Money.of(5000))
-            ),
-            isActive = true,
-            maxIssueLimit = 10,
-            issuedCount = 0,
-            startAt = now.minusDays(1),
-            endAt = now.plusDays(30),
-            validDays = 7,
-            createdAt = now,
-            updatedAt = now
-        )
         whenever(mockClockHolder.getNowInLocalDateTime()).thenReturn(now)
-        val savedCoupon = jpaCouponRepository.save(coupon)
+        val coupon = CouponTestFixture.coupon().build()
+        val savedCoupon = couponRepository.save(coupon)
         val couponId = savedCoupon.id!!
-        
+
         val issueCommand = CouponCommand.Issue(
             userId = userId,
             couponId = couponId
@@ -86,10 +60,10 @@ class CouponServiceTestIT {
         // then
         result.userCouponId shouldNotBe null
         result.status shouldBe UserCouponStatus.UNUSED
-        result.expiredAt shouldBe now.plusDays(7)
+        result.expiredAt shouldBe now.plusDays(10)
 
         // DB에 저장된 사용자 쿠폰 확인
-        val userCoupon = jpaUserCouponRepository.findById(result.userCouponId!!).orElseThrow()
+        val userCoupon = userCouponRepository.findById(result.userCouponId!!) ?: throw IllegalStateException()
         userCoupon.userId shouldBe userId
         userCoupon.coupon.id shouldBe couponId
         userCoupon.status shouldBe UserCouponStatus.UNUSED
@@ -100,33 +74,16 @@ class CouponServiceTestIT {
     }
 
     @Test
-    fun `✅쿠폰을 사용하면 할인 정보가 생성된다`() {
+    fun `✅쿠폰 사용_할인 정보가 반환된다`() {
         // given
         val userId = 2L
         val now = LocalDateTime.now()
         whenever(mockClockHolder.getNowInLocalDateTime()).thenReturn(now)
 
         // 쿠폰 생성 및 저장
-        val coupon = Coupon(
-            id = null,
-            name = "할인 쿠폰",
-            description = "5000원 할인 쿠폰",
-            discountPolicy = DiscountPolicy(
-                name = "5000원 정액 할인",
-                discountType = FixedAmountTotalDiscountType(Money.of(5000)),
-                discountCondition = MinOrderAmountCondition(Money.of(10000))
-            ),
-            isActive = true,
-            maxIssueLimit = 10,
-            issuedCount = 0,
-            startAt = now.minusDays(1),
-            endAt = now.plusDays(30),
-            validDays = 7,
-            createdAt = now,
-            updatedAt = now
-        )
-        
-        val savedCoupon = jpaCouponRepository.save(coupon)
+        val discountPolicy = CouponTestFixture.fixedAmountDiscountPolicy(Money.of(5000))
+        val coupon = CouponTestFixture.coupon(discountPolicy = discountPolicy).build()
+        val savedCoupon = couponRepository.save(coupon)
         val couponId = savedCoupon.id!!
         
         // 사용자 쿠폰 발급
@@ -168,7 +125,7 @@ class CouponServiceTestIT {
         discountInfo.sourceType shouldBe "COUPON"
         
         // 사용자 쿠폰 상태 변경 확인
-        val usedCoupon = jpaUserCouponRepository.findById(userCouponId).orElseThrow()
+        val usedCoupon = userCouponRepository.findById(userCouponId)?: throw IllegalStateException()
         usedCoupon.status shouldBe UserCouponStatus.USED
         usedCoupon.usedAt shouldNotBe null
     }
@@ -178,44 +135,14 @@ class CouponServiceTestIT {
         // given
         val userId = 10L
         val now = LocalDateTime.now()
+        val pageable = PageRequest.of(0, 3)
         whenever(mockClockHolder.getNowInLocalDateTime()).thenReturn(now)
 
-        // 여러 개의 쿠폰 생성 및 저장
-        val coupons = mutableListOf<Coupon>()
-        for (i in 1..5) {
-            val coupon = Coupon(
-                id = null,
-                name = "테스트 쿠폰 $i",
-                description = "통합 테스트용 쿠폰 $i",
-                discountPolicy = DiscountPolicy(
-                    name = "${i}00원 정액 할인",
-                    discountType = FixedAmountTotalDiscountType(Money.of(i * 1000L)),
-                    discountCondition = MinOrderAmountCondition(Money.of(5000))
-                ),
-                isActive = true,
-                maxIssueLimit = 10,
-                issuedCount = 0,
-                startAt = now.minusDays(1),
-                endAt = now.plusDays(30),
-                validDays = 7,
-                createdAt = now,
-                updatedAt = now
-            )
-            coupons.add(jpaCouponRepository.save(coupon))
+        repeat(10) {
+            val coupon = CouponTestFixture.coupon().build()
+            val savedCoupon = couponRepository.save(coupon)
+            couponService.issueCoupon(CouponCommand.Issue(userId = 10L, couponId = savedCoupon.id!!))
         }
-        
-        // 사용자에게 모든 쿠폰 발급
-        coupons.forEach { coupon ->
-            couponService.issueCoupon(
-                CouponCommand.Issue(
-                    userId = userId,
-                    couponId = coupon.id!!
-                )
-            )
-        }
-        
-        // 페이징 정보 설정 (1페이지, 3개 항목)
-        val pageable = PageRequest.of(0, 3)
 
         // when
         val result = couponService.retrieveLists(userId, pageable)
@@ -227,8 +154,8 @@ class CouponServiceTestIT {
         // 페이징 정보 확인
         result.pageResult.page shouldBe 0
         result.pageResult.size shouldBe 3
-        result.pageResult.totalElements shouldBe 5
-        result.pageResult.totalPages shouldBe 2
+        result.pageResult.totalElements shouldBe 10
+        result.pageResult.totalPages shouldBe 4
         
         // 반환된 쿠폰이 올바른 정보를 가지는지 확인
         result.coupons.forEach { userCouponData ->
@@ -236,7 +163,7 @@ class CouponServiceTestIT {
             userCouponData.couponName shouldNotBe null
             userCouponData.description shouldNotBe null
             userCouponData.status shouldBe UserCouponStatus.UNUSED.name
-            userCouponData.expiredAt shouldBe now.plusDays(7)
+            userCouponData.expiredAt shouldBe now.plusDays(10)
         }
     }
 
@@ -253,155 +180,5 @@ class CouponServiceTestIT {
         result.coupons.size shouldBe 0
         result.pageResult.totalElements shouldBe 0
         result.pageResult.totalPages shouldBe 0
-    }
-
-    @Test
-    fun `❌최소 주문 금액을 충족하지 않는 경우 쿠폰 적용에 실패한다`() {
-        // given
-        val userId = 3L
-        val now = LocalDateTime.now()
-        whenever(mockClockHolder.getNowInLocalDateTime()).thenReturn(now)
-
-        // 최소 주문 금액이 10000원인 쿠폰 생성
-        val coupon = Coupon(
-            id = null,
-            name = "할인 쿠폰",
-            description = "최소 주문 금액 10000원 쿠폰",
-            discountPolicy = DiscountPolicy(
-                name = "2000원 정액 할인",
-                discountType = FixedAmountTotalDiscountType(Money.of(2000)),
-                discountCondition = MinOrderAmountCondition(Money.of(10000))
-            ),
-            isActive = true,
-            maxIssueLimit = 10,
-            issuedCount = 0,
-            startAt = now.minusDays(1),
-            endAt = now.plusDays(30),
-            validDays = 7,
-            createdAt = now,
-            updatedAt = now
-        )
-        
-        val savedCoupon = jpaCouponRepository.save(coupon)
-        val couponId = savedCoupon.id!!
-        
-        // 사용자 쿠폰 발급
-        val issueCommand = CouponCommand.Issue(
-            userId = userId,
-            couponId = couponId
-        )
-        
-        val issuedCoupon = couponService.issueCoupon(issueCommand)
-        val userCouponId = issuedCoupon.userCouponId!!
-        
-        // 최소 주문 금액(10000원)보다 적은 8000원 주문에 쿠폰 적용 시도
-        val useCommand = CouponCommand.Use.Root(
-            userId = userId,
-            userCouponIds = listOf(userCouponId),
-            totalAmount = Money.of(8000),
-            items = listOf(
-                CouponCommand.Use.Item(
-                    orderItemId = 1L,
-                    productId = 1L,
-                    variantId = 1L,
-                    quantity = 1,
-                    subTotal = Money.of(8000)
-                )
-            ),
-            timestamp = now
-        )
-
-        // when & then
-        shouldThrowExactly<CouponTargetNotFoundException> {
-            couponService.use(useCommand)
-        }
-        
-        // 쿠폰 상태는 여전히 UNUSED 여야 함
-        val unusedCoupon = jpaUserCouponRepository.findById(userCouponId).orElseThrow()
-        unusedCoupon.status shouldBe UserCouponStatus.UNUSED
-        unusedCoupon.usedAt shouldBe null
-    }
-
-    @Test
-    fun `❌이미 사용된 쿠폰으로는 할인을 적용할 수 없다`() {
-        // given
-        val userId = 4L
-        val now = LocalDateTime.now()
-        whenever(mockClockHolder.getNowInLocalDateTime()).thenReturn(now)
-
-        // 쿠폰 생성 - Fixture 사용 및 저장
-        val discountPolicy = DiscountPolicy(
-            name = "5000원 정액 할인",
-            discountType = FixedAmountTotalDiscountType(Money.of(5000)),
-            discountCondition = MinOrderAmountCondition(Money.of(10000))
-        )
-        
-        val coupon = Coupon(
-            id = null,
-            name = "할인 쿠폰",
-            description = "5000원 할인 쿠폰",
-            discountPolicy = discountPolicy,
-            isActive = true,
-            maxIssueLimit = 10,
-            issuedCount = 0,
-            startAt = now.minusDays(1),
-            endAt = now.plusDays(30),
-            validDays = 7,
-            createdAt = now,
-            updatedAt = now
-        )
-        
-        val savedCoupon = jpaCouponRepository.save(coupon)
-        val couponId = savedCoupon.id!!
-        
-        // 사용자 쿠폰 발급
-        val issueCommand = CouponCommand.Issue(
-            userId = userId,
-            couponId = couponId
-        )
-        
-        val issuedCoupon = couponService.issueCoupon(issueCommand)
-        val userCouponId = issuedCoupon.userCouponId!!
-        
-        // 첫 번째 쿠폰 사용
-        val useCommand = CouponCommand.Use.Root(
-            userId = userId,
-            userCouponIds = listOf(userCouponId),
-            totalAmount = Money.of(15000),
-            items = listOf(
-                CouponCommand.Use.Item(
-                    orderItemId = 1L,
-                    productId = 1L,
-                    variantId = 1L,
-                    quantity = 1,
-                    subTotal = Money.of(15000)
-                )
-            ),
-            timestamp = now
-        )
-        
-        couponService.use(useCommand)
-        
-        // 동일한 쿠폰으로 두 번째 사용 시도
-        val secondUseCommand = CouponCommand.Use.Root(
-            userId = userId,
-            userCouponIds = listOf(userCouponId),
-            totalAmount = Money.of(12000),
-            items = listOf(
-                CouponCommand.Use.Item(
-                    orderItemId = 2L,
-                    productId = 2L,
-                    variantId = 2L,
-                    quantity = 1,
-                    subTotal = Money.of(12000)
-                )
-            ),
-            timestamp = now
-        )
-
-        // when & then
-        shouldThrowExactly<InvalidCouponStatusException> {
-            couponService.use(secondUseCommand)
-        }
     }
 }

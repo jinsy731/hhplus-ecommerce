@@ -2,6 +2,7 @@ package kr.hhplus.be.server.coupon.application
 
 import kr.hhplus.be.server.common.ClockHolder
 import kr.hhplus.be.server.common.PageResult
+import kr.hhplus.be.server.common.exception.DuplicateCouponIssueException
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.DiscountLineRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
@@ -19,6 +20,9 @@ class CouponService(
 
     @Transactional
     fun issueCoupon(cmd: CouponCommand.Issue): CouponResult.Issue {
+        userCouponRepository.findByUserIdAndCouponId(cmd.userId, cmd.couponId)
+            ?.let { throw DuplicateCouponIssueException() }
+
         val coupon = couponRepository.getById(cmd.couponId)
         val userCoupon = coupon.issueTo(cmd.userId, clockHolder.getNowInLocalDateTime())
 

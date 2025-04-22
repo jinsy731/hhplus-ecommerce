@@ -59,8 +59,7 @@ class OrderTest {
     @Test
     fun `✅할인 항목 추가_할인 항목이 추가되면 해당 금액만큼 discountedAmount가 증가해야 한다`() {
         // arrange
-        val now = LocalDateTime.now()
-        val order = OrderTestFixture.createOrder(1L)
+        val order = OrderTestFixture.standardOrder(userId = 1L)
         val discountLines = listOf(
             DiscountInfo(
                 orderItemId = 1L,
@@ -83,7 +82,7 @@ class OrderTest {
     @Test
     fun `✅할인 항목 추가_할인 항목이 추가되면 해당 금액만큼 orderItem의 discountedAmount가 증가해야 한다`() {
         // arrange
-        val order = OrderTestFixture.createOrder(1L)
+        val order = OrderTestFixture.standardOrder(userId = 1L)
         val orderItems = order.orderItems.asList()
         val discountLines = listOf(
             DiscountInfo(
@@ -108,15 +107,15 @@ class OrderTest {
     @Test
     fun `✅할인 항목 추가 싪패_할인 항목이 추가됐을 때 해당하는 orderItem이 없으면 IllegalStateException 예외를 발생시켜야 한다`() {
         // arrange
-        val order = OrderTestFixture.createOrder(1L)
+        val order = OrderTestFixture.standardOrder(userId = 1L)
         val discountLines = listOf(
             DiscountInfo(
-                orderItemId = 3L,
+                orderItemId = 3L, // 존재하지 않는 orderItem ID
                 amount = Money.of(1000),
                 sourceId = 1L,
                 sourceType = "COUPON"),
             DiscountInfo(
-                orderItemId = 4L,
+                orderItemId = 4L, // 존재하지 않는 orderItem ID
                 amount = Money.of(1000),
                 sourceId = 1L,
                 sourceType = "COUPON")
@@ -128,16 +127,20 @@ class OrderTest {
     @Test
     fun `⛔️할인 항목 추가_할인의 총합은 주문 금액 총합을 넘을 수 없다`() {
         // arrange
-        val order = OrderTestFixture.createOrder(1L)
+        val order = OrderTestFixture.order(userId = 1L)
+            .withOriginalTotal(Money.of(10000))
+            .withStandardItems()
+            .build()
+            
         val discountLines = listOf(
             DiscountInfo(
                 orderItemId = 1L,
-                amount = Money.of(100000),
+                amount = Money.of(100000), // 주문 금액보다 큰 할인 금액
                 sourceId = 1L,
                 sourceType = "COUPON"),
             DiscountInfo(
                 orderItemId = 2L,
-                amount = Money.of(100000),
+                amount = Money.of(100000), // 주문 금액보다 큰 할인 금액
                 sourceId = 1L,
                 sourceType = "COUPON")
         )
@@ -145,7 +148,7 @@ class OrderTest {
         order.applyDiscount(discountLines)
 
         // assert
-        order.discountedAmount shouldBe Money.of(10000)
+        order.discountedAmount shouldBe Money.of(10000) // 최대 주문 금액까지만 할인됨
     }
     
     @Test

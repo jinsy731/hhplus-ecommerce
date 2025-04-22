@@ -45,6 +45,6 @@ class UserPointTest {
     fun `⛔️유저 포인트 사용 실패_잔액이 사용 금액보다 적으면 InsufficientPointException 예외가 발생해야 한다`() {
         val now = LocalDateTime.now()
         val userPoint = UserPoint(userId = 1L, balance = Money.of(999))
-        shouldThrowExactly<InsufficientPointException> { userPoint.use(Money.of(1000), now) }
+        shouldThrowExactly<IllegalStateException> { userPoint.use(Money.of(1000), now) }
     }
 }

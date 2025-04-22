@@ -30,7 +30,7 @@ class UserPointServiceIntegrationTest {
     private lateinit var databaseCleaner: MySqlDatabaseCleaner
 
     @AfterEach
-    fun clean() {
+    fun tearDown() {
         databaseCleaner.clean()
     }
 
@@ -38,7 +38,7 @@ class UserPointServiceIntegrationTest {
     fun `사용자의 포인트를 충전하면 잔액과 히스토리가 업데이트된다`() {
         // Arrange
         val userId = 1L
-        val initialPoint = UserPointTestFixture.createUserPoint(userId = userId, balance = Money.ZERO)
+        val initialPoint = UserPointTestFixture.userPoint(userId = userId, balance = Money.ZERO).build()
         userPointRepository.save(initialPoint)
 
         val now = LocalDateTime.now()
@@ -71,7 +71,7 @@ class UserPointServiceIntegrationTest {
         // Arrange
         val userId = 2L
         val initialBalance = Money.of(10000)
-        val initialPoint = UserPointTestFixture.createUserPoint(userId = userId, balance = initialBalance)
+        val initialPoint = UserPointTestFixture.userPoint(userId = userId, balance = initialBalance).build()
         userPointRepository.save(initialPoint)
 
         val useAmount = Money.of(3000)
@@ -101,7 +101,7 @@ class UserPointServiceIntegrationTest {
         val userId = 3L
         val balance = Money.of(7000)
         val now = LocalDateTime.now()
-        val userPoint = UserPointTestFixture.createUserPoint(userId = userId, balance = balance, updatedAt = now)
+        val userPoint = UserPointTestFixture.userPoint(userId = userId, balance = balance, updatedAt = now).build()
         userPointRepository.save(userPoint)
 
         val command = UserPointCommand.Retrieve(userId)

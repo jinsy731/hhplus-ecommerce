@@ -37,13 +37,11 @@ import java.time.LocalDateTime
 ) {
 
     fun charge(amount: Money, now: LocalDateTime) {
-        require(amount > Money.ZERO) { throw InvalidChargeAmountException() }
         this.balance += amount
         this.updatedAt = now
     }
 
     fun use(amount: Money, now: LocalDateTime) {
-        require(amount <= balance) { throw InsufficientPointException() }
         this.balance -= amount
         this.updatedAt = now
     }
