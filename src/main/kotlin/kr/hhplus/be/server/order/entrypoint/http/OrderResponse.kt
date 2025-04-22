@@ -22,5 +22,5 @@ class OrderResponse {
 fun Order.toCreateResponse() = OrderResponse.Create(
     orderId = this.id,
     status = this.status,
-    finalTotal = this.finalTotal()
+    finalTotal = this.finalTotal().amount
 )

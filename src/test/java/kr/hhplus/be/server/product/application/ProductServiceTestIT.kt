@@ -5,6 +5,7 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.ProductUnavailableException
 import kr.hhplus.be.server.common.exception.ResourceNotFoundException
 import kr.hhplus.be.server.common.exception.VariantOutOfStockException
@@ -25,7 +26,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
-import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.jvm.optionals.getOrNull
 
@@ -45,18 +45,18 @@ class ProductServiceTestIT @Autowired constructor(
         // 테스트 데이터 준비
         val product1 = Product(
             name = "테스트 상품 1",
-            basePrice = BigDecimal(10000),
+            basePrice = Money.of(10000),
             status = ProductStatus.ON_SALE
         ).apply {
             addVariant(
                 ProductVariant(
-                    additionalPrice = BigDecimal(1000),
+                    additionalPrice = Money.of(1000),
                     stock = 10
                 )
             )
             addVariant(
                 ProductVariant(
-                    additionalPrice = BigDecimal(2000),
+                    additionalPrice = Money.of(2000),
                     stock = 5
                 )
             )
@@ -64,12 +64,12 @@ class ProductServiceTestIT @Autowired constructor(
 
         val product2 = Product(
             name = "테스트 상품 2",
-            basePrice = BigDecimal(20000),
+            basePrice = Money.of(20000),
             status = ProductStatus.ON_SALE
         ).apply {
             addVariant(
                 ProductVariant(
-                    additionalPrice = BigDecimal(0),
+                    additionalPrice = Money.of(0),
                     stock = 8
                 )
             )
@@ -77,12 +77,12 @@ class ProductServiceTestIT @Autowired constructor(
 
         val product3 = Product(
             name = "품절 상품",
-            basePrice = BigDecimal(15000),
+            basePrice = Money.of(15000),
             status = ProductStatus.OUT_OF_STOCK
         ).apply {
             addVariant(
                 ProductVariant(
-                    additionalPrice = BigDecimal(500),
+                    additionalPrice = Money.of(500),
                     stock = 0
                 )
             )
@@ -90,12 +90,12 @@ class ProductServiceTestIT @Autowired constructor(
 
         val product4 = Product(
             name = "인기 상품 1",
-            basePrice = BigDecimal(25000),
+            basePrice = Money.of(25000),
             status = ProductStatus.ON_SALE
         ).apply {
             addVariant(
                 ProductVariant(
-                    additionalPrice = BigDecimal(1500),
+                    additionalPrice = Money.of(1500),
                     stock = 15
                 )
             )
@@ -103,12 +103,12 @@ class ProductServiceTestIT @Autowired constructor(
 
         val product5 = Product(
             name = "인기 상품 2",
-            basePrice = BigDecimal(30000),
+            basePrice = Money.of(30000),
             status = ProductStatus.ON_SALE
         ).apply {
             addVariant(
                 ProductVariant(
-                    additionalPrice = BigDecimal(2500),
+                    additionalPrice = Money.of(2500),
                     stock = 20
                 )
             )

@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.order.domain
 
 import jakarta.persistence.*
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.AlreadyPaidOrderException
 import kr.hhplus.be.server.coupon.application.DiscountInfo
 import java.math.BigDecimal
@@ -21,14 +22,16 @@ class Order(
     @Enumerated(EnumType.STRING)
     var status: OrderStatus = OrderStatus.CREATED,
 
-    @Column(nullable = false)
-    var originalTotal: BigDecimal = BigDecimal.ZERO,
+    @Embedded
+    @AttributeOverride(name = "amount", column = Column(name = "original_total"))
+    var originalTotal: Money = Money.ZERO,
 
-    @Column(nullable = false)
-    var discountedAmount: BigDecimal = BigDecimal.ZERO,
+    @Embedded
+    @AttributeOverride(name = "amount", column = Column(name = "discounted_amount"))
+    var discountedAmount: Money = Money.ZERO,
 
     @OneToMany(mappedBy = "order", cascade = [CascadeType.ALL], orphanRemoval = true)
-    var orderItems: MutableList<OrderItem> = mutableListOf(),
+    private var _orderItems: MutableList<OrderItem> = mutableListOf(),
 
     @Column(nullable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
@@ -36,6 +39,10 @@ class Order(
     @Column(nullable = false)
     val updatedAt: LocalDateTime = LocalDateTime.now(),
 ) {
+    @get:Transient
+    val orderItems: OrderItems
+        get() = OrderItems(_orderItems)
+
 
     companion object {
         fun create(context: OrderContext.Create.Root): Order {
@@ -54,29 +61,26 @@ class Order(
     }
 
     fun addItem(orderItem: OrderItem) {
-        this.orderItems.add(orderItem)
+        this.orderItems.add(orderItem, this)
         orderItem.order = this
     }
 
-    private fun calculateOriginalTotal(): BigDecimal {
-        return this.orderItems.sumOf { it.subTotal() }
+    private fun calculateOriginalTotal(): Money {
+        return this.orderItems.calculateOriginalTotal()
     }
     
-    /**
-     * 최종 주문 금액 계산
-     */
-    fun finalTotal(): BigDecimal = originalTotal - discountedAmount
 
-    /**
-     * 할인 적용
-     */
+    fun finalTotal(): Money = originalTotal - discountedAmount
+
+
     fun applyDiscount(discountInfos: List<DiscountInfo>) {
-        discountInfos.forEach { discountLine ->
-            val orderItem = this.orderItems.find { orderItem -> orderItem.id == discountLine.orderItemId }
-            orderItem?.applyDiscount(discountLine.amount) ?: throw IllegalStateException()
-        }
+        this.orderItems.applyDiscounts(discountInfos)
+//        discountInfos.forEach { discountLine ->
+//            val orderItem = this.orderItems.find { orderItem -> orderItem.id == discountLine.orderItemId }
+//            orderItem?.applyDiscount(discountLine.amount) ?: throw IllegalStateException()
+//        }
 
-        discountedAmount = discountInfos.sumOf { it.amount }
+        discountedAmount = discountInfos.fold(Money.ZERO) { acc, it -> acc + it.amount}
         
         // 할인액이 주문 총액을 초과하지 않도록 조정
         if (discountedAmount > originalTotal) {
@@ -84,45 +88,11 @@ class Order(
         }
     }
 
-    /**
-     * 결제 완료 처리
-     */
+
     fun completeOrder() {
         if (status != OrderStatus.CREATED) {
             throw AlreadyPaidOrderException()
         }
         status = OrderStatus.PAID
     }
-    
-    /**
-     * 현재 주문 상태 계산
-     * 연관된 OrderItem의 상태를 기반으로 주문 상태를 업데이트합니다.
-     */
-    fun calculateStatus(items: List<OrderItem>) {
-        // 모든 항목이 취소되었으면 주문 취소
-        if (items.all { it.status == OrderItemStatus.CANCELED }) {
-            status = OrderStatus.CANCELED
-            return
-        }
-        
-        // 일부 항목이 환불되었다면 환불 상태로 마킹
-        if (items.any { it.status == OrderItemStatus.REFUNDED }) {
-            status = OrderStatus.REFUNDED
-            return
-        }
-        
-        // 모든 항목이 배송 완료되었으면 주문 배송 완료
-        if (items.all { it.status == OrderItemStatus.DELIVERED }) {
-            status = OrderStatus.DELIVERED
-            return
-        }
-        
-        // 하나라도 배송 중이면 주문 배송 중
-        if (items.any { it.status == OrderItemStatus.SHIPPING }) {
-            status = OrderStatus.SHIPPING
-            return
-        }
-    }
-
-
 }

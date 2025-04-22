@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.product.infrastructure
 
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.ResourceNotFoundException
 import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductRepository
@@ -62,6 +63,6 @@ interface ProductVariantJpaRepository: JpaRepository<ProductVariant, Long> {
 data class ProductListDto(
     val id: Long,
     val name: String,
-    val basePrice: BigDecimal,
+    val basePrice: Money,
     val status: ProductStatus
 )

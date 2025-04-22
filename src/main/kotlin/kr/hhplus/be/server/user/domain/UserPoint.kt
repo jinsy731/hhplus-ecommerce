@@ -1,6 +1,8 @@
 package kr.hhplus.be.server.user.domain
 
+import jakarta.persistence.AttributeOverride
 import jakarta.persistence.Column
+import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -8,6 +10,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.InsufficientPointException
 import kr.hhplus.be.server.common.exception.InvalidChargeAmountException
 import java.math.BigDecimal
@@ -24,20 +27,22 @@ import java.time.LocalDateTime
     @Column(nullable = false)
     val userId: Long,
     @Column(nullable = false)
-    var balance: BigDecimal = BigDecimal.ZERO,
+    @Embedded
+    @AttributeOverride(name = "amount", column = Column(name = "balance"))
+    var balance: Money = Money.ZERO,
     @Column(nullable = false)
     var createdAt: LocalDateTime? = LocalDateTime.now(),
     @Column(nullable = false)
     var updatedAt: LocalDateTime? = LocalDateTime.now(),
 ) {
 
-    fun charge(amount: BigDecimal, now: LocalDateTime) {
-        require(amount > BigDecimal.ZERO) { throw InvalidChargeAmountException() }
+    fun charge(amount: Money, now: LocalDateTime) {
+        require(amount > Money.ZERO) { throw InvalidChargeAmountException() }
         this.balance += amount
         this.updatedAt = now
     }
 
-    fun use(amount: BigDecimal, now: LocalDateTime) {
+    fun use(amount: Money, now: LocalDateTime) {
         require(amount <= balance) { throw InsufficientPointException() }
         this.balance -= amount
         this.updatedAt = now

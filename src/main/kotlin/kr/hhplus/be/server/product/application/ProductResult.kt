@@ -1,13 +1,11 @@
 package kr.hhplus.be.server.product.application
 
-import kr.hhplus.be.server.common.PageResult
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.product.domain.product.OptionSpec
 import kr.hhplus.be.server.product.domain.product.OptionValue
-import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductStatus
 import kr.hhplus.be.server.product.domain.product.ProductVariant
 import kr.hhplus.be.server.product.infrastructure.ProductListDto
-import java.math.BigDecimal
 
 class ProductResult {
     data class RetrieveList(
@@ -35,7 +33,7 @@ class ProductResult {
     data class ProductVariantDetail(
         val variantId: Long,
         val optionValueIds: List<Long>,
-        val additionalPrice: BigDecimal,
+        val additionalPrice: Money,
         val status: String,
         val stock: Int
     )
@@ -43,7 +41,7 @@ class ProductResult {
     data class ProductSummary(
         val productId: Long,
         val name: String,
-        val basePrice: BigDecimal,
+        val basePrice: Money,
         val status: ProductStatus,
     )
 }

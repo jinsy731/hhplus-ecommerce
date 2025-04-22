@@ -1,8 +1,7 @@
 package kr.hhplus.be.server.product.entrypoint.http
 
 import io.swagger.v3.oas.annotations.media.Schema
-import kr.hhplus.be.server.common.PageInfo
-import kr.hhplus.be.server.common.toResponse
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.product.application.ProductResult
 import kr.hhplus.be.server.product.domain.product.ProductStatus
 import java.math.BigDecimal
@@ -82,7 +81,7 @@ class ProductResponse {
         val name: String,
 
         @Schema(description = "기본 금액", example = "29000")
-        val basePrice: BigDecimal,
+        val basePrice: Money,
 
         @Schema(description = "상품 상태", example = "ON_SALE")
         val status: ProductStatus,
@@ -112,10 +111,10 @@ fun List<ProductResult.OptionSpecDetail>.toOptionSpecResponse() = this.map { Pro
     values = it.values.toOptionValueResponse()
 )}
 
-fun List<ProductResult.ProductVariantDetail>.toVaraintResponse() = this.map { ProductResponse.ProductVariantDetail(
+fun List<ProductResult.ProductVariantDetail>.toVariantResponse() = this.map { ProductResponse.ProductVariantDetail(
     variantId = it.variantId!!,
     optionValueIds = it.optionValueIds,
-    additionalPrice = it.additionalPrice,
+    additionalPrice = it.additionalPrice.amount,
     status = it.status,
     stock = it.stock
 )}

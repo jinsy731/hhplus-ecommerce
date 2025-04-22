@@ -29,7 +29,7 @@ class MoneyTest {
         // act
         val moneySum = money1 + money2
         // assert
-        moneySum.amount shouldBe BigDecimal(300)
+        moneySum shouldBe Money.of(300)
     }
 
     @Test
@@ -40,6 +40,6 @@ class MoneyTest {
         // act
         val moneySum = money1 - money2
         // assert
-        moneySum.amount shouldBe BigDecimal(100)
+        moneySum shouldBe Money.of(100)
     }
 }

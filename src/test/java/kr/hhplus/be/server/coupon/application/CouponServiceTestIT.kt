@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.common.ClockHolder
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.CouponTargetNotFoundException
 import kr.hhplus.be.server.common.exception.InvalidCouponStatusException
 import kr.hhplus.be.server.coupon.domain.model.*
@@ -58,8 +59,8 @@ class CouponServiceTestIT {
             description = "통합 테스트용 쿠폰",
             discountPolicy = DiscountPolicy(
                 name = "1000원 정액 할인",
-                discountType = FixedAmountTotalDiscountType(BigDecimal(1000)),
-                discountCondition = MinOrderAmountCondition(BigDecimal(5000))
+                discountType = FixedAmountTotalDiscountType(Money.of(1000)),
+                discountCondition = MinOrderAmountCondition(Money.of(5000))
             ),
             isActive = true,
             maxIssueLimit = 10,
@@ -112,8 +113,8 @@ class CouponServiceTestIT {
             description = "5000원 할인 쿠폰",
             discountPolicy = DiscountPolicy(
                 name = "5000원 정액 할인",
-                discountType = FixedAmountTotalDiscountType(BigDecimal(5000)),
-                discountCondition = MinOrderAmountCondition(BigDecimal(10000))
+                discountType = FixedAmountTotalDiscountType(Money.of(5000)),
+                discountCondition = MinOrderAmountCondition(Money.of(10000))
             ),
             isActive = true,
             maxIssueLimit = 10,
@@ -141,14 +142,14 @@ class CouponServiceTestIT {
         val useCommand = CouponCommand.Use.Root(
             userId = userId,
             userCouponIds = listOf(userCouponId),
-            totalAmount = BigDecimal(20000),
+            totalAmount = Money.of(20000),
             items = listOf(
                 CouponCommand.Use.Item(
                     orderItemId = 1L,
                     productId = 1L,
                     variantId = 1L,
                     quantity = 2,
-                    subTotal = BigDecimal(20000)
+                    subTotal = Money.of(20000)
                 )
             ),
             timestamp = now
@@ -162,7 +163,7 @@ class CouponServiceTestIT {
         
         val discountInfo = result.discountInfo.first()
         discountInfo.orderItemId shouldBe 1L
-        discountInfo.amount.compareTo(BigDecimal(5000)) shouldBe 0
+        discountInfo.amount.compareTo(Money.of(5000)) shouldBe 0
         discountInfo.sourceId shouldBe couponId
         discountInfo.sourceType shouldBe "COUPON"
         
@@ -188,8 +189,8 @@ class CouponServiceTestIT {
                 description = "통합 테스트용 쿠폰 $i",
                 discountPolicy = DiscountPolicy(
                     name = "${i}00원 정액 할인",
-                    discountType = FixedAmountTotalDiscountType(BigDecimal(i * 1000)),
-                    discountCondition = MinOrderAmountCondition(BigDecimal(5000))
+                    discountType = FixedAmountTotalDiscountType(Money.of(i * 1000L)),
+                    discountCondition = MinOrderAmountCondition(Money.of(5000))
                 ),
                 isActive = true,
                 maxIssueLimit = 10,
@@ -268,8 +269,8 @@ class CouponServiceTestIT {
             description = "최소 주문 금액 10000원 쿠폰",
             discountPolicy = DiscountPolicy(
                 name = "2000원 정액 할인",
-                discountType = FixedAmountTotalDiscountType(BigDecimal(2000)),
-                discountCondition = MinOrderAmountCondition(BigDecimal(10000))
+                discountType = FixedAmountTotalDiscountType(Money.of(2000)),
+                discountCondition = MinOrderAmountCondition(Money.of(10000))
             ),
             isActive = true,
             maxIssueLimit = 10,
@@ -297,14 +298,14 @@ class CouponServiceTestIT {
         val useCommand = CouponCommand.Use.Root(
             userId = userId,
             userCouponIds = listOf(userCouponId),
-            totalAmount = BigDecimal(8000),
+            totalAmount = Money.of(8000),
             items = listOf(
                 CouponCommand.Use.Item(
                     orderItemId = 1L,
                     productId = 1L,
                     variantId = 1L,
                     quantity = 1,
-                    subTotal = BigDecimal(8000)
+                    subTotal = Money.of(8000)
                 )
             ),
             timestamp = now
@@ -331,8 +332,8 @@ class CouponServiceTestIT {
         // 쿠폰 생성 - Fixture 사용 및 저장
         val discountPolicy = DiscountPolicy(
             name = "5000원 정액 할인",
-            discountType = FixedAmountTotalDiscountType(BigDecimal(5000)),
-            discountCondition = MinOrderAmountCondition(BigDecimal(10000))
+            discountType = FixedAmountTotalDiscountType(Money.of(5000)),
+            discountCondition = MinOrderAmountCondition(Money.of(10000))
         )
         
         val coupon = Coupon(
@@ -366,14 +367,14 @@ class CouponServiceTestIT {
         val useCommand = CouponCommand.Use.Root(
             userId = userId,
             userCouponIds = listOf(userCouponId),
-            totalAmount = BigDecimal(15000),
+            totalAmount = Money.of(15000),
             items = listOf(
                 CouponCommand.Use.Item(
                     orderItemId = 1L,
                     productId = 1L,
                     variantId = 1L,
                     quantity = 1,
-                    subTotal = BigDecimal(15000)
+                    subTotal = Money.of(15000)
                 )
             ),
             timestamp = now
@@ -385,14 +386,14 @@ class CouponServiceTestIT {
         val secondUseCommand = CouponCommand.Use.Root(
             userId = userId,
             userCouponIds = listOf(userCouponId),
-            totalAmount = BigDecimal(12000),
+            totalAmount = Money.of(12000),
             items = listOf(
                 CouponCommand.Use.Item(
                     orderItemId = 2L,
                     productId = 2L,
                     variantId = 2L,
                     quantity = 1,
-                    subTotal = BigDecimal(12000)
+                    subTotal = Money.of(12000)
                 )
             ),
             timestamp = now

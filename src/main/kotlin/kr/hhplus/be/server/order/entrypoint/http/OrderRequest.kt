@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.order.entrypoint.http
 
 import io.swagger.v3.oas.annotations.media.Schema
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.order.facade.OrderCriteria
 import java.math.BigDecimal
 
@@ -59,5 +60,5 @@ fun List<OrderRequest.Create.OrderItem>.toOrderItemCriteria() = this.map { Order
 
 fun List<OrderRequest.Create.PayMethod>.toPayMethodCriteria() = this.map { OrderCriteria.PlaceOrder.PayMethod(
     method = it.method,
-    amount = it.amount
+    amount = Money.of(it.amount)
 )}

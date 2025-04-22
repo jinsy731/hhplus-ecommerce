@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.coupon.application
 
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.coupon.domain.model.DiscountLine
 import java.math.BigDecimal
 
@@ -9,7 +10,7 @@ import java.math.BigDecimal
  */
 data class DiscountInfo (
     val orderItemId: Long,
-    val amount: BigDecimal,
+    val amount: Money,
     val sourceId: Long,
     val sourceType: String
 )

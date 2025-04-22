@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.order.domain.model
 
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.order.domain.OrderItem
 import kr.hhplus.be.server.order.domain.OrderItemStatus
 import org.junit.jupiter.api.Test
@@ -16,11 +17,11 @@ class OrderItemTest {
             productId = 1L,
             variantId = 1L,
             quantity = 10,
-            unitPrice = BigDecimal(1000),
+            unitPrice = Money.of(1000),
             status = OrderItemStatus.ORDERED
         )
         // act, assert
-        orderItem.subTotal() shouldBe BigDecimal(10000)
+        orderItem.subTotal shouldBe Money.of(10000)
     }
     
     @Test
@@ -31,14 +32,14 @@ class OrderItemTest {
             productId = 1L,
             variantId = 1L,
             quantity = 10,
-            unitPrice = BigDecimal(1000),
-            discountAmount = BigDecimal.ZERO,
+            unitPrice = Money.of(1000),
+            discountAmount = Money.ZERO,
             status = OrderItemStatus.ORDERED
         )
         // act
-        orderItem.applyDiscount(BigDecimal(100))
+        orderItem.applyDiscount(Money.of(100))
         
         // assert
-        orderItem.discountAmount shouldBe BigDecimal(100)
+        orderItem.discountAmount shouldBe Money.of(100)
     }
 }

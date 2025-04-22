@@ -6,6 +6,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kr.hhplus.be.server.common.ClockHolder
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.coupon.CouponTestFixture
 import kr.hhplus.be.server.coupon.domain.model.*
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
@@ -40,7 +41,7 @@ class CouponServiceTest {
         // arrange
         val userId = 1L
         val now = LocalDateTime.now()
-        val discountAmount = BigDecimal(1000)
+        val discountAmount = Money.of(1000)
         val coupon = CouponTestFixture.createValidCoupon(
             id = 1L,
             discountPolicy = DiscountPolicy(
@@ -75,13 +76,13 @@ class CouponServiceTest {
         val cmd = CouponCommand.Use.Root(
             userId = userId,
             userCouponIds = listOf(1L),
-            totalAmount = BigDecimal(1000),
+            totalAmount = Money.of(1000),
             items = listOf(CouponCommand.Use.Item(
                 orderItemId = 1L,
                 productId = 1L,
                 variantId = 1L,
                 quantity = 1,
-                subTotal = BigDecimal(1000)
+                subTotal = Money.of(1000)
             )),
             timestamp = now
         )
@@ -111,7 +112,7 @@ class CouponServiceTest {
 
 
         val order = OrderTestFixture.createOrder(userId).apply {
-            this.originalTotal = BigDecimal(5000) // 할인 기준: 10000원 이상 구매
+            this.originalTotal = Money.of(5000) // 할인 기준: 10000원 이상 구매
         }
 
         // 모든 주문 상품이 할인 조건을 만족한다고 가정

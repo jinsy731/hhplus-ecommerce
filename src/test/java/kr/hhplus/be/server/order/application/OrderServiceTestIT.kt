@@ -3,6 +3,7 @@ package kr.hhplus.be.server.order.application
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.AlreadyPaidOrderException
 import kr.hhplus.be.server.coupon.application.DiscountInfo
 import kr.hhplus.be.server.order.domain.Order
@@ -41,9 +42,9 @@ class OrderServiceTestIT {
         order.id shouldBeGreaterThan 0L
         order.userId shouldBe userId
         order.status shouldBe OrderStatus.CREATED
-        order.originalTotal shouldBe BigDecimal("10000")
-        order.discountedAmount shouldBe BigDecimal.ZERO
-        order.orderItems.size shouldBe 2
+        order.originalTotal shouldBe Money.of(10000)
+        order.discountedAmount shouldBe Money.ZERO
+        order.orderItems.size() shouldBe 2
 
         val savedOrder = orderRepository.getById(order.id)
         savedOrder.id shouldBe order.id
@@ -56,10 +57,11 @@ class OrderServiceTestIT {
     fun applyDiscount_shouldUpdateFinalTotal() {
         // given
         val order = createAndSaveOrder()
+        val orderItems = order.orderItems.asList()
 
         val discountInfos = listOf(
-            DiscountInfo(orderItemId = order.orderItems[0].id, amount = BigDecimal("2000"), sourceId = 1L, sourceType = "COUPON"),
-            DiscountInfo(orderItemId = order.orderItems[1].id, amount = BigDecimal("3000"), sourceId = 1L, sourceType = "COUPON")
+            DiscountInfo(orderItemId = orderItems[0].id, amount = Money.of(2000), sourceId = 1L, sourceType = "COUPON"),
+            DiscountInfo(orderItemId = orderItems[1].id, amount = Money.of(3000), sourceId = 1L, sourceType = "COUPON")
         )
         val cmd = OrderCommand.ApplyDiscount(order.id, discountInfos)
 
@@ -68,9 +70,10 @@ class OrderServiceTestIT {
 
         // then
         val updatedOrder = orderRepository.getById(order.id)
-        updatedOrder.discountedAmount shouldBe BigDecimal("5000")
-        updatedOrder.orderItems[0].discountAmount shouldBe BigDecimal("2000")
-        updatedOrder.orderItems[1].discountAmount shouldBe BigDecimal("3000")
+        val updatedOrderItems = updatedOrder.orderItems.asList()
+        updatedOrder.discountedAmount shouldBe Money.of(5000)
+        updatedOrderItems[0].discountAmount shouldBe Money.of(2000)
+        updatedOrderItems[1].discountAmount shouldBe Money.of(3000)
         updatedOrder.finalTotal() shouldBe updatedOrder.originalTotal - updatedOrder.discountedAmount
     }
 
@@ -80,10 +83,11 @@ class OrderServiceTestIT {
     fun discountOverTotal_shouldBeCapped() {
         // given
         val order = createAndSaveOrder()
+        val orderItems = order.orderItems.asList()
 
         val discountInfos = listOf(
-            DiscountInfo(orderItemId = order.orderItems[0].id, amount = BigDecimal("6000"), sourceId = 1L, sourceType = "COUPON"),
-            DiscountInfo(orderItemId = order.orderItems[1].id, amount = BigDecimal("7000"), sourceId = 1L, sourceType = "COUPON")
+            DiscountInfo(orderItemId = orderItems[0].id, amount = Money.of(6000), sourceId = 1L, sourceType = "COUPON"),
+            DiscountInfo(orderItemId = orderItems[1].id, amount = Money.of(7000), sourceId = 1L, sourceType = "COUPON")
         )
         val cmd = OrderCommand.ApplyDiscount(order.id, discountInfos)
 
@@ -93,7 +97,7 @@ class OrderServiceTestIT {
         // then
         val updatedOrder = orderRepository.getById(order.id)
         updatedOrder.discountedAmount shouldBe updatedOrder.originalTotal
-        updatedOrder.finalTotal() shouldBe BigDecimal.ZERO
+        updatedOrder.finalTotal() shouldBe Money.ZERO
     }
 
     @Test
@@ -132,7 +136,7 @@ class OrderServiceTestIT {
                 variants = listOf(
                     ProductInfo.CreateOrder.Variant(
                         variantId = 1L,
-                        unitPrice = BigDecimal("1000")
+                        unitPrice = Money.of(1000)
                     )
                 )
             )

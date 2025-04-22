@@ -2,6 +2,7 @@ package kr.hhplus.be.server.facade
 
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.executeThreads
 import kr.hhplus.be.server.order.domain.OrderRepository
 import kr.hhplus.be.server.order.facade.OrderCriteria
@@ -15,7 +16,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import java.math.BigDecimal
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -46,8 +46,8 @@ class OrderFacadeConcurrencyTestIT {
     private val userId = 1L
     private val productId = 1L
     private val variantId = 1L
-    private val initialBalance = BigDecimal(10000)
-    private val productPrice = BigDecimal(1000)
+    private val initialBalance = Money.of(10000)
+    private val productPrice = Money.of(1000)
 
     @BeforeEach
     fun setUp() {
@@ -63,7 +63,7 @@ class OrderFacadeConcurrencyTestIT {
         )
         val variant = ProductVariant(
             product = product,
-            additionalPrice = BigDecimal.ZERO,
+            additionalPrice = Money.ZERO,
             status = VariantStatus.ACTIVE,
             stock = 100
         )
@@ -81,12 +81,12 @@ class OrderFacadeConcurrencyTestIT {
         // 재고가 10개인 상품을 준비
         val limitedStockProduct = Product(
             name = "한정 상품",
-            basePrice = BigDecimal(5000),
+            basePrice = Money.of(5000),
             status = ProductStatus.ON_SALE
         )
         val limitedStockVariant = ProductVariant(
             product = limitedStockProduct,
-            additionalPrice = BigDecimal.ZERO,
+            additionalPrice = Money.ZERO,
             status = VariantStatus.ACTIVE,
             stock = 10 // 재고 10개만 설정
         )
@@ -119,7 +119,7 @@ class OrderFacadeConcurrencyTestIT {
                         payMethods = listOf(
                             OrderCriteria.PlaceOrder.PayMethod(
                                 method = "POINT",
-                                amount = BigDecimal(5000)
+                                amount = Money.of(5000)
                             )
                         )
                     )
@@ -159,7 +159,7 @@ class OrderFacadeConcurrencyTestIT {
     fun `포인트 중복 차감 - 동시에 여러 주문으로 포인트를 사용하면 일부는 포인트 부족으로 실패한다`() {
         // 초기 포인트 설정
         val userPoint = userPointRepository.getByUserId(userId)
-        userPoint.balance = BigDecimal(10000)  // 10,000원 포인트
+        userPoint.balance = Money.of(10000)  // 10,000원 포인트
         userPointRepository.save(userPoint)
 
         // 동시에 실행할 스레드 수
@@ -170,7 +170,7 @@ class OrderFacadeConcurrencyTestIT {
         val failCount = AtomicInteger(0)
 
         // 각 주문 금액
-        val orderAmount = BigDecimal(1000)  // 1,000원 상품
+        val orderAmount = Money.of(1000)  // 1,000원 상품
 
         // 15개의 스레드에서 동시에 주문 시도 (포인트는 10개 주문만 가능)
         for (i in 1..threadCount) {
@@ -220,7 +220,7 @@ class OrderFacadeConcurrencyTestIT {
         orders.size shouldBe successCount.get()
         
         // 포인트가 정확히 차감되었는지 확인
-        val expectedBalance = initialBalance.subtract(orderAmount.multiply(BigDecimal(successCount.get())))
+        val expectedBalance = initialBalance - (orderAmount * successCount.get().toBigDecimal())
         finalUserPoint.balance shouldBe expectedBalance
     }
     

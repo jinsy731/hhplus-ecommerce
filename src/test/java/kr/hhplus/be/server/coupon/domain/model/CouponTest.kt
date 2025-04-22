@@ -4,13 +4,12 @@ import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.CouponTargetNotFoundException
 import kr.hhplus.be.server.common.exception.ExceededMaxCouponLimitException
 import kr.hhplus.be.server.common.exception.InvalidCouponStatusException
 import kr.hhplus.be.server.coupon.CouponTestFixture
-import kr.hhplus.be.server.order.OrderTestFixture
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
 import java.time.LocalDateTime
 
 class CouponTest {
@@ -20,7 +19,7 @@ class CouponTest {
         // arrange
         val coupon = CouponTestFixture.createValidCoupon()
         // act, assert
-        shouldNotThrowAny { coupon.validate(LocalDateTime.now()) }
+        shouldNotThrowAny { coupon.validatUsability(LocalDateTime.now()) }
     }
 
     @Test
@@ -33,8 +32,8 @@ class CouponTest {
             endAt = LocalDateTime.now().minusHours(1),)
 
         // act, assert
-        shouldThrowExactly<InvalidCouponStatusException> { coupon1.validate(LocalDateTime.now()) }
-        shouldThrowExactly<InvalidCouponStatusException> { coupon2.validate(LocalDateTime.now()) }
+        shouldThrowExactly<InvalidCouponStatusException> { coupon1.validatUsability(LocalDateTime.now()) }
+        shouldThrowExactly<InvalidCouponStatusException> { coupon2.validatUsability(LocalDateTime.now()) }
     }
 
 
@@ -43,8 +42,8 @@ class CouponTest {
         // arrange
         val coupon = CouponTestFixture.createValidCoupon(discountPolicy = DiscountPolicy(
             name = "",
-            discountType = FixedAmountTotalDiscountType(BigDecimal(10000)),
-            discountCondition = MinOrderAmountCondition(minAmount = BigDecimal(5000))
+            discountType = FixedAmountTotalDiscountType(Money.of(10000)),
+            discountCondition = MinOrderAmountCondition(minAmount = Money.of(5000))
         ))
         val context = CouponTestFixture.createDiscountContext()
         val applicableItems = listOf(1L, 2L)
@@ -52,8 +51,8 @@ class CouponTest {
         val orderItemDiscountMap = coupon.calculateDiscount(context, applicableItems)
         // assert
         val discountAmounts = orderItemDiscountMap.values.toList()
-        discountAmounts[0].compareTo(BigDecimal(5000)) shouldBe 0
-        discountAmounts[1].compareTo(BigDecimal(5000)) shouldBe 0
+        discountAmounts[0].compareTo(Money.of(5000)) shouldBe 0
+        discountAmounts[1].compareTo(Money.of(5000)) shouldBe 0
     }
 
     @Test
@@ -67,16 +66,16 @@ class CouponTest {
                     productId = 1L,
                     variantId = 1L,
                     quantity = 1,
-                    subTotal = BigDecimal(10000),
-                    totalAmount = BigDecimal(20000)
+                    subTotal = Money.of(10000),
+                    totalAmount = Money.of(20000)
                 ),
                 DiscountContext.Item(
                     orderItemId = 2L,
                     productId = 1L,
                     variantId = 1L,
                     quantity = 1,
-                    subTotal = BigDecimal(10000),
-                    totalAmount = BigDecimal(20000)
+                    subTotal = Money.of(10000),
+                    totalAmount = Money.of(20000)
                 )
             ))
         // act
@@ -96,16 +95,16 @@ class CouponTest {
                     productId = 1L,
                     variantId = 1L,
                     quantity = 1,
-                    subTotal = BigDecimal(100),
-                    totalAmount = BigDecimal(200)
+                    subTotal = Money.of(100),
+                    totalAmount = Money.of(200)
                 ),
                 DiscountContext.Item(
                     orderItemId = 2L,
                     productId = 1L,
                     variantId = 1L,
                     quantity = 1,
-                    subTotal = BigDecimal(100),
-                    totalAmount = BigDecimal(200)
+                    subTotal = Money.of(100),
+                    totalAmount = Money.of(200)
                 )
             ))
         // act, assert

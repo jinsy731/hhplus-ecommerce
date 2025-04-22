@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.product.application
 
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductVariant
 import java.math.BigDecimal
@@ -17,7 +18,7 @@ class ProductInfo {
         )
         data class Variant(
             val variantId: Long,
-            val unitPrice: BigDecimal
+            val unitPrice: Money
         )
     }
 }

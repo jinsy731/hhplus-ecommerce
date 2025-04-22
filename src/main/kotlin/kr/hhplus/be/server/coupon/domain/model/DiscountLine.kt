@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.coupon.domain.model
 
 import jakarta.persistence.*
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.order.domain.OrderItem
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -32,7 +33,9 @@ class DiscountLine(
     val sourceId: Long,
 
     @Column(nullable = false)
-    val amount: BigDecimal,
+    @Embedded
+    @AttributeOverride(name = "amount", column = Column(name = "amount"))
+    val amount: Money,
 
     @Column(nullable = false)
     val createdAt: LocalDateTime = LocalDateTime.now()
@@ -42,7 +45,7 @@ class DiscountLine(
             now: LocalDateTime,
             sourceId: Long,
             discountMethod: DiscountMethod,
-            orderItemsDiscountMap: Map<DiscountContext.Item, BigDecimal>): List<DiscountLine> {
+            orderItemsDiscountMap: Map<DiscountContext.Item, Money>): List<DiscountLine> {
             return orderItemsDiscountMap.map { DiscountLine(
                 orderItemId = it.key.orderItemId,
                 type = discountMethod,

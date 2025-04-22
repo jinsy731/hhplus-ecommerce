@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.order.facade
 
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.coupon.application.CouponCommand
 import kr.hhplus.be.server.order.application.OrderCommand
 import kr.hhplus.be.server.order.application.toPreparePaymentCommandItem
@@ -29,7 +30,7 @@ class OrderCriteria {
 
         data class PayMethod(
             val method: String,
-            val amount: BigDecimal
+            val amount: Money
         )
     }
 }
@@ -75,6 +76,5 @@ fun OrderCriteria.PlaceOrder.Root.toPreparePaymentCommand(order: Order): Payment
             discountedAmount = order.discountedAmount
         ),
         timestamp = this.timestamp,
-        payMethods = this.payMethods.map { PaymentCommand.Prepare.PayMethod(type = it.method, amount = it.amount) }
     )
 }

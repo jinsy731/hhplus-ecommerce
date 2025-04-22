@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.payment.domain
 
+import kr.hhplus.be.server.common.domain.Money
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -8,28 +9,22 @@ class PaymentContext {
         data class Root(
             val order: OrderInfo,
             val timestamp: LocalDateTime,
-            val payMethods: List<PayMethod>
-        )
-
-        data class PayMethod(
-            val type: PaymentMethodType,
-            val amount: BigDecimal
         )
 
         data class OrderInfo(
             val id: Long,
             val userId: Long,
             val items: List<OrderItemInfo>,
-            val originalTotal: BigDecimal,
-            val discountedAmount: BigDecimal
+            val originalTotal: Money,
+            val discountedAmount: Money
         )
 
         data class OrderItemInfo(
             val id: Long,
             val productId: Long,
             val variantId: Long,
-            val subTotal: BigDecimal,
-            val discountedAmount: BigDecimal
+            val subTotal: Money,
+            val discountedAmount: Money
         )
     }
 
@@ -37,6 +32,4 @@ class PaymentContext {
     data class Complete(
         val paymentId: Long
     )
-
-
 }

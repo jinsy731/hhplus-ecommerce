@@ -3,6 +3,7 @@ package kr.hhplus.be.server.product.domain
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.ProductUnavailableException
 import kr.hhplus.be.server.product.ProductTestFixture
 import kr.hhplus.be.server.product.domain.product.ProductVariant
@@ -29,7 +30,7 @@ class ProductTest {
         // arrange
         val product = kr.hhplus.be.server.product.domain.product.Product(
             name = "상품 A",
-            basePrice = BigDecimal(1000),
+            basePrice = Money(BigDecimal(1000)),
             status = status
         )
         // act, assert
@@ -41,12 +42,12 @@ class ProductTest {
         // arrange
         val product = kr.hhplus.be.server.product.domain.product.Product(
             name = "상품 A",
-            basePrice = BigDecimal(1000),
+            basePrice = Money(BigDecimal(1000)),
             status = kr.hhplus.be.server.product.domain.product.ProductStatus.ON_SALE,
             variants = mutableListOf(
                 ProductVariant(
                     id = 1L,
-                    additionalPrice = BigDecimal(500),
+                    additionalPrice = Money(BigDecimal(500)),
                     stock = 10
                 )
             )
@@ -54,7 +55,7 @@ class ProductTest {
         // act
         val variantPrice = product.getVariantPrice(1L)
         // assert
-        variantPrice shouldBe BigDecimal(1500)
+        variantPrice shouldBe Money.of(1500)
     }
     
     @Test

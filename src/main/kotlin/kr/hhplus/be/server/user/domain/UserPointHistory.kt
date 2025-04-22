@@ -1,6 +1,8 @@
 package kr.hhplus.be.server.user.domain
 
+import jakarta.persistence.AttributeOverride
 import jakarta.persistence.Column
+import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -9,6 +11,7 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
+import kr.hhplus.be.server.common.domain.Money
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -24,18 +27,20 @@ import java.time.LocalDateTime
     @Column(nullable = false) @Enumerated(EnumType.STRING)
     val transactionType: TransactionType,
     @Column(nullable = false)
-    val amount: BigDecimal,
+    @Embedded
+    @AttributeOverride(name = "amount", column = Column(name = "amount"))
+    val amount: Money,
     @Column(nullable = false)
     val createdAt: LocalDateTime? = null
 ) {
     companion object {
-        fun createChargeHistory(userId: Long, amount: BigDecimal, now: LocalDateTime): UserPointHistory = UserPointHistory(
+        fun createChargeHistory(userId: Long, amount: Money, now: LocalDateTime): UserPointHistory = UserPointHistory(
             userId = userId,
             transactionType = TransactionType.CHARGE,
             amount = amount,
             createdAt = now
         )
-        fun createUseHistory(userId: Long, amount: BigDecimal, now: LocalDateTime): UserPointHistory = UserPointHistory(
+        fun createUseHistory(userId: Long, amount: Money, now: LocalDateTime): UserPointHistory = UserPointHistory(
             userId = userId,
             transactionType = TransactionType.USE,
             amount = amount,

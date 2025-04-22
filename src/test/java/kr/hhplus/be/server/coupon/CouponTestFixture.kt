@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.coupon
 
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.coupon.domain.model.Coupon
 import kr.hhplus.be.server.coupon.domain.model.DiscountCondition
 import kr.hhplus.be.server.coupon.domain.model.DiscountContext
@@ -61,14 +62,14 @@ object CouponTestFixture {
 
     fun createFixedAmountDiscountPolicy() = DiscountPolicy(
         name = "5000원 정액 할인",
-        discountType = FixedAmountTotalDiscountType(BigDecimal(5000)),
-        discountCondition = MinOrderAmountCondition(BigDecimal(10000))
+        discountType = FixedAmountTotalDiscountType(Money.of(5000)),
+        discountCondition = MinOrderAmountCondition(Money.of(10000))
     )
 
 
     fun createDiscountContext(
-        subTotal1: BigDecimal = BigDecimal(10000),
-        subTotal2: BigDecimal = BigDecimal(10000),
+        subTotal1: Money = Money.of(10000),
+        subTotal2: Money = Money.of(10000),
         timestamp: LocalDateTime = LocalDateTime.now()
         ) = DiscountContext.Root(
         items = listOf(
@@ -88,8 +89,8 @@ object CouponTestFixture {
         productId: Long = 1L,
         variantId: Long = 1L,
         quantity: Int = 1,
-        subTotal: BigDecimal = BigDecimal(10000),
-        totalAmount: BigDecimal = BigDecimal(20000),
+        subTotal: Money = Money.of(10000),
+        totalAmount: Money = Money.of(20000),
         ) = DiscountContext.Item(
         orderItemId = orderItemId,
         productId = productId,

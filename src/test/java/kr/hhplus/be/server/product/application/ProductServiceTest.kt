@@ -4,6 +4,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.product.ProductTestFixture
 import kr.hhplus.be.server.product.domain.product.ProductRepository
 import kr.hhplus.be.server.product.domain.product.ProductStatus
@@ -33,7 +34,7 @@ class ProductServiceTest {
         val productListDto = listOf(ProductListDto(
             id = 1L,
             name = "aa",
-            basePrice = BigDecimal(1000),
+            basePrice = Money.of(1000),
             status = ProductStatus.ON_SALE
         ))
         every { productRepository.searchByNameContaining(any(), any(), any()) } returns productListDto
