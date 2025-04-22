@@ -18,9 +18,10 @@ class ProductController(private val productService: ProductService): ProductApiS
     @GetMapping
     override fun retrieveLists(
         pageable: Pageable,
-        @RequestParam keyword: String?
+        @RequestParam keyword: String?,
+        @RequestParam lastId: Long?,
     ): ResponseEntity<CommonResponse<ProductResponse.Retrieve.Lists>> {
-        val result = productService.retrieveList(ProductCommand.RetrieveList(pageable,keyword))
+        val result = productService.retrieveList(ProductCommand.RetrieveList(pageable,lastId, keyword))
         return ResponseEntity.ok(CommonResponse(result.toProductResponse()))
     }
 

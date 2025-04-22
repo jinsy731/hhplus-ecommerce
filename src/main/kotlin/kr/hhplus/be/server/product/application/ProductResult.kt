@@ -1,17 +1,15 @@
 package kr.hhplus.be.server.product.application
 
-import kr.hhplus.be.server.common.PageResult
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.product.domain.product.OptionSpec
 import kr.hhplus.be.server.product.domain.product.OptionValue
-import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductStatus
 import kr.hhplus.be.server.product.domain.product.ProductVariant
-import java.math.BigDecimal
+import kr.hhplus.be.server.product.infrastructure.ProductListDto
 
 class ProductResult {
     data class RetrieveList(
-        val products: List<ProductDetail>,
-        val pageResult: PageResult
+        val products: List<ProductSummary>,
     )
 
     data class PopularProduct(
@@ -35,29 +33,25 @@ class ProductResult {
     data class ProductVariantDetail(
         val variantId: Long,
         val optionValueIds: List<Long>,
-        val additionalPrice: BigDecimal,
+        val additionalPrice: Money,
         val status: String,
         val stock: Int
     )
 
-    data class ProductDetail(
+    data class ProductSummary(
         val productId: Long,
         val name: String,
-        val basePrice: BigDecimal,
+        val basePrice: Money,
         val status: ProductStatus,
-        val optionSpecs: List<OptionSpecDetail>,
-        val variants: List<ProductVariantDetail>
     )
 }
 
-fun Product.toProductDetail(): ProductResult.ProductDetail {
-    return ProductResult.ProductDetail(
+fun ProductListDto.toProductDetail(): ProductResult.ProductSummary {
+    return ProductResult.ProductSummary(
         productId = this.id ?: throw IllegalStateException("Product ID is null"),
         name = this.name,
         basePrice = this.basePrice,
         status = this.status,
-        optionSpecs = this.optionSpecs.sortedBy { it.displayOrder }.map { it.toOptionSpecDetail() },
-        variants = this.variants.sortedBy { it.id }.map { it.toProductVariantDetail() }
     )
 }
 

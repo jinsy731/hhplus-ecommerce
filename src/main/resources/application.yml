@@ -7,7 +7,7 @@ spring:
     name: HangHaePlusDataSource
     type: com.zaxxer.hikari.HikariDataSource
     hikari:
-      maximum-pool-size: 3
+      maximum-pool-size: 16
       connection-timeout: 10000
       max-lifetime: 60000
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -20,10 +20,17 @@ spring:
     properties:
       hibernate.timezone.default_storage: NORMALIZE_UTC
       hibernate.jdbc.time_zone: UTC
-      hibernate.format_sql: true
-      hibernate.highlight_sql: true
-      hibernate.use_sql_comments: true
+      hibernate.format_sql: false
+      hibernate.highlight_sql: false
+      hibernate.use_sql_comments: false
       hibernate.default_batch_fetch_size: 100
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+      continue-on-error: true
+
 
 ---
 spring.config.activate.on-profile: local, test

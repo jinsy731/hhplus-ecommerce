@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.order.domain
 
+import kr.hhplus.be.server.common.domain.Money
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -18,7 +19,7 @@ class OrderContext {
             val productId: Long,
             val variantId: Long,
             val quantity: Int,
-            val unitPrice: BigDecimal
+            val unitPrice: Money
         )
     }
 }

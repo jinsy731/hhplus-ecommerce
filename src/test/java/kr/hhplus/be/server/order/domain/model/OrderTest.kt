@@ -2,17 +2,15 @@ package kr.hhplus.be.server.order.domain.model
 
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.AlreadyPaidOrderException
 import kr.hhplus.be.server.common.exception.ErrorCode
 import kr.hhplus.be.server.coupon.application.DiscountInfo
-import kr.hhplus.be.server.coupon.domain.model.DiscountLine
-import kr.hhplus.be.server.coupon.domain.model.DiscountMethod
 import kr.hhplus.be.server.order.OrderTestFixture
 import kr.hhplus.be.server.order.domain.Order
 import kr.hhplus.be.server.order.domain.OrderContext
 import kr.hhplus.be.server.order.domain.OrderStatus
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
 import java.time.LocalDateTime
 
 class OrderTest {
@@ -28,16 +26,16 @@ class OrderTest {
                 productId = 1L,
                 variantId = 1L,
                 quantity = 1,
-                unitPrice = BigDecimal(1000)
+                unitPrice = Money.of(1000)
             ))
         ))
 
         // act, assert
         order.userId shouldBe 1L
         order.status shouldBe OrderStatus.CREATED
-        order.originalTotal shouldBe BigDecimal(1000)
-        order.discountedAmount shouldBe BigDecimal.ZERO
-        order.orderItems.size shouldBe 1
+        order.originalTotal shouldBe Money.of(1000)
+        order.discountedAmount shouldBe Money.ZERO
+        order.orderItems.size() shouldBe 1
         order.createdAt shouldBe now
         order.updatedAt shouldBe now
     }
@@ -49,29 +47,28 @@ class OrderTest {
         val order = Order(
             id = 1L,
             userId = 1L,
-            originalTotal = BigDecimal(100),
-            discountedAmount = BigDecimal(50),
+            originalTotal = Money.of(100),
+            discountedAmount = Money.of(50),
             createdAt = now,
             updatedAt = now
         )
         // act, assert
-        order.finalTotal() shouldBe BigDecimal(50)
+        order.finalTotal() shouldBe Money.of(50)
     }
     
     @Test
     fun `✅할인 항목 추가_할인 항목이 추가되면 해당 금액만큼 discountedAmount가 증가해야 한다`() {
         // arrange
-        val now = LocalDateTime.now()
-        val order = OrderTestFixture.createOrder(1L)
+        val order = OrderTestFixture.standardOrder(userId = 1L)
         val discountLines = listOf(
             DiscountInfo(
                 orderItemId = 1L,
-                amount = BigDecimal(1000),
+                amount = Money.of(1000),
                 sourceId = 1L,
                 sourceType = "COUPON"),
             DiscountInfo(
                 orderItemId = 2L,
-                amount = BigDecimal(1000),
+                amount = Money.of(1000),
                 sourceId = 1L,
                 sourceType = "COUPON")
         )
@@ -79,22 +76,23 @@ class OrderTest {
         order.applyDiscount(discountLines)
         
         // assert
-        order.discountedAmount shouldBe BigDecimal(2000)
+        order.discountedAmount shouldBe Money.of(2000)
     }
 
     @Test
     fun `✅할인 항목 추가_할인 항목이 추가되면 해당 금액만큼 orderItem의 discountedAmount가 증가해야 한다`() {
         // arrange
-        val order = OrderTestFixture.createOrder(1L)
+        val order = OrderTestFixture.standardOrder(userId = 1L)
+        val orderItems = order.orderItems.asList()
         val discountLines = listOf(
             DiscountInfo(
                 orderItemId = 1L,
-                amount = BigDecimal(1000),
+                amount = Money.of(1000),
                 sourceId = 1L,
                 sourceType = "COUPON"),
             DiscountInfo(
                 orderItemId = 2L,
-                amount = BigDecimal(1000),
+                amount = Money.of(1000),
                 sourceId = 1L,
                 sourceType = "COUPON")
         )
@@ -102,23 +100,23 @@ class OrderTest {
         order.applyDiscount(discountLines)
 
         // assert
-        order.orderItems[0].discountAmount shouldBe BigDecimal(1000)
-        order.orderItems[1].discountAmount shouldBe BigDecimal(1000)
+        orderItems[0].discountAmount shouldBe Money.of(1000)
+        orderItems[1].discountAmount shouldBe Money.of(1000)
     }
 
     @Test
     fun `✅할인 항목 추가 싪패_할인 항목이 추가됐을 때 해당하는 orderItem이 없으면 IllegalStateException 예외를 발생시켜야 한다`() {
         // arrange
-        val order = OrderTestFixture.createOrder(1L)
+        val order = OrderTestFixture.standardOrder(userId = 1L)
         val discountLines = listOf(
             DiscountInfo(
-                orderItemId = 3L,
-                amount = BigDecimal(1000),
+                orderItemId = 3L, // 존재하지 않는 orderItem ID
+                amount = Money.of(1000),
                 sourceId = 1L,
                 sourceType = "COUPON"),
             DiscountInfo(
-                orderItemId = 4L,
-                amount = BigDecimal(1000),
+                orderItemId = 4L, // 존재하지 않는 orderItem ID
+                amount = Money.of(1000),
                 sourceId = 1L,
                 sourceType = "COUPON")
         )
@@ -129,16 +127,20 @@ class OrderTest {
     @Test
     fun `⛔️할인 항목 추가_할인의 총합은 주문 금액 총합을 넘을 수 없다`() {
         // arrange
-        val order = OrderTestFixture.createOrder(1L)
+        val order = OrderTestFixture.order(userId = 1L)
+            .withOriginalTotal(Money.of(10000))
+            .withStandardItems()
+            .build()
+            
         val discountLines = listOf(
             DiscountInfo(
                 orderItemId = 1L,
-                amount = BigDecimal(100000),
+                amount = Money.of(100000), // 주문 금액보다 큰 할인 금액
                 sourceId = 1L,
                 sourceType = "COUPON"),
             DiscountInfo(
                 orderItemId = 2L,
-                amount = BigDecimal(100000),
+                amount = Money.of(100000), // 주문 금액보다 큰 할인 금액
                 sourceId = 1L,
                 sourceType = "COUPON")
         )
@@ -146,7 +148,7 @@ class OrderTest {
         order.applyDiscount(discountLines)
 
         // assert
-        order.discountedAmount shouldBe BigDecimal(10000)
+        order.discountedAmount shouldBe Money.of(10000) // 최대 주문 금액까지만 할인됨
     }
     
     @Test

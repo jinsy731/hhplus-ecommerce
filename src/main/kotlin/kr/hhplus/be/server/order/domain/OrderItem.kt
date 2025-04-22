@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.order.domain
 
 import jakarta.persistence.*
+import kr.hhplus.be.server.common.domain.Money
 import java.math.BigDecimal
 
 @Entity
@@ -21,10 +22,14 @@ class OrderItem(
     val quantity: Int,
 
     @Column(nullable = false)
-    val unitPrice: BigDecimal,
+    @Embedded
+    @AttributeOverride(name = "amount", column = Column(name = "unit_price"))
+    val unitPrice: Money,
 
     @Column(nullable = false)
-    var discountAmount: BigDecimal = BigDecimal.ZERO, // 상품별 할인 금액
+    @Embedded
+    @AttributeOverride(name = "amount", column = Column(name = "discount_amount"))
+    var discountAmount: Money = Money.ZERO, // 상품별 할인 금액
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -34,6 +39,10 @@ class OrderItem(
     @JoinColumn(name = "order_id", nullable = false)
     var order: Order? = null
 ) {
+    @get:Transient
+    val subTotal: Money
+            get() = unitPrice * quantity.toBigDecimal() - discountAmount
+
     companion object {
         fun from(itemContext: List<OrderContext.Create.Item>): MutableList<OrderItem> = itemContext.map { OrderItem(
             productId = it.productId,
@@ -43,14 +52,7 @@ class OrderItem(
         ) }.toMutableList()
     }
 
-    /**
-     * 항목의 소계를 계산합니다.
-     */
-    fun subTotal(): BigDecimal = unitPrice * quantity.toBigDecimal() - discountAmount
-
-    fun subTotalBeforeDiscount(): BigDecimal = unitPrice * quantity.toBigDecimal()
-
-    fun applyDiscount(amount: BigDecimal) {
+    fun applyDiscount(amount: Money) {
         this.discountAmount += amount
     }
 }

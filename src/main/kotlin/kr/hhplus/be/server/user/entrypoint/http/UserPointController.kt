@@ -13,7 +13,7 @@ class UserPointController(private val userPointService: UserPointService) : User
         val result = userPointService.charge(req.toCmd(userId))
         return ResponseEntity.ok(CommonResponse(UserPointResponse.Charge(
             userId = result.userId,
-            point = result.pointAfterCharge,
+            point = result.pointAfterCharge.amount,
             updatedAt = result.updatedAt
         )))
     }
@@ -22,7 +22,7 @@ class UserPointController(private val userPointService: UserPointService) : User
         val result = userPointService.retrievePoint(UserPointCommand.Retrieve(userId))
         return ResponseEntity.ok(CommonResponse(UserPointResponse.Retrieve(
             userId = result.userId,
-            point = result.point,
+            point = result.point.amount,
             updatedAt = result.updatedAt
         )))
     }

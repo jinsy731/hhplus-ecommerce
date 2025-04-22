@@ -3,8 +3,8 @@ package kr.hhplus.be.server.user.entrypoint
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.common.CommonResponse
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.user.UserPointTestFixture
 import kr.hhplus.be.server.user.entrypoint.http.UserPointResponse
 import kr.hhplus.be.server.user.infrastructure.JpaUserPointHistoryRepository
@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.context.annotation.Import
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
@@ -22,7 +21,6 @@ import org.springframework.http.HttpStatus
 import java.math.BigDecimal
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(TestcontainersConfiguration::class)
 class UserPointControllerE2ETest {
 
     @Autowired
@@ -41,8 +39,8 @@ class UserPointControllerE2ETest {
 
     @Test
     fun `잔액 충전 - 성공`() {
-        val userId = 1L
-        val userPoint = UserPointTestFixture.createUserPoint(userId = userId, balance = BigDecimal(1000))
+        val userId = 10L
+        val userPoint = UserPointTestFixture.createUserPoint(userId = userId, balance = Money.of(1000))
         userPointRepository.save(userPoint)
 
         val request = mapOf("amount" to 5000)
@@ -64,7 +62,7 @@ class UserPointControllerE2ETest {
     @Test
     fun `잔액 조회 - 성공`() {
         val userId = 2L
-        val userPoint = UserPointTestFixture.createUserPoint(userId = userId, balance = BigDecimal(1000))
+        val userPoint = UserPointTestFixture.createUserPoint(userId = userId, balance = Money.of(1000))
         userPointRepository.save(userPoint)
 
 

@@ -1,38 +1,31 @@
 package kr.hhplus.be.server.payment.application
 
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.payment.domain.PaymentContext
-import kr.hhplus.be.server.payment.domain.PaymentMethodType
-import org.springframework.data.jpa.domain.AbstractPersistable_.id
-import java.math.BigDecimal
 import java.time.LocalDateTime
+import kotlin.collections.map
 
 class PaymentCommand {
     class Prepare {
         data class Root(
             val order: OrderInfo,
             val timestamp: LocalDateTime,
-            val payMethods: List<PayMethod>
-        )
-
-        data class PayMethod(
-            val type: String,
-            val amount: BigDecimal
         )
 
         data class OrderInfo(
             val id: Long,
             val userId: Long,
             val items: List<OrderItemInfo>,
-            val originalTotal: BigDecimal,
-            val discountedAmount: BigDecimal
+            val originalTotal: Money,
+            val discountedAmount: Money
         )
 
         data class OrderItemInfo(
             val id: Long,
             val productId: Long,
             val variantId: Long,
-            val subTotal: BigDecimal,
-            val discountedAmount: BigDecimal,
+            val subTotal: Money,
+            val discountedAmount: Money,
         )
     }
 
@@ -45,10 +38,6 @@ class PaymentCommand {
 fun PaymentCommand.Prepare.Root.toPreparePaymentContext() = PaymentContext.Prepare.Root(
     order = this.order.toContext(),
     timestamp = this.timestamp,
-    payMethods = this.payMethods.map { PaymentContext.Prepare.PayMethod(
-        type = PaymentMethodType.valueOf(it.type),
-        amount = it.amount
-    ) }
 )
 
 fun PaymentCommand.Prepare.OrderInfo.toContext() = PaymentContext.Prepare.OrderInfo(

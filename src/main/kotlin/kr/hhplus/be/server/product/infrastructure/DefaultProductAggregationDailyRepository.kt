@@ -28,6 +28,13 @@ class DefaultProductAggregationDailyRepository(
         return jpaRepository.findAllById(ids)
     }
 
+    override fun findTopProductsForRange(
+        from: LocalDate,
+        to: LocalDate,
+        limit: Int
+    ): List<Map<String, Any>> {
+        return jpaRepository.findTopProductsForRange(from, to, limit)
+    }
 }
 
 interface JpaProductSalesAggregationDailyRepository: JpaRepository<ProductSalesAggregationDaily, ProductSalesAggregationDailyId> {
@@ -49,4 +56,18 @@ interface JpaProductSalesAggregationDailyRepository: JpaRepository<ProductSalesA
         @Param("toDate") toDate: LocalDate,
         @Param("limit") limit: Int
     ): List<ProductSalesAggregate>
+
+    @Query("""
+    SELECT product_id, SUM(sales_count) as total_sales
+    FROM p_sales_agg_day
+    WHERE sales_day BETWEEN :from AND :to
+    GROUP BY product_id
+    ORDER BY total_sales DESC
+    LIMIT :limit
+""", nativeQuery = true)
+    fun findTopProductsForRange(
+        @Param("from") from: LocalDate,
+        @Param("to") to: LocalDate,
+        @Param("limit") limit: Int
+    ): List<Map<String, Any>>
 }

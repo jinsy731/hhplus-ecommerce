@@ -5,12 +5,12 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.InsufficientPointException
 import kr.hhplus.be.server.common.exception.InvalidChargeAmountException
 import kr.hhplus.be.server.user.domain.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
 import java.time.LocalDateTime
 
 class UserPointServiceTest {
@@ -30,8 +30,8 @@ class UserPointServiceTest {
         // arrange
         val time = LocalDateTime.now()
         val userId = 1L
-        val initialBalance = BigDecimal(100)
-        val chargeAmount = BigDecimal(100)
+        val initialBalance = Money.of(100)
+        val chargeAmount = Money.of(100)
         val finalBalance = initialBalance + chargeAmount
         
         val userPoint = UserPoint(1L, userId, initialBalance).apply { this.createdAt = time }
@@ -76,8 +76,8 @@ class UserPointServiceTest {
         // arrange
         val time = LocalDateTime.now()
         val userId = 1L
-        val initialBalance = BigDecimal(100)
-        val chargeAmount = BigDecimal.ZERO
+        val initialBalance = Money.of(100)
+        val chargeAmount = Money.ZERO
 
         val userPoint = UserPoint(1L, userId, initialBalance)
 
@@ -102,8 +102,8 @@ class UserPointServiceTest {
         // arrange
         val time = LocalDateTime.now()
         val userId = 1L
-        val initialBalance = BigDecimal(100)
-        val useAmount = BigDecimal(100)
+        val initialBalance = Money.of(100)
+        val useAmount = Money.of(100)
         val finalBalance = initialBalance - useAmount
 
         val userPoint = UserPoint(1L, userId, initialBalance).apply { this.createdAt = time }
@@ -146,8 +146,8 @@ class UserPointServiceTest {
         // arrange
         val time = LocalDateTime.now()
         val userId = 1L
-        val initialBalance = BigDecimal(100)
-        val useAmount = BigDecimal(101)
+        val initialBalance = Money.of(100)
+        val useAmount = Money.of(101)
 
         val userPoint = UserPoint(1L, userId, initialBalance).apply { this.createdAt = time }
 
@@ -172,7 +172,7 @@ class UserPointServiceTest {
     fun `✅유저 포인트 조회`() {
         // arrange
         val userId = 1L
-        val balance = BigDecimal(100)
+        val balance = Money.of(100)
         val time = LocalDateTime.now()
         val userPoint = UserPoint(1L, userId, balance).apply { this.updatedAt = time }
         val cmd = UserPointCommand.Retrieve(userId)

@@ -1,8 +1,7 @@
 package kr.hhplus.be.server.product.entrypoint.http
 
 import io.swagger.v3.oas.annotations.media.Schema
-import kr.hhplus.be.server.common.PageInfo
-import kr.hhplus.be.server.common.toResponse
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.product.application.ProductResult
 import kr.hhplus.be.server.product.domain.product.ProductStatus
 import java.math.BigDecimal
@@ -14,10 +13,7 @@ class ProductResponse {
         @Schema(description = "상품 목록 응답")
         data class Lists(
             @Schema(description = "상품 리스트")
-            val products: List<ProductDetail>,
-
-            @Schema(description = "페이지 정보")
-            val pageInfo: PageInfo
+            val products: List<ProductSummary>,
         )
 
         @Schema(description = "인기 상품 정보")
@@ -77,7 +73,7 @@ class ProductResponse {
     )
 
     @Schema(description = "상품 정보")
-    data class ProductDetail(
+    data class ProductSummary(
         @Schema(description = "상품 ID", example = "1")
         val productId: Long,
 
@@ -85,31 +81,22 @@ class ProductResponse {
         val name: String,
 
         @Schema(description = "기본 금액", example = "29000")
-        val basePrice: BigDecimal,
+        val basePrice: Money,
 
         @Schema(description = "상품 상태", example = "ON_SALE")
         val status: ProductStatus,
-
-        @Schema(description = "옵션 스펙 배열")
-        val optionSpecs: List<OptionSpecDetail>,
-
-        @Schema(description = "옵션 조합 배열")
-        val variants: List<ProductVariantDetail>
     )
 }
 
 fun ProductResult.RetrieveList.toProductResponse() = ProductResponse.Retrieve.Lists(
-    products = this.products.toProductResponse(),
-    pageInfo = this.pageResult.toResponse(),
+    products = this.products.toProductResponse()
 )
 
-fun List<ProductResult.ProductDetail>.toProductResponse() = this.map { ProductResponse.ProductDetail(
+fun List<ProductResult.ProductSummary>.toProductResponse() = this.map { ProductResponse.ProductSummary(
     productId = it.productId!!,
     name = it.name,
     basePrice = it.basePrice,
     status = it.status,
-    optionSpecs = it.optionSpecs.toOptionSpecResponse(),
-    variants = it.variants.toVaraintResponse()
 )}.toList()
 
 fun List<ProductResult.OptionValueDetail>.toOptionValueResponse() = this.map { ProductResponse.OptionValueDetail(
@@ -124,10 +111,10 @@ fun List<ProductResult.OptionSpecDetail>.toOptionSpecResponse() = this.map { Pro
     values = it.values.toOptionValueResponse()
 )}
 
-fun List<ProductResult.ProductVariantDetail>.toVaraintResponse() = this.map { ProductResponse.ProductVariantDetail(
+fun List<ProductResult.ProductVariantDetail>.toVariantResponse() = this.map { ProductResponse.ProductVariantDetail(
     variantId = it.variantId!!,
     optionValueIds = it.optionValueIds,
-    additionalPrice = it.additionalPrice,
+    additionalPrice = it.additionalPrice.amount,
     status = it.status,
     stock = it.stock
 )}

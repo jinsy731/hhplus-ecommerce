@@ -62,7 +62,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-web")
-
+	implementation("p6spy:p6spy:3.9.1")
     // DB
 	runtimeOnly("com.mysql:mysql-connector-j")
 

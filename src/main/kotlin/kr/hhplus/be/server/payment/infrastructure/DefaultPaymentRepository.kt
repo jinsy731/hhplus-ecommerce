@@ -15,4 +15,8 @@ class DefaultPaymentRepository(private val jpaRepository: JpaPaymentRepository):
     override fun getById(id: Long): Payment {
         return jpaRepository.findById(id).getOrElse { throw ResourceNotFoundException() }
     }
+
+    override fun getByOrderId(orderId: Long): Payment {
+        return jpaRepository.findByOrderId(orderId) ?: throw ResourceNotFoundException()
+    }
 }

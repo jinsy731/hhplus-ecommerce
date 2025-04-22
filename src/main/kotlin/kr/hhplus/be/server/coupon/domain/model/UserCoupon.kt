@@ -49,7 +49,7 @@ class UserCoupon(
      * 쿠폰 사용 처리
      */
     fun use(now: LocalDateTime) {
-        coupon.validate(now)
+        coupon.validatUsability(now)
         check(status == UserCouponStatus.UNUSED) { throw InvalidCouponStatusException() }
         check(expiredAt.isAfter(now)) {
             this.status = UserCouponStatus.EXPIRED

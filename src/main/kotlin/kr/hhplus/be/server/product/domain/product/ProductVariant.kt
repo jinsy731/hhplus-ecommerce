@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.product.domain.product
 
 import jakarta.persistence.*
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.VariantOutOfStockException
 import kr.hhplus.be.server.common.exception.VariantUnavailableException
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
@@ -20,7 +21,9 @@ class ProductVariant(
     var product: Product? = null,
 
     @Column(nullable = false)
-    var additionalPrice: BigDecimal = BigDecimal.ZERO,
+    @Embedded
+    @AttributeOverride(name = "amount", column = Column(name = "additional_price"))
+    var additionalPrice: Money = Money.ZERO,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

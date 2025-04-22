@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.payment.domain
 
 import jakarta.persistence.*
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
 import kr.hhplus.be.server.common.exception.AlreadyPaidException
 import java.math.BigDecimal
@@ -34,11 +35,15 @@ class Payment(
 
     // 기존 가격
     @Column(nullable = false)
-    val originalAmount: BigDecimal,
+    @Embedded
+    @AttributeOverride(name = "amount", column = Column(name = "original_amount"))
+    val originalAmount: Money,
 
     // 할인된 가격
     @Column(nullable = false)
-    val discountedAmount: BigDecimal,
+    @Embedded
+    @AttributeOverride(name = "amount", column = Column(name = "discounted_amount"))
+    val discountedAmount: Money,
 
     // 결제 상태
     @Enumerated(EnumType.STRING)
@@ -50,9 +55,6 @@ class Payment(
 
     @OneToMany(mappedBy = "payment", cascade = [CascadeType.ALL], orphanRemoval = true)
     val details: MutableList<PaymentItemDetail> = mutableListOf(),
-
-    @OneToMany(mappedBy = "payment", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val methods: MutableList<PaymentMethod> = mutableListOf()
 ) : BaseTimeEntity() {
 
     companion object {
@@ -63,7 +65,6 @@ class Payment(
                 discountedAmount = context.order.discountedAmount,
                 timestamp = context.timestamp,
                 details = PaymentItemDetail.create(context.order),
-                methods = PaymentMethod.create(context.payMethods)
             )
         }
     }

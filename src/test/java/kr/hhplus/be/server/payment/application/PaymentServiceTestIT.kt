@@ -4,19 +4,18 @@ import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
-import kr.hhplus.be.server.SpringBootTestWithMySQLContainer
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.AlreadyPaidException
 import kr.hhplus.be.server.common.exception.ResourceNotFoundException
-import kr.hhplus.be.server.payment.domain.PaymentMethodType
 import kr.hhplus.be.server.payment.domain.PaymentRepository
 import kr.hhplus.be.server.payment.domain.PaymentStatus
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
-import java.math.BigDecimal
 import java.time.LocalDateTime
 
-@SpringBootTestWithMySQLContainer
+@SpringBootTest
 class PaymentServiceTestIT {
 
     @Autowired
@@ -43,8 +42,7 @@ class PaymentServiceTestIT {
         payment.timestamp shouldBe cmd.timestamp
         
         payment.details shouldHaveSize 2
-        payment.methods shouldHaveSize 2
-        
+
         // DB에 저장된 결제 정보 확인
         val savedPayment = paymentRepository.getById(payment.id)
         savedPayment.id shouldBe payment.id
@@ -102,40 +100,30 @@ class PaymentServiceTestIT {
             id = 101L,
             productId = 1001L,
             variantId = 10001L,
-            subTotal = BigDecimal("50000"),
-            discountedAmount = BigDecimal("5000")
+            subTotal = Money.of(50000),
+            discountedAmount = Money.of(5000)
         )
         
         val orderItemInfo2 = PaymentCommand.Prepare.OrderItemInfo(
             id = 102L,
             productId = 1002L,
             variantId = 10002L,
-            subTotal = BigDecimal("30000"),
-            discountedAmount = BigDecimal("3000")
+            subTotal = Money.of(30000),
+            discountedAmount = Money.of(3000)
         )
         
         val orderInfo = PaymentCommand.Prepare.OrderInfo(
             id = 1L,
             userId = 100L,
             items = listOf(orderItemInfo1, orderItemInfo2),
-            originalTotal = BigDecimal("80000"),
-            discountedAmount = BigDecimal("8000")
+            originalTotal = Money.of(80000),
+            discountedAmount = Money.of(8000)
         )
-        
-        val payMethod1 = PaymentCommand.Prepare.PayMethod(
-            type = PaymentMethodType.CREDIT_CARD.name,
-            amount = BigDecimal("60000")
-        )
-        
-        val payMethod2 = PaymentCommand.Prepare.PayMethod(
-            type = PaymentMethodType.POINT.name,
-            amount = BigDecimal("12000")
-        )
+
         
         return PaymentCommand.Prepare.Root(
             order = orderInfo,
             timestamp = LocalDateTime.now(),
-            payMethods = listOf(payMethod1, payMethod2)
         )
     }
 }

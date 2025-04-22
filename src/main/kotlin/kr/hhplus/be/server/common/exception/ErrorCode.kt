@@ -13,6 +13,7 @@ enum class ErrorCode(
     EXPIRED_COUPON(HttpStatus.CONFLICT, "CP002", "만료된 쿠폰입니다."),
     EXCEEDED_MAX_COUPON_LIMIT(HttpStatus.CONFLICT, "CP003", "발급 가능한 쿠폰 수량을 초과하였습니다."),
     COUPON_TARGET_NOT_FOUND(HttpStatus.CONFLICT, "CP004", "쿠폰 적용 가능한 상품이 없습니다."),
+    DUPLICATE_COUPON_ISSUE(HttpStatus.CONFLICT , "CP005", "이미 발급받은 쿠폰입니다."),
 
     EMPTY_ORDER_ITEM(HttpStatus.BAD_REQUEST, "O001", "주문 항목이 비어있습니다."),
     ALREADY_PAID_ORDER(HttpStatus.CONFLICT, "O002", "이미 결제된 주문입니다."),

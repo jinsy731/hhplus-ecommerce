@@ -3,19 +3,18 @@ package kr.hhplus.be.server.user.application
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.SpringBootTestWithMySQLContainer
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.user.UserPointTestFixture
 import kr.hhplus.be.server.user.domain.TransactionType
-import kr.hhplus.be.server.user.domain.UserPoint
 import kr.hhplus.be.server.user.domain.UserPointHistoryRepository
 import kr.hhplus.be.server.user.domain.UserPointRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import java.math.BigDecimal
+import org.springframework.boot.test.context.SpringBootTest
 import java.time.LocalDateTime
 
-@SpringBootTestWithMySQLContainer
+@SpringBootTest
 class UserPointServiceIntegrationTest {
 
     @Autowired
@@ -31,7 +30,7 @@ class UserPointServiceIntegrationTest {
     private lateinit var databaseCleaner: MySqlDatabaseCleaner
 
     @AfterEach
-    fun clean() {
+    fun tearDown() {
         databaseCleaner.clean()
     }
 
@@ -39,11 +38,11 @@ class UserPointServiceIntegrationTest {
     fun `사용자의 포인트를 충전하면 잔액과 히스토리가 업데이트된다`() {
         // Arrange
         val userId = 1L
-        val initialPoint = UserPointTestFixture.createUserPoint(userId = userId, balance = BigDecimal.ZERO)
+        val initialPoint = UserPointTestFixture.userPoint(userId = userId, balance = Money.ZERO).build()
         userPointRepository.save(initialPoint)
 
         val now = LocalDateTime.now()
-        val chargeAmount = BigDecimal(5000)
+        val chargeAmount = Money.of(5000)
         val command = UserPointCommand.Charge(userId, chargeAmount, now)
 
         // Act
@@ -71,11 +70,11 @@ class UserPointServiceIntegrationTest {
     fun `사용자의 포인트를 사용할 수 있다`() {
         // Arrange
         val userId = 2L
-        val initialBalance = BigDecimal(10000)
-        val initialPoint = UserPointTestFixture.createUserPoint(userId = userId, balance = initialBalance)
+        val initialBalance = Money.of(10000)
+        val initialPoint = UserPointTestFixture.userPoint(userId = userId, balance = initialBalance).build()
         userPointRepository.save(initialPoint)
 
-        val useAmount = BigDecimal(3000)
+        val useAmount = Money.of(3000)
         val now = LocalDateTime.now()
         val command = UserPointCommand.Use(userId, useAmount, now)
 
@@ -100,9 +99,9 @@ class UserPointServiceIntegrationTest {
     fun `사용자의 포인트를 조회할 수 있다`() {
         // Arrange
         val userId = 3L
-        val balance = BigDecimal(7000)
+        val balance = Money.of(7000)
         val now = LocalDateTime.now()
-        val userPoint = UserPointTestFixture.createUserPoint(userId = userId, balance = balance, updatedAt = now)
+        val userPoint = UserPointTestFixture.userPoint(userId = userId, balance = balance, updatedAt = now).build()
         userPointRepository.save(userPoint)
 
         val command = UserPointCommand.Retrieve(userId)

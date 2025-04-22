@@ -1,7 +1,9 @@
 package kr.hhplus.be.server.order.application
 
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.order.domain.Order
 import kr.hhplus.be.server.order.domain.OrderItem
+import kr.hhplus.be.server.order.domain.OrderItems
 import java.math.BigDecimal
 
 /**
@@ -12,8 +14,8 @@ data class OrderInfo(
     val id: Long,
     val userId: Long,
     val items: List<OrderItemInfo>,
-    val originalTotal: BigDecimal,
-    val discountedAmount: BigDecimal
+    val originalTotal: Money,
+    val discountedAmount: Money
 )
 
 /**
@@ -24,7 +26,7 @@ data class OrderItemInfo(
     val productId: Long,
     val variantId: Long,
     val quantity: Int,
-    val unitPrice: BigDecimal
+    val unitPrice: Money
 )
 
 fun Order.toOrderInfo(): OrderInfo = OrderInfo(
@@ -35,7 +37,7 @@ fun Order.toOrderInfo(): OrderInfo = OrderInfo(
     discountedAmount = this.discountedAmount
 )
 
-fun List<OrderItem>.toOrderItemInfo(): List<OrderItemInfo> = this.map { OrderItemInfo(
+fun OrderItems.toOrderItemInfo(): List<OrderItemInfo> = this.asList().map { OrderItemInfo(
     id = it.id,
     productId = it.productId,
     variantId = it.variantId,

@@ -4,24 +4,25 @@ import kr.hhplus.be.server.common.PageResult
 import kr.hhplus.be.server.common.exception.ResourceNotFoundException
 import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductRepository
-import kr.hhplus.be.server.product.infrastructure.JpaProductSalesAggregationDailyRepository
+import kr.hhplus.be.server.product.domain.stats.PopularProductDailyId
+import kr.hhplus.be.server.product.infrastructure.JpaPopularProductsDailyRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.lang.IllegalStateException
+import java.time.LocalDate
 
 @Service
 @Transactional(readOnly = true)
 class ProductService(
     private val productRepository: ProductRepository,
-    private val productSalesAggregationDailyRepository: JpaProductSalesAggregationDailyRepository
+    private val popularProductsDailyRepository: JpaPopularProductsDailyRepository
 ) {
 
 
     fun retrieveList(cmd: ProductCommand.RetrieveList): ProductResult.RetrieveList {
-        val productPage = productRepository.searchByNameContaining(cmd.keyword, cmd.pageable) // TODO: pageable 말고 Spring 의존적이지 않은 파라미터를 써야하나 ?
+        val products = productRepository.searchByNameContaining(cmd.keyword, cmd.lastId, cmd.pageable) // TODO: pageable 말고 Spring 의존적이지 않은 파라미터를 써야하나 ?
         return ProductResult.RetrieveList(
-            products = productPage.content.map { it.toProductDetail() },
-            pageResult = PageResult.of(productPage)
+            products = products.map { it.toProductDetail() },
         )
     }
 
@@ -48,18 +49,17 @@ class ProductService(
     
 
     fun retrievePopular(cmd: ProductCommand.RetrievePopularProducts): List<ProductResult.PopularProduct> {
-        val salesAggregates = productSalesAggregationDailyRepository.findPopularProducts(
-            fromDate = cmd.fromDate,
-            toDate = cmd.toDate,
-            limit = cmd.limit
+        // 지정된 날짜로부터 랭킹 조회 (fromDate ~ toDate까지)
+        val salesAggregates = popularProductsDailyRepository.findAllById(
+            (1..cmd.limit).map { PopularProductDailyId(cmd.toDate, it) }
         )
-        val products = productRepository.findAll(salesAggregates.map { it.getProductId() })
+        val products = productRepository.findAll(salesAggregates.map { it.productId })
         
         return salesAggregates.map { aggregate ->
             ProductResult.PopularProduct(
-                productId = aggregate.getProductId(),
-                name = products.find { it.id == aggregate.getProductId() }?.name ?: throw IllegalStateException(),
-                totalSales = aggregate.getTotalSales().toInt()
+                productId = aggregate.productId,
+                name = products.find { it.id == aggregate.productId }?.name ?: throw IllegalStateException(),
+                totalSales = aggregate.totalSales.toInt()
             )
         }
     }
