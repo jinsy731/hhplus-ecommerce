@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import kr.hhplus.be.server.common.CommonResponse
+import org.springframework.data.domain.Pageable
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -23,10 +25,11 @@ interface ProductApiSpec {
         ]
     )
     @GetMapping
-    fun getProducts(
-        @RequestParam(defaultValue = "0") page: Int,
-        @RequestParam(defaultValue = "20") size: Int
-    ): CommonResponse<ProductResponse.Retrieve.Lists>
+    fun retrieveLists(
+        pageable: Pageable,
+        @RequestParam keyword: String? = "",
+        @RequestParam lastId: Long?,
+    ): ResponseEntity<CommonResponse<ProductResponse.Retrieve.Lists>>
 
     @Operation(
         summary = "인기 상품 조회",
@@ -36,5 +39,5 @@ interface ProductApiSpec {
         ]
     )
     @GetMapping("/popular")
-    fun getPopularProducts(): CommonResponse<List<ProductResponse.Retrieve.Popular>>
+    fun retrievePopular(): ResponseEntity<CommonResponse<List<ProductResponse.Retrieve.Popular>>>
 }

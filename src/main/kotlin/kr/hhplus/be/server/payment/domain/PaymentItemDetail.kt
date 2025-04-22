@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.payment.domain
 
 import jakarta.persistence.*
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
 import java.math.BigDecimal
 
@@ -21,11 +22,15 @@ class PaymentItemDetail(
 
     // 기존 가격
     @Column(nullable = false)
-    val originalAmount: BigDecimal,
+    @Embedded
+    @AttributeOverride(name = "amount", column = Column(name = "original_amount"))
+    val originalAmount: Money,
 
     // 할인된 가격
     @Column(nullable = false)
-    val discountedAmount: BigDecimal,
+    @Embedded
+    @AttributeOverride(name = "amount", column = Column(name = "discounted_amount"))
+    val discountedAmount: Money,
 
     // 환불 여부
     @Column(nullable = false)

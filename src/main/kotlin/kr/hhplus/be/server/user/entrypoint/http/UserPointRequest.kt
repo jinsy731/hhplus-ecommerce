@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.user.entrypoint.http
 
 import io.swagger.v3.oas.annotations.media.Schema
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.user.application.UserPointCommand
 import kr.hhplus.be.server.user.entrypoint.http.UserPointRequest.Charge
 import java.math.BigDecimal
@@ -13,4 +14,4 @@ class UserPointRequest {
     )
 }
 
-fun Charge.toCmd(userId: Long) = UserPointCommand.Charge(userId, amount)
+fun Charge.toCmd(userId: Long) = UserPointCommand.Charge(userId, Money.of(amount))

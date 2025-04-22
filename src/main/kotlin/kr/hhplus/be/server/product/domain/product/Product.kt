@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.product.domain.product
 
 import jakarta.persistence.*
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.ProductUnavailableException
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
 import java.math.BigDecimal
@@ -27,7 +28,9 @@ class Product(
     var name: String,
 
     @Column(nullable = false)
-    var basePrice: BigDecimal,
+    @Embedded
+    @AttributeOverride(name = "amount", column = Column(name = "base_price"))
+    var basePrice: Money,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -60,7 +63,7 @@ class Product(
         findVariant(variantId)?.checkAvailableToOrder(quantity)
     }
 
-    fun getVariantPrice(variantId: Long): BigDecimal {
+    fun getVariantPrice(variantId: Long): Money {
         return (this.basePrice + findVariant(variantId).additionalPrice)
     }
 

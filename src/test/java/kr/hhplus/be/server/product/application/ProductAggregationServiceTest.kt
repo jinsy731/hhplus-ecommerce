@@ -1,10 +1,14 @@
 package kr.hhplus.be.server.product.application
 
 import io.kotest.matchers.shouldBe
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import kr.hhplus.be.server.product.domain.stats.PopularProductDailyId
+import kr.hhplus.be.server.product.domain.stats.PopularProductsDaily
 import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDaily
 import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyCheckpoint
 import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyCheckpointRepository
@@ -13,6 +17,7 @@ import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyRepo
 import kr.hhplus.be.server.product.domain.stats.ProductSalesLog
 import kr.hhplus.be.server.product.domain.stats.ProductSalesLogRepository
 import kr.hhplus.be.server.product.domain.stats.TransactionType
+import kr.hhplus.be.server.product.infrastructure.JpaPopularProductsDailyRepository
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -23,10 +28,13 @@ class ProductAggregationServiceTest {
     private val mockProductSalesLogRepository = mockk<ProductSalesLogRepository>()
     private val mockProductSalesAggregationDailyRepository = mockk<ProductSalesAggregationDailyRepository>()
     private val mockProductSalesAggregationCheckpointRepository = mockk<ProductSalesAggregationDailyCheckpointRepository>()
+    private val mockPopularProductDailyRepository = mockk<JpaPopularProductsDailyRepository>()
     private val sut = ProductAggregationService(
         mockProductSalesLogRepository,
         mockProductSalesAggregationDailyRepository,
-        mockProductSalesAggregationCheckpointRepository
+        mockProductSalesAggregationCheckpointRepository,
+        mockPopularProductDailyRepository
+
     )
     
     @Test
@@ -34,8 +42,8 @@ class ProductAggregationServiceTest {
         // arrange
         val day = LocalDate.of(2025, 5, 1)
         val lastCheckpointId = 1L
-        val lastCheckpoint = ProductSalesAggregationDailyCheckpoint(lastCheckpointId)
-        val newCheckpoint = ProductSalesAggregationDailyCheckpoint(5L)
+        val lastCheckpoint = ProductSalesAggregationDailyCheckpoint(lastAggregatedLogId = lastCheckpointId)
+        val newCheckpoint = ProductSalesAggregationDailyCheckpoint(lastAggregatedLogId = 5L)
         val checkpointSlot = slot<ProductSalesAggregationDailyCheckpoint>()
         val product1AggregationSlot = slot<ProductSalesAggregationDaily>()
         val product2AggregationSlot = slot<ProductSalesAggregationDaily>()
@@ -85,6 +93,13 @@ class ProductAggregationServiceTest {
         every { mockProductSalesAggregationCheckpointRepository.save(capture(checkpointSlot)) } returns newCheckpoint
         every { mockProductSalesAggregationDailyRepository.findAll(any())} returns listOf(product1AggregationDaily, product2AggregationDaily)
         every { mockProductSalesAggregationDailyRepository.save(capture(product1AggregationSlot)) } returns mockk()
+        every { mockPopularProductDailyRepository.deleteAllById(any())} just Runs
+        every { mockProductSalesAggregationDailyRepository.findTopProductsForRange(any(), any(), any()) } returns listOf(mapOf(
+            "product_id" to 1L,
+            "total_sales" to 100
+        ))
+        every { mockPopularProductDailyRepository.saveAll(any<List<PopularProductsDaily>>()) } returns emptyList()
+        
         // act
         sut.aggregateSinceLastSummary(10, day)
         // assert
@@ -101,6 +116,12 @@ class ProductAggregationServiceTest {
         every { mockProductSalesAggregationDailyRepository.findAll(any()) } returns emptyList()
         every { mockProductSalesAggregationCheckpointRepository.findLast() } returns null
         every { mockProductSalesLogRepository.findForBatch(any(), any()) } returns emptyList()
+        every { mockPopularProductDailyRepository.deleteAllById(any())} just Runs
+        every { mockProductSalesAggregationDailyRepository.findTopProductsForRange(any(), any(), any()) } returns listOf(mapOf(
+            "product_id" to 1L,
+            "total_sales" to 100
+        ))
+        every { mockPopularProductDailyRepository.saveAll(any<List<PopularProductsDaily>>()) } returns emptyList()
 
         // act
         sut.aggregateSinceLastSummary(10, today)
@@ -132,6 +153,12 @@ class ProductAggregationServiceTest {
         every { mockProductSalesAggregationDailyRepository.findAll(any()) } returns emptyList()
         every { mockProductSalesAggregationDailyRepository.save(capture(newAggSlot)) } returns mockk()
         every { mockProductSalesAggregationCheckpointRepository.save(capture(checkpointSlot)) } returns mockk()
+        every { mockPopularProductDailyRepository.deleteAllById(any())} just Runs
+        every { mockProductSalesAggregationDailyRepository.findTopProductsForRange(any(), any(), any()) } returns listOf(mapOf(
+            "product_id" to 1L,
+            "total_sales" to 100
+        ))
+        every { mockPopularProductDailyRepository.saveAll(any<List<PopularProductsDaily>>()) } returns emptyList()
 
         // act
         sut.aggregateSinceLastSummary(10, today)
@@ -158,6 +185,12 @@ class ProductAggregationServiceTest {
         every { mockProductSalesAggregationDailyRepository.findAll(any()) } returns emptyList()
         every { mockProductSalesAggregationDailyRepository.save(capture(savedAggSlot)) } returns mockk()
         every { mockProductSalesAggregationCheckpointRepository.save(capture(checkpointSlot)) } returns mockk()
+        every { mockPopularProductDailyRepository.deleteAllById(any())} just Runs
+        every { mockProductSalesAggregationDailyRepository.findTopProductsForRange(any(), any(), any()) } returns listOf(mapOf(
+            "product_id" to 1L,
+            "total_sales" to 100
+        ))
+        every { mockPopularProductDailyRepository.saveAll(any<List<PopularProductsDaily>>()) } returns emptyList()
 
         // act
         sut.aggregateSinceLastSummary(10, today)

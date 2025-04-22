@@ -5,6 +5,7 @@ class InvalidCouponStatusException: BusinessException(ErrorCode.INVALID_COUPON_S
 class ExpiredCouponException: BusinessException(ErrorCode.EXPIRED_COUPON)
 class ExceededMaxCouponLimitException: BusinessException(ErrorCode.EXCEEDED_MAX_COUPON_LIMIT)
 class CouponTargetNotFoundException: BusinessException(ErrorCode.COUPON_TARGET_NOT_FOUND)
+class DuplicateCouponIssueException: BusinessException(ErrorCode.DUPLICATE_COUPON_ISSUE)
 
 
 // Payment

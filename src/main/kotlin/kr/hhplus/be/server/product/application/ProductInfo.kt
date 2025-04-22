@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.product.application
 
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductVariant
 import java.math.BigDecimal
@@ -17,7 +18,7 @@ class ProductInfo {
         )
         data class Variant(
             val variantId: Long,
-            val unitPrice: BigDecimal
+            val unitPrice: Money
         )
     }
 }
@@ -31,7 +32,7 @@ fun List<Product>.toCreateOrderProductInfo(): List<ProductInfo.CreateOrder.Root>
 
 fun List<ProductVariant>.toCreateOrderProductInfo(product: Product): List<ProductInfo.CreateOrder.Variant> {
     return this.map { variant -> ProductInfo.CreateOrder.Variant(
-        variantId = variant.id,
-        unitPrice = product.getVariantPrice(variant.id)
+        variantId = variant.id!!,
+        unitPrice = product.getVariantPrice(variant.id!!)
     ) }
 }

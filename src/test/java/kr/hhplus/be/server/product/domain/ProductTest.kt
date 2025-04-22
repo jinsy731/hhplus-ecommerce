@@ -3,6 +3,7 @@ package kr.hhplus.be.server.product.domain
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.ProductUnavailableException
 import kr.hhplus.be.server.product.ProductTestFixture
 import kr.hhplus.be.server.product.domain.product.ProductVariant
@@ -17,7 +18,7 @@ class ProductTest {
     @EnumSource(value = kr.hhplus.be.server.product.domain.product.ProductStatus::class, names = ["ON_SALE", "PARTIALLY_OUT_OF_STOCK"])
     fun `✅주문 시 상품 검증 성공`(status: kr.hhplus.be.server.product.domain.product.ProductStatus) {
         // arrange
-        val product = ProductTestFixture.createValidProduct(id = 1L).apply { this.status = status }
+        val product = ProductTestFixture.createValidProduct(id = 1L, variantIds = listOf(1,2)).apply { this.status = status }
 
         // act, assert
         shouldNotThrowAny { product.validatePurchasability(variantId = 1L, quantity = 1) }
@@ -29,7 +30,7 @@ class ProductTest {
         // arrange
         val product = kr.hhplus.be.server.product.domain.product.Product(
             name = "상품 A",
-            basePrice = BigDecimal(1000),
+            basePrice = Money(BigDecimal(1000)),
             status = status
         )
         // act, assert
@@ -41,12 +42,12 @@ class ProductTest {
         // arrange
         val product = kr.hhplus.be.server.product.domain.product.Product(
             name = "상품 A",
-            basePrice = BigDecimal(1000),
+            basePrice = Money(BigDecimal(1000)),
             status = kr.hhplus.be.server.product.domain.product.ProductStatus.ON_SALE,
             variants = mutableListOf(
                 ProductVariant(
                     id = 1L,
-                    additionalPrice = BigDecimal(500),
+                    additionalPrice = Money(BigDecimal(500)),
                     stock = 10
                 )
             )
@@ -54,13 +55,13 @@ class ProductTest {
         // act
         val variantPrice = product.getVariantPrice(1L)
         // assert
-        variantPrice shouldBe BigDecimal(1500)
+        variantPrice shouldBe Money.of(1500)
     }
     
     @Test
     fun `✅상품 구매_검증이 통과하면 상품옵션별 재고가 감소해야한다`() {
         // arrange
-        val product = ProductTestFixture.createValidProduct()
+        val product = ProductTestFixture.createValidProduct(variantIds = listOf(1,2))
         // act
         product.reduceStockByPurchase(1L, 1)
         // assert

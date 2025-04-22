@@ -2,32 +2,30 @@ package kr.hhplus.be.server.coupon.entrypoint.http
 
 import kr.hhplus.be.server.common.CommonResponse
 import kr.hhplus.be.server.common.PageInfo
+import kr.hhplus.be.server.coupon.application.CouponService
+import org.springframework.data.domain.Pageable
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDateTime
 
 @RestController
 @RequestMapping("/api/v1/users")
-class UserCouponController: UserCouponApiSpec {
+class UserCouponController(private val couponService: CouponService): UserCouponApiSpec {
 
     @PostMapping("/{userId}/coupons")
     override fun issueCoupon(
         @PathVariable userId: Long,
         @RequestBody request: CouponRequest.Issue
     ): CommonResponse<CouponResponse.Issue> {
-        val result = CouponResponse.Issue(1234, "UNUSED")
-        return CommonResponse(result)
+        val result = couponService.issueCoupon(request.toCmd(userId))
+        return CommonResponse(result.toResponse())
     }
 
     @GetMapping("/{userId}/coupons")
-    override fun getCoupons(
-        @PathVariable userId: Long
-    ): CommonResponse<CouponResponse.Retrieve> {
-        val result = CouponResponse.Retrieve(
-            listOf(
-                CouponResponse.UserCouponData(123, "신규가입 5천원", "FIXED", "5000", "UNUSED", LocalDateTime.of(2025, 5, 1, 10, 0, 0))
-            ),
-            PageInfo(0, 20, 31, 4)
-        )
-        return CommonResponse(result)
+    override fun retrieveLists(
+        @PathVariable userId: Long,
+        pageable: Pageable,
+    ): CommonResponse<CouponResponse.RetrieveLists> {
+        val result = couponService.retrieveLists(userId, pageable)
+        return CommonResponse(result.toResponse())
     }
 }

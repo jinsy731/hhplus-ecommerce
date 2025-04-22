@@ -2,6 +2,8 @@ package kr.hhplus.be.server.coupon.domain.model
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -40,14 +42,14 @@ class UserCoupon(
     @Column
     var usedAt: LocalDateTime? = null,
 
-    @Column(nullable = false)
+    @Column(nullable = false) @Enumerated(EnumType.STRING)
     var status: UserCouponStatus = UserCouponStatus.UNUSED,
 ) {
     /**
      * 쿠폰 사용 처리
      */
     fun use(now: LocalDateTime) {
-        coupon.validate(now)
+        coupon.validatUsability(now)
         check(status == UserCouponStatus.UNUSED) { throw InvalidCouponStatusException() }
         check(expiredAt.isAfter(now)) {
             this.status = UserCouponStatus.EXPIRED

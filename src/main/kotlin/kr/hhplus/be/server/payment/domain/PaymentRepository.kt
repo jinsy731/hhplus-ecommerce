@@ -8,4 +8,5 @@ interface PaymentRepository {
     fun save(payment: Payment): Payment
 
     fun getById(id: Long): Payment
+    fun getByOrderId(orderId: Long): Payment
 }

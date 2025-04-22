@@ -3,6 +3,7 @@ package kr.hhplus.be.server
 import jakarta.annotation.PreDestroy
 import org.springframework.context.annotation.Configuration
 import org.testcontainers.containers.MySQLContainer
+import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.utility.DockerImageName
 
 @Configuration
@@ -25,6 +26,7 @@ class TestcontainersConfiguration {
             System.setProperty("spring.datasource.url", mySqlContainer.getJdbcUrl() + "?characterEncoding=UTF-8&serverTimezone=UTC")
             System.setProperty("spring.datasource.username", mySqlContainer.username)
             System.setProperty("spring.datasource.password", mySqlContainer.password)
+            System.setProperty("jakarta.persistence.jdbc.url", mySqlContainer.jdbcUrl)
         }
     }
 }

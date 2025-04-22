@@ -5,12 +5,12 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.InsufficientPointException
 import kr.hhplus.be.server.common.exception.InvalidChargeAmountException
 import kr.hhplus.be.server.user.domain.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
 import java.time.LocalDateTime
 
 class UserPointServiceTest {
@@ -30,8 +30,8 @@ class UserPointServiceTest {
         // arrange
         val time = LocalDateTime.now()
         val userId = 1L
-        val initialBalance = BigDecimal(100)
-        val chargeAmount = BigDecimal(100)
+        val initialBalance = Money.of(100)
+        val chargeAmount = Money.of(100)
         val finalBalance = initialBalance + chargeAmount
         
         val userPoint = UserPoint(1L, userId, initialBalance).apply { this.createdAt = time }
@@ -45,7 +45,7 @@ class UserPointServiceTest {
         
         every { userPointRepository.getByUserId(userId) } returns userPoint
         every { userPointRepository.save(any()) } returns userPoint
-        every { userPointHistoryRepository.save(any()) } returns mockk<UserPointHistory>()
+        every { userPointHistoryRepository.save(any()) } returns expectedHistory
         
         val cmd = UserPointCommand.Charge(
             userId = userId,
@@ -61,7 +61,14 @@ class UserPointServiceTest {
         result.pointAfterCharge shouldBe finalBalance
         result.updatedAt shouldBe time
         verify(exactly = 1) { userPointRepository.save(userPoint) }
-        verify(exactly = 1) { userPointHistoryRepository.save(expectedHistory) }
+        verify(exactly = 1) {
+            userPointHistoryRepository.save(match {
+                it.userId == userId &&
+                        it.amount == chargeAmount &&
+                        it.transactionType == TransactionType.CHARGE &&
+                        it.createdAt == time
+            })
+        }
     }
     
     @Test
@@ -69,8 +76,8 @@ class UserPointServiceTest {
         // arrange
         val time = LocalDateTime.now()
         val userId = 1L
-        val initialBalance = BigDecimal(100)
-        val chargeAmount = BigDecimal.ZERO
+        val initialBalance = Money.of(100)
+        val chargeAmount = Money.ZERO
 
         val userPoint = UserPoint(1L, userId, initialBalance)
 
@@ -95,8 +102,8 @@ class UserPointServiceTest {
         // arrange
         val time = LocalDateTime.now()
         val userId = 1L
-        val initialBalance = BigDecimal(100)
-        val useAmount = BigDecimal(100)
+        val initialBalance = Money.of(100)
+        val useAmount = Money.of(100)
         val finalBalance = initialBalance - useAmount
 
         val userPoint = UserPoint(1L, userId, initialBalance).apply { this.createdAt = time }
@@ -110,7 +117,7 @@ class UserPointServiceTest {
 
         every { userPointRepository.getByUserId(userId) } returns userPoint
         every { userPointRepository.save(any()) } returns userPoint
-        every { userPointHistoryRepository.save(expectedHistory) } returns mockk<UserPointHistory>()
+        every { userPointHistoryRepository.save(any()) } returns expectedHistory
 
         val cmd = UserPointCommand.Use(
             userId = userId,
@@ -124,7 +131,14 @@ class UserPointServiceTest {
         //assert
         userPoint.balance shouldBe finalBalance
         verify(exactly = 1) { userPointRepository.save(userPoint) }
-        verify(exactly = 1) { userPointHistoryRepository.save(expectedHistory) }
+        verify(exactly = 1) {
+            userPointHistoryRepository.save(match {
+                it.userId == userId &&
+                        it.amount == useAmount &&
+                        it.transactionType == TransactionType.USE &&
+                        it.createdAt == time
+            })
+        }
     }
 
     @Test
@@ -132,8 +146,8 @@ class UserPointServiceTest {
         // arrange
         val time = LocalDateTime.now()
         val userId = 1L
-        val initialBalance = BigDecimal(100)
-        val useAmount = BigDecimal(101)
+        val initialBalance = Money.of(100)
+        val useAmount = Money.of(101)
 
         val userPoint = UserPoint(1L, userId, initialBalance).apply { this.createdAt = time }
 
@@ -158,7 +172,7 @@ class UserPointServiceTest {
     fun `✅유저 포인트 조회`() {
         // arrange
         val userId = 1L
-        val balance = BigDecimal(100)
+        val balance = Money.of(100)
         val time = LocalDateTime.now()
         val userPoint = UserPoint(1L, userId, balance).apply { this.updatedAt = time }
         val cmd = UserPointCommand.Retrieve(userId)

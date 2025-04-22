@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.coupon.domain.model
 
+import kr.hhplus.be.server.common.domain.Money
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -9,7 +10,7 @@ import java.time.LocalDateTime
 class DiscountContext {
     data class Root(
         val userId: Long? = null,
-        val totalAmount: BigDecimal? = null,
+        val totalAmount: Money? = null,
         val items: List<Item>,
         val timestamp: LocalDateTime = LocalDateTime.now(),
         // 필요한 다른 컨텍스트 정보들을 추가할 수 있음
@@ -21,7 +22,7 @@ class DiscountContext {
         val productId: Long,
         val variantId: Long,
         val quantity: Int,
-        val subTotal: BigDecimal,
-        val totalAmount: BigDecimal
+        val subTotal: Money,
+        val totalAmount: Money
     )
 }

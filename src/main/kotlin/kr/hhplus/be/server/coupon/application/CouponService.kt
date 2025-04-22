@@ -1,22 +1,30 @@
 package kr.hhplus.be.server.coupon.application
 
-import jakarta.transaction.Transactional
+import kr.hhplus.be.server.common.ClockHolder
+import kr.hhplus.be.server.common.PageResult
+import kr.hhplus.be.server.common.exception.DuplicateCouponIssueException
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.DiscountLineRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class CouponService(
     private val couponRepository: CouponRepository,
     private val userCouponRepository: UserCouponRepository,
     private val discountLineRepository: DiscountLineRepository,
+    private val clockHolder: ClockHolder
     ) {
 
     @Transactional
     fun issueCoupon(cmd: CouponCommand.Issue): CouponResult.Issue {
+        userCouponRepository.findByUserIdAndCouponId(cmd.userId, cmd.couponId)
+            ?.let { throw DuplicateCouponIssueException() }
+
         val coupon = couponRepository.getById(cmd.couponId)
-        val userCoupon = coupon.issueTo(cmd.userId)
+        val userCoupon = coupon.issueTo(cmd.userId, clockHolder.getNowInLocalDateTime())
 
         val savedUserCoupon = userCouponRepository.save(userCoupon)
 
@@ -44,5 +52,15 @@ class CouponService(
         val savedDiscountLine = discountLineRepository.saveAll(discountLines)
 
         return CouponResult.Use(savedDiscountLine.toDiscountInfoList())
+    }
+
+    @Transactional(readOnly = true)
+    fun retrieveLists(userId: Long, pageable: Pageable): CouponResult.RetrieveList {
+        val userCouponPage = userCouponRepository.findAllByUserId(userId, pageable)
+
+        return CouponResult.RetrieveList(
+            coupons = userCouponPage.content.map { uc -> uc.toUserCouponData() },
+            pageResult = PageResult.of(userCouponPage)
+        )
     }
 }

@@ -1,10 +1,10 @@
 package kr.hhplus.be.server.coupon.domain.model
 
 import jakarta.persistence.*
+import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.CouponTargetNotFoundException
 import kr.hhplus.be.server.common.exception.ExceededMaxCouponLimitException
 import kr.hhplus.be.server.common.exception.InvalidCouponStatusException
-import java.math.BigDecimal
 import java.time.LocalDateTime
 
 /**
@@ -24,7 +24,7 @@ class Coupon(
     @Column(nullable = false)
     val description: String,
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = [CascadeType.PERSIST])
     @JoinColumn(name = "discount_policy_id", nullable = false)
     val discountPolicy: DiscountPolicy,
     
@@ -55,7 +55,7 @@ class Coupon(
     /**
      * 쿠폰이 유효한지 확인
      */
-    fun validate(now: LocalDateTime) {
+    fun validatUsability(now: LocalDateTime) {
         if(!(isActive && now.isAfter(startAt) && now.isBefore(endAt)))
             throw InvalidCouponStatusException()
     }
@@ -63,8 +63,8 @@ class Coupon(
     /**
      * 쿠폰 할인 금액 계산
      */
-    override fun calculateDiscount(context: DiscountContext.Root, applicableItemIds: List<Long>): Map<DiscountContext.Item, BigDecimal> {
-        validate(context.timestamp)
+    override fun calculateDiscount(context: DiscountContext.Root, applicableItemIds: List<Long>): Map<DiscountContext.Item, Money> {
+        validatUsability(context.timestamp)
         val applicableItems = context.items.filter { applicableItemIds.contains(it.orderItemId) }
         return discountPolicy.calculateDiscount(context.copy(items = applicableItems))
     }

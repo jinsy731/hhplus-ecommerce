@@ -6,5 +6,6 @@ import java.util.Optional
 
 interface OrderRepository{
     fun getById(id: Long): Order
+    fun findAll(): List<Order>
     fun save(order: Order): Order
 }
