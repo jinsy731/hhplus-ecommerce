@@ -12,6 +12,10 @@ class DefaultCouponRepository(private val jpaRepository: JpaCouponRepository): C
         return jpaRepository.findById(id).getOrElse { throw ResourceNotFoundException() }
     }
 
+    override fun getByIdForUpdate(id: Long): Coupon {
+        return jpaRepository.findByIdForUpdate(id) ?: throw ResourceNotFoundException()
+    }
+
     override fun save(coupon: Coupon): Coupon {
         return jpaRepository.save(coupon)
     }
