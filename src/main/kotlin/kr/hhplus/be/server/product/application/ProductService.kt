@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.product.application
 
-import kr.hhplus.be.server.common.PageResult
 import kr.hhplus.be.server.common.exception.ResourceNotFoundException
 import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductRepository
@@ -8,8 +7,6 @@ import kr.hhplus.be.server.product.domain.stats.PopularProductDailyId
 import kr.hhplus.be.server.product.infrastructure.JpaPopularProductsDailyRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.lang.IllegalStateException
-import java.time.LocalDate
 
 @Service
 @Transactional(readOnly = true)
@@ -39,7 +36,7 @@ class ProductService(
 
     @Transactional
     fun reduceStockByPurchase(cmd: ProductCommand.ReduceStockByPurchase.Root) {
-        val products = productRepository.findAll(cmd.items.map { it.productId })
+        val products = productRepository.findAllByIdForUpdate(cmd.items.map { it.productId })
 
         cmd.items.forEach { item ->
             val product = products.find { it.id == item.productId } ?: throw ResourceNotFoundException()
