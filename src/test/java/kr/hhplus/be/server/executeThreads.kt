@@ -3,14 +3,14 @@ package kr.hhplus.be.server
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 
-fun executeConcurrently(count: Int = 100, block: () -> Any) {
+fun executeConcurrently(count: Int = 100, block: (Int) -> Any) {
     val countDownLatch = CountDownLatch(count)
     val executor = Executors.newFixedThreadPool(12)
 
-    repeat(count) {
+    repeat(count) { it ->
         executor.submit {
             try {
-                block()
+                block(it)
             } finally {
                 countDownLatch.countDown()
             }

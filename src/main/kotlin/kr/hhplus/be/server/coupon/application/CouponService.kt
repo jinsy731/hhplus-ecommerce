@@ -23,7 +23,7 @@ class CouponService(
         userCouponRepository.findByUserIdAndCouponId(cmd.userId, cmd.couponId)
             ?.let { throw DuplicateCouponIssueException() }
 
-        val coupon = couponRepository.getById(cmd.couponId)
+        val coupon = couponRepository.getByIdForUpdate(cmd.couponId)
         val userCoupon = coupon.issueTo(cmd.userId, clockHolder.getNowInLocalDateTime())
 
         val savedUserCoupon = userCouponRepository.save(userCoupon)
