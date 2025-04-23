@@ -148,6 +148,12 @@ object CouponTestFixture {
         )
     }
 
+    fun noConditionDiscountPolicy() = DiscountPolicy(
+        name = "TEST",
+        discountType = FixedAmountTotalDiscountType(Money.of(1000)),
+        discountCondition = allProductCondition()
+    )
+
     /**
      * 특정 상품 할인 조건 (상품 ID 1번)
      */

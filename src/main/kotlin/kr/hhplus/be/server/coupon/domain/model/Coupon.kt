@@ -5,6 +5,7 @@ import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.CouponTargetNotFoundException
 import kr.hhplus.be.server.common.exception.ExceededMaxCouponLimitException
 import kr.hhplus.be.server.common.exception.InvalidCouponStatusException
+import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isActive
 import java.time.LocalDateTime
 
 /**
@@ -50,7 +51,7 @@ class Coupon(
     val createdAt: LocalDateTime = LocalDateTime.now(),
     
     @Column(nullable = false)
-    val updatedAt: LocalDateTime = LocalDateTime.now()
+    val updatedAt: LocalDateTime = LocalDateTime.now(),
 ): Discount {
     /**
      * 쿠폰이 유효한지 확인
