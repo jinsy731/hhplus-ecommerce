@@ -34,10 +34,10 @@ class Product(
     @Column(nullable = false)
     var status: ProductStatus = ProductStatus.DRAFT,
 
-    @OneToMany(mappedBy = "product", cascade = [CascadeType.ALL], orphanRemoval = true)
+    @OneToMany(mappedBy = "product", cascade = [CascadeType.PERSIST], orphanRemoval = true)
     val optionSpecs: MutableList<OptionSpec> = mutableListOf(),
 
-    @OneToMany(mappedBy = "product", cascade = [CascadeType.ALL], orphanRemoval = true)
+    @OneToMany(mappedBy = "product", cascade = [CascadeType.PERSIST], orphanRemoval = true, fetch = FetchType.LAZY)
     val variants: MutableList<ProductVariant> = mutableListOf()
 ) : BaseTimeEntity() {
 

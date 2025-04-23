@@ -14,4 +14,6 @@ interface ProductRepository {
     fun searchByNameContaining(keyword: String?, lastId: Long?, pageable: Pageable): List<ProductListDto>
 
     fun findAll(ids: List<Long>): List<Product>
+
+    fun findAllByIdForUpdate(ids: List<Long>): List<Product>
 }
