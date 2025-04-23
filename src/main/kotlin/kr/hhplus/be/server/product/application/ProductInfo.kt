@@ -3,7 +3,6 @@ package kr.hhplus.be.server.product.application
 import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductVariant
-import java.math.BigDecimal
 
 /**
  * Order <-> Product 사이의 도메인 간 결합도를 낮추기 위한 ACL의 역할을 하는 DTO
@@ -33,6 +32,6 @@ fun List<Product>.toCreateOrderProductInfo(): List<ProductInfo.CreateOrder.Root>
 fun List<ProductVariant>.toCreateOrderProductInfo(product: Product): List<ProductInfo.CreateOrder.Variant> {
     return this.map { variant -> ProductInfo.CreateOrder.Variant(
         variantId = variant.id!!,
-        unitPrice = product.getVariantPrice(variant.id!!)
+        unitPrice = product.getFinalPriceWithVariant(variant.id!!)
     ) }
 }

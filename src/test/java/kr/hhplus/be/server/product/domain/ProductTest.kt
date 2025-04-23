@@ -53,7 +53,7 @@ class ProductTest {
             )
         )
         // act
-        val variantPrice = product.getVariantPrice(1L)
+        val variantPrice = product.getFinalPriceWithVariant(1L)
         // assert
         variantPrice shouldBe Money.of(1500)
     }
