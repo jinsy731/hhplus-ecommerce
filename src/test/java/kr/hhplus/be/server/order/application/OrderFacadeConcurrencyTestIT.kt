@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.facade
+package kr.hhplus.be.server.order.application
 
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -9,9 +9,7 @@ import kr.hhplus.be.server.order.domain.OrderRepository
 import kr.hhplus.be.server.order.facade.OrderCriteria
 import kr.hhplus.be.server.order.facade.OrderFacade
 import kr.hhplus.be.server.product.ProductTestFixture
-import kr.hhplus.be.server.product.ProductTestFixture.variant
 import kr.hhplus.be.server.product.domain.product.ProductRepository
-import kr.hhplus.be.server.product.infrastructure.ProductJpaRepository
 import kr.hhplus.be.server.product.infrastructure.ProductVariantJpaRepository
 import kr.hhplus.be.server.user.UserPointTestFixture
 import kr.hhplus.be.server.user.infrastructure.JpaUserPointRepository
@@ -40,7 +38,7 @@ class OrderFacadeConcurrencyTestIT @Autowired constructor(
         // arrange: 재고가 100개인 옵션을 가진 상품
         val userPoints = IntRange(1, 120).map {
             logger.info { "UserPoint userId=$it" }
-            UserPointTestFixture.userPoint(userId = it.toLong(), balance = Money.of(1500)).build()
+            UserPointTestFixture.userPoint(userId = it.toLong(), balance = Money.Companion.of(1500)).build()
         }
         val product = ProductTestFixture.product()
             .withVariants(ProductTestFixture.variant(stock = 100))
@@ -67,7 +65,7 @@ class OrderFacadeConcurrencyTestIT @Autowired constructor(
             )
             orderFacade.placeOrder(cri)
         }
-        
+
         // assert: 주문은 정확히 100개만 생성, 100명의 유저는 잔액이 0이고 20명의 유저는 잔액이 1500이어야 한다. 재고는 0이어야 한다.
         val findProduct = productRepository.getById(savedProduct.id!!)
         val findVariant = productVariantJpaRepository.findByProductId(findProduct.id!!)!!
@@ -75,8 +73,8 @@ class OrderFacadeConcurrencyTestIT @Autowired constructor(
         val orders = orderRepository.findAll()
 
         findVariant.stock shouldBe 0
-        findUserPoint.filter { it.balance == Money.ZERO } shouldHaveSize 100
-        findUserPoint.filter { it.balance == Money.of(1500) } shouldHaveSize 20
+        findUserPoint.filter { it.balance == Money.Companion.ZERO } shouldHaveSize 100
+        findUserPoint.filter { it.balance == Money.Companion.of(1500) } shouldHaveSize 20
         orders shouldHaveSize 100
     }
 }

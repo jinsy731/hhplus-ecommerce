@@ -1,10 +1,9 @@
 package kr.hhplus.be.server.order.facade
 
-import jakarta.transaction.Transactional
-import kr.hhplus.be.server.coupon.application.CouponService
 import kr.hhplus.be.server.common.MessagingService
-import kr.hhplus.be.server.order.application.OrderService
+import kr.hhplus.be.server.coupon.application.CouponService
 import kr.hhplus.be.server.order.application.OrderCommand
+import kr.hhplus.be.server.order.application.OrderService
 import kr.hhplus.be.server.order.domain.Order
 import kr.hhplus.be.server.payment.application.PaymentCommand
 import kr.hhplus.be.server.payment.application.PaymentService
@@ -13,6 +12,7 @@ import kr.hhplus.be.server.product.application.ProductService
 import kr.hhplus.be.server.user.application.UserPointCommand
 import kr.hhplus.be.server.user.application.UserPointService
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class OrderFacade(
