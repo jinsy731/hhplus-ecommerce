@@ -61,7 +61,6 @@ class OrderFacadeConcurrencyTestIT @Autowired constructor(
                     )
                 ),
                 userCouponIds = listOf(),
-                payMethods = listOf(),
             )
             orderFacade.placeOrder(cri)
         }

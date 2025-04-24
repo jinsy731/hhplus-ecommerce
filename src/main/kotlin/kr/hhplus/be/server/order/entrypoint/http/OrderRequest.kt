@@ -17,9 +17,6 @@ class OrderRequest {
 
             @Schema(description = "사용할 유저 쿠폰 ID ", example = "[1,2,3]",)
             val userCouponIds: List<Long>,
-
-            @Schema(description = "결제 수단 리스트")
-            val payMethods: List<PayMethod>
         )
 
 
@@ -34,14 +31,6 @@ class OrderRequest {
             @Schema(description = "주문 수량", example = "2")
             val quantity: Int
         )
-
-        @Schema(description = "결제 수단 정보")
-        data class PayMethod(
-            @Schema(description = "결제 수단", example = "POINT")
-            val method: String,
-            @Schema(description = "결제 금액", example = "10000")
-            val amount: BigDecimal
-        )
     }
 }
 
@@ -49,16 +38,10 @@ fun OrderRequest.Create.Root.toCreateCriteria() = OrderCriteria.PlaceOrder.Root(
     userId = this.userId,
     items = this.items.toOrderItemCriteria(),
     userCouponIds = this.userCouponIds,
-    payMethods = this.payMethods.toPayMethodCriteria()
 )
 
 fun List<OrderRequest.Create.OrderItem>.toOrderItemCriteria() = this.map { OrderCriteria.PlaceOrder.Item(
     productId = it.productId,
     variantId = it.variantId,
     quantity = it.quantity
-)}
-
-fun List<OrderRequest.Create.PayMethod>.toPayMethodCriteria() = this.map { OrderCriteria.PlaceOrder.PayMethod(
-    method = it.method,
-    amount = Money.of(it.amount)
 )}
