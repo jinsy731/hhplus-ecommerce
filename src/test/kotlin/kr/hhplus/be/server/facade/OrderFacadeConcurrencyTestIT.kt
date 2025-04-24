@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.facade
 
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.common.domain.Money
@@ -7,262 +8,75 @@ import kr.hhplus.be.server.executeConcurrently
 import kr.hhplus.be.server.order.domain.OrderRepository
 import kr.hhplus.be.server.order.facade.OrderCriteria
 import kr.hhplus.be.server.order.facade.OrderFacade
-import kr.hhplus.be.server.product.domain.product.*
+import kr.hhplus.be.server.product.ProductTestFixture
+import kr.hhplus.be.server.product.ProductTestFixture.variant
+import kr.hhplus.be.server.product.domain.product.ProductRepository
+import kr.hhplus.be.server.product.infrastructure.ProductJpaRepository
 import kr.hhplus.be.server.product.infrastructure.ProductVariantJpaRepository
 import kr.hhplus.be.server.user.UserPointTestFixture
-import kr.hhplus.be.server.user.domain.UserPointRepository
+import kr.hhplus.be.server.user.infrastructure.JpaUserPointRepository
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.platform.commons.logging.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
-import kotlin.jvm.optionals.getOrNull
 
 @SpringBootTest
-class OrderFacadeConcurrencyTestIT {
-
-    @Autowired
-    private lateinit var orderFacade: OrderFacade
-
-    @Autowired
-    private lateinit var userPointRepository: UserPointRepository
-
-    @Autowired
-    private lateinit var productRepository: ProductRepository
-
-    @Autowired
-    private lateinit var orderRepository: OrderRepository
-
-    @Autowired
-    private lateinit var productVariantJpaRepository: ProductVariantJpaRepository
-
-    @Autowired
-    private lateinit var databaseCleaner: MySqlDatabaseCleaner
-
-    private val userId = 1L
-    private val productId = 1L
-    private val variantId = 1L
-    private val initialBalance = Money.of(10000)
-    private val productPrice = Money.of(1000)
-
-    @BeforeEach
-    fun setUp() {
-        // 테스트용 사용자 포인트 생성
-        val userPoint = UserPointTestFixture.createUserPoint(userId = userId, balance = initialBalance)
-        userPointRepository.save(userPoint)
-
-        // 테스트용 상품 생성
-        val product = Product(
-            name = "테스트 상품",
-            basePrice = productPrice,
-            status = ProductStatus.ON_SALE
-        )
-        val variant = ProductVariant(
-            product = product,
-            additionalPrice = Money.ZERO,
-            status = VariantStatus.ACTIVE,
-            stock = 100
-        )
-        product.addVariant(variant)
-        productRepository.save(product)
-    }
+class OrderFacadeConcurrencyTestIT @Autowired constructor(
+    private val orderFacade: OrderFacade,
+    private val jpaUserPointRepository: JpaUserPointRepository,
+    private val productRepository: ProductRepository,
+    private val orderRepository: OrderRepository,
+    private val productVariantJpaRepository: ProductVariantJpaRepository,
+    private val databaseCleaner: MySqlDatabaseCleaner,
+) {
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     @AfterEach
-    fun clean() {
-        databaseCleaner.clean()
-    }
+    fun tearDown() = databaseCleaner.clean()
 
     @Test
-    fun `재고 동시 구매 - 동시에 여러 주문을 실행하면 재고 부족으로 일부 주문이 실패한다`() {
-        // 재고가 10개인 상품을 준비
-        val limitedStockProduct = Product(
-            name = "한정 상품",
-            basePrice = Money.of(5000),
-            status = ProductStatus.ON_SALE
-        )
-        val limitedStockVariant = ProductVariant(
-            product = limitedStockProduct,
-            additionalPrice = Money.ZERO,
-            status = VariantStatus.ACTIVE,
-            stock = 10 // 재고 10개만 설정
-        )
-        limitedStockProduct.addVariant(limitedStockVariant)
-        productRepository.save(limitedStockProduct)
-        val productId = limitedStockProduct.id
-        val variantId = limitedStockVariant.id
+    fun `✅주문 동시성 테스트_동일 상품, 동일 옵션에 대한 120개의 동시 주문 요청에도 재고가 정확히 감소해야 하고 재고가 부족한 경우 실패해야 한다`() {
+        // arrange: 재고가 100개인 옵션을 가진 상품
+        val userPoints = IntRange(1, 120).map {
+            logger.info { "UserPoint userId=$it" }
+            UserPointTestFixture.userPoint(userId = it.toLong(), balance = Money.of(1500)).build()
+        }
+        val product = ProductTestFixture.product()
+            .withVariants(ProductTestFixture.variant(stock = 100))
+            .build()
 
-        // 동시에 실행할 스레드 수 (재고보다 많게 설정)
-        val threadCount = 15
-        val executorService = Executors.newFixedThreadPool(threadCount)
-        val latch = CountDownLatch(threadCount)
-        val successCount = AtomicInteger(0)
-        val failCount = AtomicInteger(0)
+        jpaUserPointRepository.saveAll(userPoints)
+        val savedProduct = productRepository.save(product)
+        val variant = productVariantJpaRepository.findByProductId(savedProduct.id!!)!!
 
-        // 15개의 스레드에서 동시에 주문을 시도 (재고는 10개)
-        for (i in 1..threadCount) {
-            executorService.execute {
-                try {
-                    val orderCriteria = OrderCriteria.PlaceOrder.Root(
-                        userId = userId,
-                        items = listOf(
-                            OrderCriteria.PlaceOrder.Item(
-                                productId = productId!!,
-                                variantId = variantId!!,
-                                quantity = 1
-                            )
-                        ),
-                        userCouponIds = emptyList(),
-                        payMethods = listOf(
-                            OrderCriteria.PlaceOrder.PayMethod(
-                                method = "POINT",
-                                amount = Money.of(5000)
-                            )
-                        )
+        // act: 동일상품, 옵션에 대한 120개의 동시 주문 요청
+        executeConcurrently(120) {
+            logger.info { "cycle#$it :: userId=${it + 1}" }
+            val cri = OrderCriteria.PlaceOrder.Root(
+                userId = (it + 1).toLong(),
+                items = listOf(
+                    OrderCriteria.PlaceOrder.Item(
+                        productId = savedProduct.id!!,
+                        variantId = variant.id!!,
+                        quantity = 1
                     )
-
-                    orderFacade.placeOrder(orderCriteria)
-                    successCount.incrementAndGet()
-                } catch (e: Exception) {
-                    // 예외 발생 시 카운트
-                    failCount.incrementAndGet()
-                } finally {
-                    latch.countDown()
-                }
-            }
+                ),
+                userCouponIds = listOf(),
+                payMethods = listOf(),
+            )
+            orderFacade.placeOrder(cri)
         }
-
-        // 모든 스레드가 완료될 때까지 대기
-        latch.await(10, TimeUnit.SECONDS)
-        executorService.shutdown()
-
-        // 검증
-        successCount.get() + failCount.get() shouldBe threadCount
         
-        // 재고 확인을 위해 상품을 다시 조회
-        val finalProduct = productRepository.getById(productId!!)
-        val finalVariant = productVariantJpaRepository.findById(variantId!!).getOrNull() ?: throw IllegalStateException("Variant not found")
-            
-        if (successCount.get() == 10) {
-            // 재고가 모두 소진된 경우
-            finalVariant.stock shouldBe 0
-        } else {
-            // 재고가 남은 경우 (성공 개수만큼 감소)
-            finalVariant.stock shouldBe (10 - successCount.get())
-        }
-    }
-
-    @Test
-    fun `포인트 중복 차감 - 동시에 여러 주문으로 포인트를 사용하면 일부는 포인트 부족으로 실패한다`() {
-        // 초기 포인트 설정
-        val userPoint = userPointRepository.getByUserId(userId)
-        userPoint.balance = Money.of(10000)  // 10,000원 포인트
-        userPointRepository.save(userPoint)
-
-        // 동시에 실행할 스레드 수
-        val threadCount = 15
-        val executorService = Executors.newFixedThreadPool(threadCount)
-        val latch = CountDownLatch(threadCount)
-        val successCount = AtomicInteger(0)
-        val failCount = AtomicInteger(0)
-
-        // 각 주문 금액
-        val orderAmount = Money.of(1000)  // 1,000원 상품
-
-        // 15개의 스레드에서 동시에 주문 시도 (포인트는 10개 주문만 가능)
-        for (i in 1..threadCount) {
-            executorService.execute {
-                try {
-                    val orderCriteria = OrderCriteria.PlaceOrder.Root(
-                        userId = userId,
-                        items = listOf(
-                            OrderCriteria.PlaceOrder.Item(
-                                productId = productId,
-                                variantId = variantId,
-                                quantity = 1
-                            )
-                        ),
-                        userCouponIds = emptyList(),
-                        payMethods = listOf(
-                            OrderCriteria.PlaceOrder.PayMethod(
-                                method = "POINT",
-                                amount = orderAmount
-                            )
-                        )
-                    )
-
-                    orderFacade.placeOrder(orderCriteria)
-                    successCount.incrementAndGet()
-                } catch (e: Exception) {
-                    // 예외 발생 시 카운트
-                    failCount.incrementAndGet()
-                } finally {
-                    latch.countDown()
-                }
-            }
-        }
-
-        // 모든 스레드가 완료될 때까지 대기
-        latch.await(10, TimeUnit.SECONDS)
-        executorService.shutdown()
-
-        // 검증
-        successCount.get() + failCount.get() shouldBe threadCount
-        
-        // 최종 포인트 확인
-        val finalUserPoint = userPointRepository.getByUserId(userId)
-        
-        // 주문 개수 확인
+        // assert: 주문은 정확히 100개만 생성, 100명의 유저는 잔액이 0이고 20명의 유저는 잔액이 1500이어야 한다. 재고는 0이어야 한다.
+        val findProduct = productRepository.getById(savedProduct.id!!)
+        val findVariant = productVariantJpaRepository.findByProductId(findProduct.id!!)!!
+        val findUserPoint = jpaUserPointRepository.findAll()
         val orders = orderRepository.findAll()
-        orders.size shouldBe successCount.get()
-        
-        // 포인트가 정확히 차감되었는지 확인
-        val expectedBalance = initialBalance - (orderAmount * successCount.get().toBigDecimal())
-        finalUserPoint.balance shouldBe expectedBalance
-    }
-    
-    @Test
-    fun `쿠폰 중복 사용 테스트`() {
-        // 쿠폰 테스트 설정 - 실제 CouponRepository 및 UserCouponRepository가 존재한다면 구현
-        // 현재는 생략하고 동시성 테스트에 집중
-        
-        // 동시에 실행할 스레드 수
-        val threadCount = 5
-        val successCount = AtomicInteger(0)
-        val failCount = AtomicInteger(0)
-        
-        // 여러 스레드에서 동시에 같은 쿠폰을 사용하여 주문 - 실제 구현 시 수정 필요
-        executeConcurrently(threadCount) {
-            try {
-                val orderCriteria = OrderCriteria.PlaceOrder.Root(
-                    userId = userId,
-                    items = listOf(
-                        OrderCriteria.PlaceOrder.Item(
-                            productId = productId,
-                            variantId = variantId,
-                            quantity = 1
-                        )
-                    ),
-                    userCouponIds = listOf(1L), // 동일한 쿠폰 ID
-                    payMethods = listOf(
-                        OrderCriteria.PlaceOrder.PayMethod(
-                            method = "POINT",
-                            amount = productPrice
-                        )
-                    )
-                )
 
-                orderFacade.placeOrder(orderCriteria)
-                successCount.incrementAndGet()
-            } catch (e: Exception) {
-                failCount.incrementAndGet()
-            }
-        }
-        
-        // 검증 - 실제 구현 시 쿠폰 상태 확인 로직 추가 필요
-        // (개념적인 테스트 - 쿠폰은 한 번만 사용되어야 함)
+        findVariant.stock shouldBe 0
+        findUserPoint.filter { it.balance == Money.ZERO } shouldHaveSize 100
+        findUserPoint.filter { it.balance == Money.of(1500) } shouldHaveSize 20
+        orders shouldHaveSize 100
     }
 }

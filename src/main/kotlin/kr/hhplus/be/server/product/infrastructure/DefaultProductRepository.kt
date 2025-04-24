@@ -69,7 +69,7 @@ interface ProductJpaRepository: JpaRepository<Product, Long> {
 }
 
 interface ProductVariantJpaRepository: JpaRepository<ProductVariant, Long> {
-
+    fun findByProductId(productId: Long): ProductVariant?
 }
 
 data class ProductListDto(
