@@ -27,7 +27,7 @@ class ProductCommand {
         )
     }
 
-    class ReduceStockByPurchase {
+    class ValidateAndReduceStock {
         data class Root(
             val items: List<Item>
         )

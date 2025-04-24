@@ -14,8 +14,6 @@ class ProductService(
     private val productRepository: ProductRepository,
     private val popularProductsDailyRepository: JpaPopularProductsDailyRepository
 ) {
-
-
     fun retrieveList(cmd: ProductCommand.RetrieveList): ProductResult.RetrieveList {
         val products = productRepository.searchByNameContaining(cmd.keyword, cmd.lastId, cmd.pageable) // TODO: pageable 말고 Spring 의존적이지 않은 파라미터를 써야하나 ?
         return ProductResult.RetrieveList(
@@ -23,27 +21,16 @@ class ProductService(
         )
     }
 
-    fun findAllById(ids: List<Long>): List<Product> = productRepository.findAll(ids)
-
-    fun validatePurchasability(cmd: ProductCommand.ValidatePurchasability.Root) {
-        val products = productRepository.findAll(cmd.items.map { it.productId })
-
-        cmd.items.forEach { item ->
-            val product = products.find { it.id == item.productId } ?: throw ResourceNotFoundException()
-            product.validatePurchasability(item.variantId, item.quantity)
-        }
-    }
-
     @Transactional
-    fun reduceStockByPurchase(cmd: ProductCommand.ReduceStockByPurchase.Root) {
+    fun validateAndReduceStock(cmd: ProductCommand.ValidateAndReduceStock.Root) {
         val products = productRepository.findAllByIdForUpdate(cmd.items.map { it.productId })
 
         cmd.items.forEach { item ->
             val product = products.find { it.id == item.productId } ?: throw ResourceNotFoundException()
+            product.validatePurchasability(item.variantId, item.quantity)
             product.reduceStockByPurchase(item.variantId, item.quantity)
         }
     }
-    
 
     fun retrievePopular(cmd: ProductCommand.RetrievePopularProducts): List<ProductResult.PopularProduct> {
         // 지정된 날짜로부터 랭킹 조회 (fromDate ~ toDate까지)
@@ -60,4 +47,6 @@ class ProductService(
             )
         }
     }
+
+    fun findAllById(ids: List<Long>): List<Product> = productRepository.findAll(ids)
 }
