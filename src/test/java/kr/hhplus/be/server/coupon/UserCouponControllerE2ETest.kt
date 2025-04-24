@@ -3,6 +3,7 @@ package kr.hhplus.be.server.coupon
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.common.CommonResponse
 import kr.hhplus.be.server.coupon.application.CouponCommand
@@ -12,6 +13,7 @@ import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.entrypoint.http.CouponRequest
 import kr.hhplus.be.server.coupon.entrypoint.http.CouponResponse
 import kr.hhplus.be.server.coupon.infrastructure.JpaCouponRepository
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -24,16 +26,14 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.context.jdbc.Sql
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-internal class UserCouponControllerE2ETest {
-
-    @Autowired
-    lateinit var restTemplate: TestRestTemplate
-
-    @Autowired
-    private lateinit var couponRepository: JpaCouponRepository
-
-    @Autowired
-    private lateinit var couponService: CouponService
+internal class UserCouponControllerE2ETest @Autowired constructor(
+    private val restTemplate: TestRestTemplate,
+    private val couponRepository: JpaCouponRepository,
+    private val couponService: CouponService,
+    private val databaseCleaner: MySqlDatabaseCleaner
+){
+    @AfterEach
+    fun tearDown() = databaseCleaner.clean()
 
     private val testUserId = 1L
     private val testCouponId = 1L // SQL 파일에 정의된 쿠폰 ID 사용

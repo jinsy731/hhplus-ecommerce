@@ -27,9 +27,9 @@ class UserPointTest {
 
     @ParameterizedTest
     @ValueSource(strings = ["-1"])
-    fun `⛔️유저 포인트 충전 실패_충전 금액이 0보다 작거나 같으면 InvalidChargeAmountException 이 발생해야한다`(amount: BigDecimal) {
+    fun `⛔️유저 포인트 충전 실패_충전 금액이 0보다 작거나 같으면 IllegalArgumentException 이 발생해야한다`(amount: BigDecimal) {
         val userPoint = UserPoint(1L, 1L, Money.ZERO)
-        val ex = shouldThrowExactly<InvalidChargeAmountException> { userPoint.charge(Money.of(amount), LocalDateTime.now()) }
+        val ex = shouldThrowExactly<IllegalArgumentException> { userPoint.charge(Money.of(amount), LocalDateTime.now()) }
     }
     
     @Test
@@ -42,9 +42,9 @@ class UserPointTest {
     }
 
     @Test
-    fun `⛔️유저 포인트 사용 실패_잔액이 사용 금액보다 적으면 InsufficientPointException 예외가 발생해야 한다`() {
+    fun `⛔️유저 포인트 사용 실패_잔액이 사용 금액보다 적으면 IllegalArgumentException 예외가 발생해야 한다`() {
         val now = LocalDateTime.now()
         val userPoint = UserPoint(userId = 1L, balance = Money.of(999))
-        shouldThrowExactly<IllegalStateException> { userPoint.use(Money.of(1000), now) }
+        shouldThrowExactly<IllegalArgumentException> { userPoint.use(Money.of(1000), now) }
     }
 }
