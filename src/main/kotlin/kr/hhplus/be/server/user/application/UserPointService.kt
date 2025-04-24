@@ -5,6 +5,7 @@ import kr.hhplus.be.server.user.domain.UserPointHistoryRepository
 import kr.hhplus.be.server.user.domain.UserPointRepository
 import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Recover
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -34,6 +35,7 @@ class UserPointService(
             updatedAt = userPoint.updatedAt
         )
     }
+
 
     @Transactional
     @Retryable(
