@@ -26,7 +26,7 @@ spring:
       hibernate.default_batch_fetch_size: 100
   sql:
     init:
-      mode: always
+      mode: never
       schema-locations: classpath:schema.sql
       data-locations: classpath:data.sql
       continue-on-error: true

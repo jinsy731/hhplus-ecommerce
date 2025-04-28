@@ -16,6 +16,7 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException::class)
     fun handleBusinessException(ex: BusinessException): ResponseEntity<ErrorResponse> {
+        log.info("business exception: ${ex.message}")
         val errorResponse = ErrorResponse(
             code = ex.errorCode.code,
             message = ex.message ?: ex.errorCode.message
