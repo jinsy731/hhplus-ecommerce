@@ -41,6 +41,11 @@ spring:
     username: application
     password: application
 
+  redis:
+    cluster:
+      nodes: localhost:7001, localhost:7002, localhost:7003
+    timeout: 3000
+
 logging:
   level:
     org.hibernate:
