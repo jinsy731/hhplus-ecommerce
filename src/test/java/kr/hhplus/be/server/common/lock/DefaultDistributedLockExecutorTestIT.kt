@@ -41,4 +41,32 @@ class DefaultDistributedLockExecutorIntegrationTest {
         val valueAfterCommit = redisTemplate.opsForValue().get("lock:$key")
         assertNull(valueAfterCommit, "커밋 후 락이 해제되어야 함")
     }
+
+    @Test
+    fun `executeMulti - 트랜잭션 커밋 이후에 멀티 락이 해제되어야 한다`() {
+        val keys = arrayOf("lock:test:multi:1", "lock:test:multi:2")
+        val transactionTemplate = TransactionTemplate(transactionManager)
+
+        transactionTemplate.execute {
+            lockExecutor.executeMulti(keys, LockType.SPIN, 1000, 5000) {
+                // 트랜잭션 중: 모든 키에 대해 락이 있어야 함
+                keys.forEach { key ->
+                    val value = redisTemplate.opsForValue().get("lock:$key")
+                    assertNotNull(value, "트랜잭션 중에는 락이 있어야 함 - $key")
+                }
+            }
+
+            // 트랜잭션 중: 다시 한 번 락 확인
+            keys.forEach { key ->
+                val value = redisTemplate.opsForValue().get("lock:$key")
+                assertNotNull(value, "트랜잭션 중 락 확인 - $key")
+            }
+        }
+
+        // 트랜잭션 커밋 후: 모든 키의 락이 해제되어야 함
+        keys.forEach { key ->
+            val value = redisTemplate.opsForValue().get("lock:$key")
+            assertNull(value, "커밋 후 락이 해제되어야 함 - $key")
+        }
+    }
 }

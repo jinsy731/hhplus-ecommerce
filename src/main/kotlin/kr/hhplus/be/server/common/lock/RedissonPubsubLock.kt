@@ -30,4 +30,28 @@ class RedissonPubsubLock(
             lock.unlock()
         }
     }
+
+    override fun tryMultiLock(
+        keys: Array<String>,
+        waitTimeMillis: Long,
+        leaseTimeMillis: Long
+    ): Boolean {
+        val locks = keys.sortedArray()
+            .map { key ->
+                val lockKey = "$LOCK_PREFIX$key"
+                redissonClient.getLock(lockKey) }
+
+        val multiLock = redissonClient.getMultiLock(*(locks.toTypedArray()))
+        return multiLock.tryLock(waitTimeMillis, leaseTimeMillis, TimeUnit.MILLISECONDS)
+    }
+
+    override fun unlockMulti(keys: Array<String>) {
+        val locks = keys.sortedArray()
+            .map { key ->
+                val lockKey = "$LOCK_PREFIX$key"
+                redissonClient.getLock(lockKey) }
+
+        val multiLock = redissonClient.getMultiLock(*(locks.toTypedArray()))
+        multiLock.unlock()
+    }
 }

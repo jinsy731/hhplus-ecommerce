@@ -8,4 +8,12 @@ interface DistributedLockExecutor {
         leaseTimeMillis: Long = 3000,
         block: () -> T
     ): T
+
+    fun <T> executeMulti(
+        keys: Array<String>,
+        lockType: LockType,
+        waitTimeMillis: Long = 1000,
+        leaseTimeMillis: Long = 3000,
+        block: () -> T
+    ): T
 }

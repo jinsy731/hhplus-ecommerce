@@ -1,7 +1,5 @@
-package kr.hhplus.be.server.lock
+package kr.hhplus.be.server.common.lock
 
-import kr.hhplus.be.server.common.lock.LockType
-import kr.hhplus.be.server.common.lock.WithDistributedLock
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired

@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.common.lock
 
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -74,5 +75,64 @@ class RedisSpinLockTestIT {
         executor.shutdown()
 
         assertEquals(1, successCount.get(), "동시성 환경에서 하나의 스레드만 락을 획득해야 함")
+    }
+
+    @Test
+    fun `멀티락 획득 및 해제 성공`() {
+        // given
+        val keys = arrayOf("integration-lock1", "integration-lock2")
+
+        // when
+        val locked = spinLock.tryMultiLock(keys, waitTimeMillis = 1000, leaseTimeMillis = 3000)
+
+        // then
+        locked shouldBe true
+
+        // unlock
+        spinLock.unlockMulti(keys)
+    }
+
+    @Test
+    fun `중복된 멀티락 획득 실패`() {
+        // given
+        val keys = arrayOf("integration-lock3", "integration-lock4")
+
+        // 첫 번째 락 성공
+        val firstLock = spinLock.tryMultiLock(keys, waitTimeMillis = 1000, leaseTimeMillis = 3000)
+        firstLock shouldBe true
+
+        // 두 번째 락은 실패해야 함
+        val secondLock = spinLock.tryMultiLock(keys, waitTimeMillis = 500, leaseTimeMillis = 1000)
+        secondLock shouldBe false
+
+        // cleanup
+        spinLock.unlockMulti(keys)
+    }
+
+    @Test
+    fun `락 획득 시 Redis에 키가 존재하고 해제 시 키가 삭제된다`() {
+        // given
+        val keys = arrayOf("integration-lock5", "integration-lock6")
+        val prefixedKeys = keys.map { "lock:$it" }
+
+        // when
+        val locked = spinLock.tryMultiLock(keys, waitTimeMillis = 1000, leaseTimeMillis = 5000)
+
+        // then
+        locked shouldBe true
+        // Redis에 실제 락 키가 존재하는지 확인
+        prefixedKeys.forEach { key ->
+            val exists = redisTemplate.hasKey(key)
+            exists shouldBe true
+        }
+
+        // unlock
+        spinLock.unlockMulti(keys)
+
+        // Redis에서 락 키가 제거되었는지 확인
+        prefixedKeys.forEach { key ->
+            val exists = redisTemplate.hasKey(key)
+            exists shouldBe false
+        }
     }
 }

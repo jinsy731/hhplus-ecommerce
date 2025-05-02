@@ -53,4 +53,19 @@ class RedisSpinLock(
             lockId
         )
     }
+
+    override fun tryMultiLock(
+        keys: Array<String>,
+        waitTimeMillis: Long,
+        leaseTimeMillis: Long
+    ): Boolean {
+        return keys.sortedArray()
+            .map { this.tryLock(it, waitTimeMillis, leaseTimeMillis) }
+            .fold(true) { cur, it -> cur && it }
+    }
+
+    override fun unlockMulti(keys: Array<String>) {
+        keys.sortedArray()
+            .forEach { this.unlock(it) }
+    }
 }
