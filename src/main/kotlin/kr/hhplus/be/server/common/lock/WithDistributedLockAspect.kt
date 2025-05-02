@@ -5,20 +5,23 @@ import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.reflect.MethodSignature
+import org.slf4j.LoggerFactory
 import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.expression.spel.support.StandardEvaluationContext
 import org.springframework.stereotype.Component
 
 @Aspect
 @Component
-class DistributedLockAspect(
+class WithDistributedLockAspect(
     private val lockExecutor: DistributedLockExecutor,
     private val parser: SpelExpressionParser = SpelExpressionParser()
 ) {
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     @Around("@annotation(withDistributedLock)")
     fun around(joinPoint: ProceedingJoinPoint, withDistributedLock: WithDistributedLock): Any? {
         val key = resolveKey(joinPoint, withDistributedLock.key)
+        logger.info("resolve key: $key")
 
         return lockExecutor.execute(
             key = key,
