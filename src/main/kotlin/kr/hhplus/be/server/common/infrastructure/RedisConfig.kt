@@ -3,27 +3,28 @@ package kr.hhplus.be.server.common.infrastructure
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.data.redis.connection.RedisClusterConfiguration
 import org.springframework.data.redis.connection.RedisConnectionFactory
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
 import org.springframework.data.redis.core.StringRedisTemplate
 
 @Configuration
-class RedisClusterConfig {
+class RedisConfig {
 
-    @Value("\${spring.redis.cluster.nodes}")
-    private lateinit var clusterNodes: String
+    @Value("\${spring.redis.host}")
+    private lateinit var redisHost: String
+
+    @Value("\${spring.redis.port}")
+    private var redisPort: Int = 6379
 
     @Bean
     fun redisConnectionFactory(): RedisConnectionFactory {
-        val nodeList = clusterNodes.split(",").map { it.trim() }
-        val clusterConfig = RedisClusterConfiguration(nodeList)
-
-        return LettuceConnectionFactory(clusterConfig)
+        val standaloneConfig = RedisStandaloneConfiguration(redisHost, redisPort)
+        return LettuceConnectionFactory(standaloneConfig)
     }
 
     @Bean
-    fun stringRedisTemplate(connectionFactory: RedisConnectionFactory): StringRedisTemplate {
-        return StringRedisTemplate(connectionFactory)
+    fun stringRedisTemplate(factory: RedisConnectionFactory): StringRedisTemplate {
+        return StringRedisTemplate(factory)
     }
 }

@@ -14,36 +14,12 @@ services:
       - ./data/mysql/log/:/var/log/mysql
       - ./data/mysql/conf.d/:/etc/mysql/conf.d/
 
-  redis-node1:
+  redis:
     image: redis:7
     ports:
-      - "7001:7001"
-      - "17001:17001"
-    command: redis-server --port 7001 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+      - "6379:6379"
+    command: redis-server --appendonly yes
 
-  redis-node2:
-    image: redis:7
-    ports:
-      - "7002:7002"
-      - "17002:17002"
-    command: redis-server --port 7002 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
-
-  redis-node3:
-    image: redis:7
-    ports:
-      - "7003:7003"
-      - "17003:17003"
-    command: redis-server --port 7003 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
-
-  redis-cluster-init:
-    image: redis:7
-    depends_on:
-      - redis-node1
-      - redis-node2
-      - redis-node3
-    entrypoint: [ "bash", "/init-cluster.sh" ]
-    volumes:
-      - ./init-cluster.sh:/init-cluster.sh
 
 
 networks:

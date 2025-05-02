@@ -8,23 +8,24 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class RedissonClusterConfig {
+class RedissonConfig {
 
-    @Value("\${spring.redis.cluster.nodes}")
-    private lateinit var clusterNodes: String
+    @Value("\${spring.redis.host}")
+    private lateinit var redisHost: String
+
+    @Value("\${spring.redis.port}")
+    private var redisPort: Int = 6379
 
     @Bean
     fun redissonClient(): RedissonClient {
         val config = Config()
-
-        val nodeList = clusterNodes.split(",")
-            .map { "redis://$it" }
-
-        config.useClusterServers()
-            .addNodeAddress(*nodeList.toTypedArray())
-            .setScanInterval(2000)
+        config.useSingleServer()
+            .setAddress("redis://$redisHost:$redisPort")
+            .setConnectionMinimumIdleSize(2)
+            .setConnectionPoolSize(10)
             .setRetryAttempts(3)
             .setRetryInterval(1500)
+            .setTimeout(3000)
 
         return Redisson.create(config)
     }
