@@ -3,6 +3,9 @@ package kr.hhplus.be.server.coupon.application
 import kr.hhplus.be.server.common.ClockHolder
 import kr.hhplus.be.server.common.PageResult
 import kr.hhplus.be.server.common.exception.DuplicateCouponIssueException
+import kr.hhplus.be.server.common.lock.LockType
+import kr.hhplus.be.server.common.lock.WithDistributedLock
+import kr.hhplus.be.server.common.lock.WithMultiDistributedLock
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.DiscountLineRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
@@ -21,6 +24,10 @@ class CouponService(
     private val clockHolder: ClockHolder
     ) {
 
+    @WithDistributedLock(
+        key = "'coupon:' + #cmd.couponId",
+        type = LockType.PUBSUB
+    )
     @Transactional
     fun issueCoupon(cmd: CouponCommand.Issue): CouponResult.Issue {
         userCouponRepository.findByUserIdAndCouponId(cmd.userId, cmd.couponId)
@@ -44,6 +51,10 @@ class CouponService(
      * 2. 적용 대상 전체에 대한 할인 금액 계산
      * 3. 각 대상에 할인 금액 분배 (물품별 할인 금액 계산을 위해)
      */
+    @WithMultiDistributedLock(
+        key = "#cmd.userCouponIds.![ 'user:coupon:' + #this ]",
+        type = LockType.SPIN
+    )
     @Transactional
     @Retryable(
         value = [OptimisticLockingFailureException::class],

@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.common.lock
 
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.transaction.support.TransactionSynchronization
 import org.springframework.transaction.support.TransactionSynchronizationManager
@@ -9,6 +10,8 @@ import java.lang.IllegalArgumentException
 class DefaultDistributedLockExecutor(
     private val distributedLocks: List<DistributedLock>
 ) : DistributedLockExecutor {
+
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     override fun <T> execute(
         key: String,
@@ -22,6 +25,8 @@ class DefaultDistributedLockExecutor(
         if (!lock.tryLock(key, waitTimeMillis, leaseTimeMillis)) {
             throw IllegalStateException("Lock acquisition failed: $key")
         }
+        logger.info("Lock acquired with following key: $key")
+
         var result: T
 
         if (TransactionSynchronizationManager.isActualTransactionActive()) {
@@ -50,6 +55,8 @@ class DefaultDistributedLockExecutor(
             }
         }
 
+        logger.info("Lock released with following key: $key")
+
         return result
     }
 
@@ -63,8 +70,11 @@ class DefaultDistributedLockExecutor(
         val lock = distributedLocks.find { it.supports(lockType) } ?: throw IllegalArgumentException("Not supported LockType: $lockType")
 
         if (!lock.tryMultiLock(keys, waitTimeMillis, leaseTimeMillis)) {
-            throw IllegalStateException("Lock acquisition failed: $keys")
+            throw IllegalStateException("Lock acquisition failed: ${keys.joinToString()}")
         }
+
+        logger.info("Multi Lock acquired with following key: ${keys.joinToString()}")
+
         var result: T
 
         if (TransactionSynchronizationManager.isActualTransactionActive()) {
@@ -92,6 +102,7 @@ class DefaultDistributedLockExecutor(
                 lock.unlockMulti(keys)
             }
         }
+        logger.info("Multi Lock released with following key: ${keys.joinToString()}")
 
         return result
     }

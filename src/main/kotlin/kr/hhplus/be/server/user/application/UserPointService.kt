@@ -1,11 +1,12 @@
 package kr.hhplus.be.server.user.application
 
+import kr.hhplus.be.server.common.lock.LockType
+import kr.hhplus.be.server.common.lock.WithDistributedLock
 import kr.hhplus.be.server.user.domain.UserPointHistory
 import kr.hhplus.be.server.user.domain.UserPointHistoryRepository
 import kr.hhplus.be.server.user.domain.UserPointRepository
 import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.retry.annotation.Backoff
-import org.springframework.retry.annotation.Recover
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -15,6 +16,10 @@ class UserPointService(
     private val userPointRepository: UserPointRepository,
     private val userPointHistoryRepository: UserPointHistoryRepository) {
 
+    @WithDistributedLock(
+        key = "'user:point:' + #cmd.userId",
+        type = LockType.SPIN
+    )
     @Transactional
     @Retryable(
         value = [OptimisticLockingFailureException::class],
@@ -37,6 +42,10 @@ class UserPointService(
     }
 
 
+    @WithDistributedLock(
+        key = "'user:point:' + #cmd.userId",
+        type = LockType.SPIN
+    )
     @Transactional
     @Retryable(
         value = [OptimisticLockingFailureException::class],
