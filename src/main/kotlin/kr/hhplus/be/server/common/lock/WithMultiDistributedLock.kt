@@ -3,7 +3,7 @@ package kr.hhplus.be.server.common.lock
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class WithMultiDistributedLock(
-    val key: String,
+    val keys: Array<String> = [],
     val type: LockType = LockType.PUBSUB,
     val waitTimeMillis: Long = 1000,
     val leaseTimeMillis: Long = 3000

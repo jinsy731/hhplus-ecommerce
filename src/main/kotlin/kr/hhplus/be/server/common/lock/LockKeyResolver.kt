@@ -15,21 +15,28 @@ class LockKeyResolver {
     private val paramDiscoverer = DefaultParameterNameDiscoverer()
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    fun resolveKey(joinPoint: JoinPoint, expression: String): List<String> {
-        if (!expression.contains("#")) return listOf(expression)
+    fun resolveKey(joinPoint: JoinPoint, vararg expressions: String): List<String> {
         val context = createContext(joinPoint)
-        val parsed = parser.parseExpression(expression).getValue(context)
-        val resolvedKeys = when (parsed) {
-            is Collection<*> -> parsed.map {
-                it?.toString() ?: throw IllegalArgumentException("null 키는 허용되지 않습니다: $expression")
-            }
-            is String -> listOf(parsed)
-            else -> throw IllegalArgumentException("SpEL 표현식이 List 또는 String을 반환해야 합니다: $expression")
-        }
 
-        return resolvedKeys
+        return expressions
+            .map {
+                if(!it.contains("#")) it
+                else parser.parseExpression(it).getValue(context)
+            }
+            .flatMap { parsed ->
+                when (parsed) {
+                    is Collection<*> -> parsed.map {
+                        it?.toString() ?: throw IllegalArgumentException("null 키는 허용되지 않습니다: $expressions")
+                    }
+                    is String -> listOf(parsed)
+                    else -> throw IllegalArgumentException("SpEL 표현식이 List 또는 String을 반환해야 합니다: $expressions")
+                }
+            }
             .distinct()
-            .sorted()
+            .sortedBy {
+                val numberPart = it.substringAfterLast(":").toIntOrNull() ?: Int.MAX_VALUE
+                numberPart
+            }
     }
 
     private fun createContext(joinPoint: JoinPoint): StandardEvaluationContext {

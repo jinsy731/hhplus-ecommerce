@@ -49,7 +49,7 @@ class WithMultiLockAspectTestIT {
 class MultiLockTestService {
 
     @WithMultiDistributedLock(
-        key = "#productIds.![ 'product:' + #this ]", // SpEL 표현으로 다중 키 해석
+        keys = ["#productIds.![ 'product:' + #this ]"], // SpEL 표현으로 다중 키 해석
         type = LockType.SPIN,
         waitTimeMillis = 1000,
         leaseTimeMillis = 5000

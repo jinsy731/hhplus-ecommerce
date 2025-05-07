@@ -18,7 +18,7 @@ class WithMultiLockAspect(
 
     @Around("@annotation(annotation)")
     fun around(joinPoint: ProceedingJoinPoint, annotation: WithMultiDistributedLock): Any? {
-        val keys = keyResolver.resolveKey(joinPoint, annotation.key)
+        val keys = keyResolver.resolveKey(joinPoint, *annotation.keys)
         logger.info("[WithMultiLock] keys resolved: $keys")
 
         return lockExecutor.executeMulti(

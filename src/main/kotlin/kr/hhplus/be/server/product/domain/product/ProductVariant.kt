@@ -44,6 +44,7 @@ class ProductVariant(
     fun reduceStock(quantity: Int) {
         check(this.stock >= quantity) { throw VariantOutOfStockException()  }
         this.stock -= quantity
+        println("stock after reduce(ID: $id): $stock")
     }
 }
 

@@ -52,7 +52,7 @@ class CouponService(
      * 3. 각 대상에 할인 금액 분배 (물품별 할인 금액 계산을 위해)
      */
     @WithMultiDistributedLock(
-        key = "#cmd.userCouponIds.![ 'user:coupon:' + #this ]",
+        keys = ["#cmd.userCouponIds.![ 'user:coupon:' + #this ]"],
         type = LockType.SPIN
     )
     @Transactional
