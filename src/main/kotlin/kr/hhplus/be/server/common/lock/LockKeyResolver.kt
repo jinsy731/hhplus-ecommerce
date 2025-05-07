@@ -19,13 +19,17 @@ class LockKeyResolver {
         if (!expression.contains("#")) return listOf(expression)
         val context = createContext(joinPoint)
         val parsed = parser.parseExpression(expression).getValue(context)
-        return when (parsed) {
+        val resolvedKeys = when (parsed) {
             is Collection<*> -> parsed.map {
                 it?.toString() ?: throw IllegalArgumentException("null 키는 허용되지 않습니다: $expression")
             }
             is String -> listOf(parsed)
             else -> throw IllegalArgumentException("SpEL 표현식이 List 또는 String을 반환해야 합니다: $expression")
         }
+
+        return resolvedKeys
+            .distinct()
+            .sorted()
     }
 
     private fun createContext(joinPoint: JoinPoint): StandardEvaluationContext {

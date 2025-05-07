@@ -76,6 +76,29 @@ class LockKeyResolverTest {
     }
 
     @Test
+    fun `다중 키 해석 - 중복 제거`() {
+        val target = DummyService()
+        val method = target::listParamMethod.javaMethod!!
+        val input = listOf(1L, 1L, 1L)
+        val joinPoint = mockJoinPoint(target, method, arrayOf(input))
+
+        val keys = resolver.resolveKey(joinPoint, "#userIds.![ 'lock:' + #this ]")
+        assertEquals(keys.size, 1)
+        assertEquals(listOf("lock:1"), keys)
+    }
+
+    @Test
+    fun `다중 키 해석 - 오름차순 정렬`() {
+        val target = DummyService()
+        val method = target::listParamMethod.javaMethod!!
+        val input = listOf(3L, 1L, 2L)
+        val joinPoint = mockJoinPoint(target, method, arrayOf(input))
+
+        val keys = resolver.resolveKey(joinPoint, "#userIds.![ 'lock:' + #this ]")
+        assertEquals(listOf("lock:1", "lock:2", "lock:3"), keys)
+    }
+
+    @Test
     fun `표현식에 #이 없으면 그대로 반환`() {
         val target = DummyService()
         val method = target::singleParamMethod.javaMethod!!
