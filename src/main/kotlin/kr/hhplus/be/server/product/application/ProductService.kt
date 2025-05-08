@@ -22,7 +22,7 @@ class ProductService(
     private val productRepository: ProductRepository,
     private val popularProductsDailyRepository: JpaPopularProductsDailyRepository,
     private val stringRedisTemplate: StringRedisTemplate,
-    private val productRedisTemplate: RedisTemplate<String, ProductListDto>,
+    private val productRedisTemplate: RedisTemplate<String, ProductResult.RetrieveList>,
 ) {
     fun retrieveList(cmd: ProductCommand.RetrieveList): ProductResult.RetrieveList {
         val products = productRepository.searchByKeyword(cmd.keyword, cmd.lastId, cmd.pageable)
@@ -32,47 +32,28 @@ class ProductService(
         )
     }
 
-    fun retrieveCachedList(cmd: ProductCommand.RetrieveList): ProductResult.RetrieveList {
+    fun retrieveListWithPageCache(cmd: ProductCommand.RetrieveList): ProductResult.RetrieveList {
         val keyword = cmd.keyword ?: "all"
-        val cacheIdsKey = "product:search:ids:keyword:$keyword"
-        val cacheDataKeyPrefix = "product:search:data"
         val pageSize = cmd.pageable.pageSize
         val lastId = cmd.lastId ?: Long.MAX_VALUE
+        val cacheKey = "product:search:page:$keyword:$lastId:$pageSize"
 
-        val allIds = stringRedisTemplate.opsForList().range(cacheIdsKey, 0, -1)
-            ?.mapNotNull { it.toLongOrNull() }
-            ?.takeIf { it.isNotEmpty() }
-            ?: run {
-                val ids = productRepository.searchIdsByKeyword(cmd.keyword)
-                if (ids.isNotEmpty()) {
-                    stringRedisTemplate.opsForList().rightPushAll(cacheIdsKey, *ids.map { it.toString() }.toTypedArray())
-                    stringRedisTemplate.expire(cacheIdsKey, Duration.ofMinutes(10))
-                }
-                ids
-            }
-
-        val pagedIds = allIds.filter { it < lastId }.take(pageSize)
-        val keys = pagedIds.map { "$cacheDataKeyPrefix:$it" }
-
-        val cachedValues = productRedisTemplate.opsForValue().multiGet(keys) ?: emptyList()
-        val cachedMap = pagedIds.zip(cachedValues).filter { (_, value) -> value != null }.associate { it.first to it.second!! }
-        val missedIds = pagedIds.filterNot { cachedMap.containsKey(it) }
-
-        val dbFetched = if (missedIds.isNotEmpty()) {
-            productRepository.findSummaryByIds(missedIds).also { fetched ->
-                fetched.forEach {
-                    productRedisTemplate.opsForValue().set("$cacheDataKeyPrefix:${it.id}", it, Duration.ofMinutes(10))
-                }
-            }
-        } else emptyList()
-
-        val products = pagedIds.mapNotNull { id ->
-            cachedMap[id] ?: dbFetched.find { it.id == id }
+        // 캐시 조회
+        val cached = productRedisTemplate.opsForValue().get(cacheKey)
+        if (cached != null) {
+            return cached
         }
 
-        return ProductResult.RetrieveList(
+        // 캐시 미스 - DB 조회
+        val products = productRepository.searchByKeyword(cmd.keyword, cmd.lastId, cmd.pageable)
+
+        val result = ProductResult.RetrieveList(
             products = products.map { it.toProductDetail() }
         )
+
+        // 캐시 저장 (페이지 단위)
+        productRedisTemplate.opsForValue().set(cacheKey, result, Duration.ofMinutes(10))
+        return result
     }
 
     @WithMultiDistributedLock(

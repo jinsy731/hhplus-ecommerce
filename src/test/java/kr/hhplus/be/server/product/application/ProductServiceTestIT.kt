@@ -22,6 +22,7 @@ import kr.hhplus.be.server.product.infrastructure.JpaProductSalesAggregationDail
 import kr.hhplus.be.server.product.infrastructure.ProductVariantJpaRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -253,6 +254,20 @@ class ProductServiceTestIT @Autowired constructor(
 
         // Act
         val result = productService.retrieveList(cmd)
+
+        // Assert
+        result.products shouldHaveSize 2
+        result.products.map { it.name } shouldContainExactlyInAnyOrder listOf("테스트 상품 1", "테스트 상품 2")
+    }
+
+    @RepeatedTest(2)
+    fun `✅상품 목록을 조회할 수 있다(캐싱)`() {
+        // Arrange
+        val pageable = PageRequest.of(0, 10)
+        val cmd = ProductCommand.RetrieveList(pageable, null, "테스트")
+
+        // Act
+        val result = productService.retrieveListWithPageCache(cmd)
 
         // Assert
         result.products shouldHaveSize 2
