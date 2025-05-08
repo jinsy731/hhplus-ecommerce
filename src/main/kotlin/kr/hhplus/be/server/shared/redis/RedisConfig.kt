@@ -1,6 +1,9 @@
 package kr.hhplus.be.server.shared.redis
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import kr.hhplus.be.server.product.infrastructure.ProductListDto
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -10,6 +13,7 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer
 import org.springframework.data.redis.serializer.StringRedisSerializer
 
 @Configuration
@@ -43,6 +47,19 @@ class RedisConfig {
         template.hashKeySerializer = StringRedisSerializer()
         template.hashValueSerializer = serializer
 
+        template.afterPropertiesSet()
+        return template
+    }
+
+    @Bean
+    fun productRedisTemplate(connectionFactory: RedisConnectionFactory, objectMapper: ObjectMapper): RedisTemplate<String, ProductListDto> {
+        val template = RedisTemplate<String, ProductListDto>()
+        template.connectionFactory = connectionFactory
+
+        val serializer = Jackson2JsonRedisSerializer(objectMapper, ProductListDto::class.java)
+
+        template.keySerializer = StringRedisSerializer()
+        template.valueSerializer = serializer
         template.afterPropertiesSet()
         return template
     }

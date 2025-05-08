@@ -21,7 +21,7 @@ class ProductController(private val productService: ProductService): ProductApiS
         @RequestParam keyword: String?,
         @RequestParam lastId: Long?,
     ): ResponseEntity<CommonResponse<ProductResponse.Retrieve.Lists>> {
-        val result = productService.retrieveList(ProductCommand.RetrieveList(pageable,lastId, keyword))
+        val result = productService.retrieveCachedList(ProductCommand.RetrieveList(pageable,lastId, keyword))
         return ResponseEntity.ok(CommonResponse(result.toProductResponse()))
     }
 

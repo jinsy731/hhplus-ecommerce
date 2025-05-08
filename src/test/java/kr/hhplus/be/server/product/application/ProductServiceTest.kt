@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.product.application
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.matchers.collections.shouldHaveSize
 import io.mockk.every
 import io.mockk.mockk
@@ -11,11 +12,21 @@ import kr.hhplus.be.server.product.infrastructure.JpaPopularProductsDailyReposit
 import kr.hhplus.be.server.product.infrastructure.ProductListDto
 import org.junit.jupiter.api.Test
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.redis.core.RedisTemplate
+import org.springframework.data.redis.core.StringRedisTemplate
 
 class ProductServiceTest {
     private val productRepository: ProductRepository = mockk()
     private val mockPopularProductDailyRepository = mockk<JpaPopularProductsDailyRepository>()
-    private val productService = ProductService(productRepository, mockPopularProductDailyRepository)
+    private val mockStringRedisTemplate = mockk<StringRedisTemplate>()
+    private val mockGenericRedisTemplate = mockk<RedisTemplate<String, Any>>()
+    private val productService = ProductService(
+        productRepository,
+        mockPopularProductDailyRepository,
+        mockStringRedisTemplate,
+        mockGenericRedisTemplate,
+        jacksonObjectMapper()
+        )
     
     @Test
     fun `✅상품 목록 조회`() {
