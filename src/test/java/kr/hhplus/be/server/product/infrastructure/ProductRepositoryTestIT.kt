@@ -69,4 +69,17 @@ class ProductRepositoryTestIT @Autowired constructor(
         // assert
         ids shouldHaveSize 2
     }
+
+    @Test
+    fun `상품 조회 by ids`() {
+        // arrange: 상품 10개 저장
+        val products = IntRange(0, 9).map { ProductTestFixture.product().build() }
+        val ids = productJpaRepository.saveAll(products).mapNotNull { it.id }
+
+        // act: id로 상품 조회
+        val productSummaries = productRepository.findSummaryByIds(ids)
+
+        // assert: 조회된 상품이 10개인지 검증
+        productSummaries shouldHaveSize 10
+    }
 }

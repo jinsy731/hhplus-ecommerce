@@ -46,6 +46,10 @@ class DefaultProductRepository(
     override fun getById(id: Long): Product {
         return jpaRepository.findById(id).getOrNull() ?: throw ResourceNotFoundException()
     }
+
+    override fun findSummaryByIds(ids: List<Long>): List<ProductListDto> {
+        return jpaRepository.findSummaryByIds(ids)
+    }
 }
 
 interface ProductJpaRepository: JpaRepository<Product, Long> {
@@ -79,6 +83,15 @@ interface ProductJpaRepository: JpaRepository<Product, Long> {
     """)
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     fun findAllByIdForUpdate(@Param("ids") ids: List<Long>): List<Product>
+
+    @Query("""
+        SELECT new kr.hhplus.be.server.product.infrastructure.ProductListDto(
+            p.id, p.name, p.basePrice, p.status
+        )
+        FROM Product p
+        WHERE p.id in :ids
+    """)
+    fun findSummaryByIds(@Param("ids") ids: List<Long>): List<ProductListDto>
 }
 
 interface ProductVariantJpaRepository: JpaRepository<ProductVariant, Long> {

@@ -15,4 +15,6 @@ interface ProductRepository {
     fun findAll(ids: List<Long>): List<Product>
 
     fun findAllByIdForUpdate(ids: List<Long>): List<Product>
+
+    fun findSummaryByIds(ids: List<Long>): List<ProductListDto>
 }
