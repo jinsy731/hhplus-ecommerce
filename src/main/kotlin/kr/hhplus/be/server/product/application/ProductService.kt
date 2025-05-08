@@ -8,7 +8,6 @@ import kr.hhplus.be.server.product.domain.stats.PopularProductDailyId
 import kr.hhplus.be.server.product.infrastructure.JpaPopularProductsDailyRepository
 import kr.hhplus.be.server.shared.exception.ResourceNotFoundException
 import org.springframework.cache.annotation.Cacheable
-import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -17,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional
 class ProductService(
     private val productRepository: ProductRepository,
     private val popularProductsDailyRepository: JpaPopularProductsDailyRepository,
-    private val productRedisTemplate: RedisTemplate<String, ProductResult.RetrieveList>,
 ) {
     fun retrieveList(cmd: ProductCommand.RetrieveList): ProductResult.RetrieveList {
         val products = productRepository.searchByKeyword(cmd.keyword, cmd.lastId, cmd.pageable)
@@ -29,7 +27,7 @@ class ProductService(
 
     @Cacheable(
         cacheNames = ["productSearch"],
-        key = "'cache:product:search:' + (#cmd.keyword ?: 'all') + ':' + (#cmd.lastId ?: Long.MAX_VALUE) + ':' + #cmd.pageable.pageSize"
+        key = "'cache:product:search:' + (#cmd.keyword != null ? #cmd.keyword : 'all') + ':' + (#cmd.lastId != null ? #cmd.lastId : ${Int.MAX_VALUE}) + ':' + #cmd.pageable.pageSize"
     )
     fun retrieveListWithPageCache(cmd: ProductCommand.RetrieveList): ProductResult.RetrieveList =
         retrieveList(cmd)
@@ -71,7 +69,6 @@ class ProductService(
     @Cacheable(
         cacheNames = ["popularProducts"],
         key = "'cache:product:popular'",
-        unless = "#result == null"
     )
     fun retrievePopularWithCaching(cmd: ProductCommand.RetrievePopularProducts): List<ProductResult.PopularProduct>
     = retrievePopular(cmd)
