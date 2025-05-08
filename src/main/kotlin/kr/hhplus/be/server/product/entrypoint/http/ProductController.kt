@@ -32,7 +32,7 @@ class ProductController(private val productService: ProductService): ProductApiS
         val limit = 5
         
         val cmd = ProductCommand.RetrievePopularProducts(fromDate, toDate, limit)
-        val result = productService.retrievePopular(cmd)
+        val result = productService.retrievePopularWithCaching(cmd)
         
         return ResponseEntity.ok(CommonResponse(result.map { it.toPopularProductResponse() }))
     }

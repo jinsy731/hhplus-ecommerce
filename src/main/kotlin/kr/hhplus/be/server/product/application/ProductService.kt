@@ -9,6 +9,7 @@ import kr.hhplus.be.server.product.domain.product.ProductRepository
 import kr.hhplus.be.server.product.domain.stats.PopularProductDailyId
 import kr.hhplus.be.server.product.infrastructure.JpaPopularProductsDailyRepository
 import kr.hhplus.be.server.product.infrastructure.ProductListDto
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Service
@@ -90,6 +91,13 @@ class ProductService(
             )
         }
     }
+
+    @Cacheable(
+        cacheNames = ["popularProducts"],
+        key = "'cache:product:popular'"
+    )
+    fun retrievePopularWithCaching(cmd: ProductCommand.RetrievePopularProducts): List<ProductResult.PopularProduct>
+    = retrievePopular(cmd)
 
     fun findAllById(ids: List<Long>): List<Product> = productRepository.findAll(ids)
 }
