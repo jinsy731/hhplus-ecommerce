@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.common
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(description = "공통 응답 포맷")
@@ -26,6 +27,7 @@ data class PageInfo(
 
 
 @Schema(description = "에러 응답 포맷")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class ErrorResponse(
     @Schema(description = "에러 코드", example = "INVALID_AMOUNT")
     val code: String,

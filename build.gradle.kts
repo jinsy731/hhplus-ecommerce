@@ -66,13 +66,12 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.retry:spring-retry")
 	implementation("org.springframework:spring-aspects")
-
-	implementation("p6spy:p6spy:3.9.1")
+	
     // DB
 	runtimeOnly("com.mysql:mysql-connector-j")
 
 	// Doc
-	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
 
 	// Test
 	// Mockito Core
