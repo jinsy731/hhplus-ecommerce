@@ -27,7 +27,8 @@ class ProductService(
 
     @Cacheable(
         cacheNames = ["productSearch"],
-        key = "'cache:product:search:' + (#cmd.keyword != null ? #cmd.keyword : 'all') + ':' + (#cmd.lastId != null ? #cmd.lastId : ${Int.MAX_VALUE}) + ':' + #cmd.pageable.pageSize"
+        key = "'cache:product:search:' + (#cmd.keyword != null ? #cmd.keyword : 'all') + ':' + (#cmd.lastId != null ? #cmd.lastId : ${Int.MAX_VALUE}) + ':' + #cmd.pageable.pageSize",
+        sync = true
     )
     fun retrieveListWithPageCache(cmd: ProductCommand.RetrieveList): ProductResult.RetrieveList =
         retrieveList(cmd)
@@ -69,6 +70,7 @@ class ProductService(
     @Cacheable(
         cacheNames = ["popularProducts"],
         key = "'cache:product:popular'",
+        sync = true
     )
     fun retrievePopularWithCaching(cmd: ProductCommand.RetrievePopularProducts): List<ProductResult.PopularProduct>
     = retrievePopular(cmd)
