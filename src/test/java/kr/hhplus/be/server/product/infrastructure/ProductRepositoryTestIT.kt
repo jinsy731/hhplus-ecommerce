@@ -15,6 +15,7 @@ import org.springframework.transaction.support.TransactionTemplate
 @SpringBootTest
 class ProductRepositoryTestIT @Autowired constructor(
     private val productRepository: ProductRepository,
+    private val productJpaRepository: ProductJpaRepository,
     private val databaseCleaner: MySqlDatabaseCleaner,
     private val txTemplate: TransactionTemplate
 ){
@@ -48,5 +49,24 @@ class ProductRepositoryTestIT @Autowired constructor(
 
         // assert: findProducts의 size는 10이어야 함.
         findProducts!! shouldHaveSize 10
+    }
+
+    @Test
+    fun `상품 검색 Id 목록 조회`() {
+        // arrange: 검색 조건에 부합하는 상품 2개, 부합하지 않는 상품 3개 설정
+        val products = listOf(
+            ProductTestFixture.product(name = "테스트 상품1").build(),
+            ProductTestFixture.product(name = "테스트 상품2").build(),
+            ProductTestFixture.product(name = "dummy1").build(),
+            ProductTestFixture.product(name = "dummy2").build(),
+            ProductTestFixture.product(name = "dummy2").build(),
+        )
+        productJpaRepository.saveAll(products)
+
+        // act
+        val ids = productRepository.searchIdsByKeyword("테스트")
+
+        // assert
+        ids shouldHaveSize 2
     }
 }

@@ -16,13 +16,19 @@ import org.springframework.stereotype.Repository
 import kotlin.jvm.optionals.getOrNull
 
 @Repository
-class DefaultProductRepository(private val jpaRepository: ProductJpaRepository): ProductRepository {
-    override fun searchByNameContaining(
+class DefaultProductRepository(
+    private val jpaRepository: ProductJpaRepository,
+    ): ProductRepository {
+    override fun searchByKeyword(
         keyword: String?,
         lastId: Long?,
         pageable: Pageable
     ): List<ProductListDto> {
         return jpaRepository.findByNameWithNoOffset(keyword, lastId,pageable)
+    }
+
+    override fun searchIdsByKeyword(keyword: String?): List<Long> {
+        return jpaRepository.findIdsByName(keyword)
     }
 
     override fun findAll(ids: List<Long>): List<Product> {
@@ -57,6 +63,13 @@ interface ProductJpaRepository: JpaRepository<Product, Long> {
         @Param("lastId") lastId: Long?,
         pageable: Pageable  // 혹은 그냥 size만 직접 LIMIT 설정
     ): List<ProductListDto>
+
+    @Query("""
+        SELECT p.id FROM Product p
+        WHERE p.name LIKE %:name%
+        ORDER BY p.id DESC
+    """)
+    fun findIdsByName(@Param("name") name: String?): List<Long>
 
     @Query("""
         SELECT p

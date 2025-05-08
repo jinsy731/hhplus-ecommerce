@@ -17,7 +17,7 @@ class ProductService(
     private val popularProductsDailyRepository: JpaPopularProductsDailyRepository
 ) {
     fun retrieveList(cmd: ProductCommand.RetrieveList): ProductResult.RetrieveList {
-        val products = productRepository.searchByNameContaining(cmd.keyword, cmd.lastId, cmd.pageable) // TODO: pageable 말고 Spring 의존적이지 않은 파라미터를 써야하나 ?
+        val products = productRepository.searchByKeyword(cmd.keyword, cmd.lastId, cmd.pageable) // TODO: pageable 말고 Spring 의존적이지 않은 파라미터를 써야하나 ?
         return ProductResult.RetrieveList(
             products = products.map { it.toProductDetail() },
         )

@@ -31,7 +31,7 @@ class ProductServiceTest {
             basePrice = Money.of(1000),
             status = ProductStatus.ON_SALE
         ))
-        every { productRepository.searchByNameContaining(any(), any(), any()) } returns productListDto
+        every { productRepository.searchByKeyword(any(), any(), any()) } returns productListDto
 
         // act
         val result = productService.retrieveList(cmd)
