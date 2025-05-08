@@ -11,6 +11,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import jakarta.persistence.Version
 import kr.hhplus.be.server.common.exception.ExpiredCouponException
 import kr.hhplus.be.server.common.exception.InvalidCouponStatusException
 import java.time.LocalDateTime
@@ -44,6 +45,9 @@ class UserCoupon(
 
     @Column(nullable = false) @Enumerated(EnumType.STRING)
     var status: UserCouponStatus = UserCouponStatus.UNUSED,
+
+    @Version
+    var version: Long? = null
 ) {
     /**
      * 쿠폰 사용 처리

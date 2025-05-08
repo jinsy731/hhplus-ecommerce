@@ -1,19 +1,18 @@
 package kr.hhplus.be.server.product.infrastructure
 
+import jakarta.persistence.LockModeType
 import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.ResourceNotFoundException
 import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductRepository
 import kr.hhplus.be.server.product.domain.product.ProductStatus
 import kr.hhplus.be.server.product.domain.product.ProductVariant
-import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
-import java.math.BigDecimal
-import kotlin.jvm.optionals.getOrDefault
 import kotlin.jvm.optionals.getOrNull
 
 @Repository
@@ -28,6 +27,10 @@ class DefaultProductRepository(private val jpaRepository: ProductJpaRepository):
 
     override fun findAll(ids: List<Long>): List<Product> {
         return jpaRepository.findAllById(ids)
+    }
+
+    override fun findAllByIdForUpdate(ids: List<Long>): List<Product> {
+        return jpaRepository.findAllByIdForUpdate(ids)
     }
 
     override fun save(entity: Product): Product {
@@ -54,10 +57,19 @@ interface ProductJpaRepository: JpaRepository<Product, Long> {
         @Param("lastId") lastId: Long?,
         pageable: Pageable  // 혹은 그냥 size만 직접 LIMIT 설정
     ): List<ProductListDto>
+
+    @Query("""
+        SELECT p
+        FROM Product p
+        WHERE p.id in :ids
+        ORDER BY p.id
+    """)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    fun findAllByIdForUpdate(@Param("ids") ids: List<Long>): List<Product>
 }
 
 interface ProductVariantJpaRepository: JpaRepository<ProductVariant, Long> {
-
+    fun findByProductId(productId: Long): ProductVariant?
 }
 
 data class ProductListDto(

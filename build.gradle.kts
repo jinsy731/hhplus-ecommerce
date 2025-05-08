@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
 	kotlin("jvm") version "1.9.0"
 	kotlin("kapt") version "1.9.0"
@@ -62,12 +64,14 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-web")
-	implementation("p6spy:p6spy:3.9.1")
+	implementation("org.springframework.retry:spring-retry")
+	implementation("org.springframework:spring-aspects")
+	
     // DB
 	runtimeOnly("com.mysql:mysql-connector-j")
 
 	// Doc
-	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
 
 	// Test
 	// Mockito Core

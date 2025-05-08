@@ -1,11 +1,9 @@
 package kr.hhplus.be.server.order.facade
 
-import jakarta.transaction.Transactional
-import kr.hhplus.be.server.coupon.application.CouponService
 import kr.hhplus.be.server.common.MessagingService
-import kr.hhplus.be.server.order.application.OrderService
-import kr.hhplus.be.server.coupon.application.toDiscountInfoList
+import kr.hhplus.be.server.coupon.application.CouponService
 import kr.hhplus.be.server.order.application.OrderCommand
+import kr.hhplus.be.server.order.application.OrderService
 import kr.hhplus.be.server.order.domain.Order
 import kr.hhplus.be.server.payment.application.PaymentCommand
 import kr.hhplus.be.server.payment.application.PaymentService
@@ -14,6 +12,7 @@ import kr.hhplus.be.server.product.application.ProductService
 import kr.hhplus.be.server.user.application.UserPointCommand
 import kr.hhplus.be.server.user.application.UserPointService
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class OrderFacade(
@@ -27,9 +26,9 @@ class OrderFacade(
 
     @Transactional
     fun placeOrder(cri: OrderCriteria.PlaceOrder.Root): Order {
-        // 주문 생성
-        productService.validatePurchasability(ProductCommand.ValidatePurchasability.Root(
-            items = cri.items.map { ProductCommand.ValidatePurchasability.Item(
+        // 재고 차감
+        productService.validateAndReduceStock(ProductCommand.ValidateAndReduceStock.Root(
+            items = cri.items.map { ProductCommand.ValidateAndReduceStock.Item(
                 productId = it.productId,
                 variantId = it.variantId,
                 quantity = it.quantity
@@ -38,22 +37,16 @@ class OrderFacade(
         val products = productService.findAllById(cri.items.map { it.productId })
         val order = orderService.createOrder(cri.toCreateOrderCommand(products))
 
-        // 쿠폰 적용
+        // 쿠폰 적용 및 포인트 차감
         val applyCouponResult = couponService.use(cri.toUseCouponCommand(order))
         orderService.applyDiscount(OrderCommand.ApplyDiscount(order.id, applyCouponResult.discountInfo))
+        userPointService.use(UserPointCommand.Use(cri.userId, order.finalTotal(), cri.timestamp))
 
         // 결제 시작
         val payment = paymentService.preparePayment(cri.toPreparePaymentCommand(order))
         paymentService.completePayment(PaymentCommand.Complete(payment.id))
         orderService.completeOrder(order.id)
-        productService.reduceStockByPurchase(ProductCommand.ReduceStockByPurchase.Root(
-            items = order.orderItems.map { ProductCommand.ReduceStockByPurchase.Item(
-                productId = it.productId,
-                variantId = it.variantId,
-                quantity = it.quantity
-            ) }
-        ))
-        userPointService.use(UserPointCommand.Use(cri.userId, order.finalTotal(), cri.timestamp))
+
         messagingService.publish(order)
 
         return order

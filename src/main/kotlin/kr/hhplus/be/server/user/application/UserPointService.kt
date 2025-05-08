@@ -3,6 +3,10 @@ package kr.hhplus.be.server.user.application
 import kr.hhplus.be.server.user.domain.UserPointHistory
 import kr.hhplus.be.server.user.domain.UserPointHistoryRepository
 import kr.hhplus.be.server.user.domain.UserPointRepository
+import org.springframework.dao.OptimisticLockingFailureException
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Recover
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -12,6 +16,11 @@ class UserPointService(
     private val userPointHistoryRepository: UserPointHistoryRepository) {
 
     @Transactional
+    @Retryable(
+        value = [OptimisticLockingFailureException::class],
+        maxAttempts = 3,
+        backoff = Backoff(delay = 300, multiplier = 1.5)
+    )
     fun charge(cmd: UserPointCommand.Charge): UserPointResult.Charge {
         val userPoint = userPointRepository.getByUserId(cmd.userId)
         userPoint.charge(cmd.amount, cmd.now) // UserPoint의 time과 UserPointHistory의 time이 일치하는지 확인하려면 time의 주입을 어디까지 밀어내야할까?
@@ -27,7 +36,13 @@ class UserPointService(
         )
     }
 
+
     @Transactional
+    @Retryable(
+        value = [OptimisticLockingFailureException::class],
+        maxAttempts = 3,
+        backoff = Backoff(delay = 300, multiplier = 1.5)
+    )
     fun use(cmd: UserPointCommand.Use) {
         val userPoint = userPointRepository.getByUserId(cmd.userId)
         userPoint.use(cmd.amount, cmd.now)

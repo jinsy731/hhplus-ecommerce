@@ -4,8 +4,6 @@ import jakarta.persistence.*
 import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.ProductUnavailableException
 import kr.hhplus.be.server.common.entity.BaseTimeEntity
-import java.math.BigDecimal
-import kotlin.plus
 
 enum class ProductStatus {
     DRAFT,
@@ -36,10 +34,10 @@ class Product(
     @Column(nullable = false)
     var status: ProductStatus = ProductStatus.DRAFT,
 
-    @OneToMany(mappedBy = "product", cascade = [CascadeType.ALL], orphanRemoval = true)
+    @OneToMany(mappedBy = "product", cascade = [CascadeType.PERSIST], orphanRemoval = true)
     val optionSpecs: MutableList<OptionSpec> = mutableListOf(),
 
-    @OneToMany(mappedBy = "product", cascade = [CascadeType.ALL], orphanRemoval = true)
+    @OneToMany(mappedBy = "product", cascade = [CascadeType.PERSIST], orphanRemoval = true, fetch = FetchType.LAZY)
     val variants: MutableList<ProductVariant> = mutableListOf()
 ) : BaseTimeEntity() {
 
@@ -63,7 +61,7 @@ class Product(
         findVariant(variantId)?.checkAvailableToOrder(quantity)
     }
 
-    fun getVariantPrice(variantId: Long): Money {
+    fun getFinalPriceWithVariant(variantId: Long): Money {
         return (this.basePrice + findVariant(variantId).additionalPrice)
     }
 

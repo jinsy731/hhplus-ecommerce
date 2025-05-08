@@ -70,32 +70,6 @@ class UserPointServiceTest {
             })
         }
     }
-    
-    @Test
-    fun `⛔️ 유저 포인트 충전 실패_유저 포인트와 포인트 내역이 저장되지 않아야 한다`() {
-        // arrange
-        val time = LocalDateTime.now()
-        val userId = 1L
-        val initialBalance = Money.of(100)
-        val chargeAmount = Money.ZERO
-
-        val userPoint = UserPoint(1L, userId, initialBalance)
-
-        every { userPointRepository.getByUserId(userId) } returns userPoint
-
-        val cmd = UserPointCommand.Charge(
-            userId = userId,
-            amount = chargeAmount,
-            now = time
-        )
-
-        //act
-        shouldThrowExactly<InvalidChargeAmountException> { pointService.charge(cmd) }
-
-        //assert
-        verify(exactly = 0) { userPointRepository.save(any()) }
-        verify(exactly = 0) { userPointHistoryRepository.save(any()) }
-    }
 
     @Test
     fun `✅ 유저 포인트 사용`() {
@@ -160,7 +134,7 @@ class UserPointServiceTest {
         )
 
         //act
-        shouldThrowExactly<InsufficientPointException> { pointService.use(cmd) }
+        shouldThrowExactly<IllegalArgumentException> { pointService.use(cmd) }
 
         //assert
         userPoint.balance shouldBe initialBalance

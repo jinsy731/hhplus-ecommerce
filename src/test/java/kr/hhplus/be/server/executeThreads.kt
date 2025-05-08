@@ -2,16 +2,18 @@ package kr.hhplus.be.server
 
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
-fun executeThreads(count: Int = 100, block: () -> Any) {
+fun executeConcurrently(count: Int = 100, block: (Int) -> Any) {
     val countDownLatch = CountDownLatch(count)
-    val executor = Executors.newFixedThreadPool(100)
+    val executor = Executors.newFixedThreadPool(12)
 
-    repeat(count) {
+    repeat(count) { it ->
         executor.submit {
-            block()
-            countDownLatch.countDown()
+            try {
+                block(it)
+            } finally {
+                countDownLatch.countDown()
+            }
         }
     }
 
@@ -19,28 +21,20 @@ fun executeThreads(count: Int = 100, block: () -> Any) {
     executor.shutdown()
 }
 
-/**
- * 인덱스와 CountDownLatch를 파라미터로 전달하는 함수
- * 주로 동시성 테스트에서 각 스레드에게 인덱스를 전달하고 싶을 때 사용
- * @param count 실행할 스레드 수
- * @param block 각 스레드에서 실행할 로직을 정의한 함수 (인덱스와 CountDownLatch를 파라미터로 받음)
- */
-fun executeThreads(count: Int = 100, block: (index: Int, latch: CountDownLatch) -> Unit) {
+fun executeMultipleFunctionConcurrently(count: Int = 100, blocks: List<() -> Any>) {
     val countDownLatch = CountDownLatch(count)
-    val executor = Executors.newFixedThreadPool(100)
+    val executor = Executors.newFixedThreadPool(12)
 
-    repeat(count) { index ->
+    repeat(count) {
         executor.submit {
             try {
-                block(index, countDownLatch)
-            } catch (e: Exception) {
+                blocks.random()
+            } finally {
                 countDownLatch.countDown()
-                throw e
             }
         }
     }
 
-    countDownLatch.await(30, TimeUnit.SECONDS)
+    countDownLatch.await()
     executor.shutdown()
-    executor.awaitTermination(10, TimeUnit.SECONDS)
 }

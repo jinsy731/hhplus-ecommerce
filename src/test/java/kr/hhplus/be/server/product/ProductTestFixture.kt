@@ -113,7 +113,10 @@ object ProductTestFixture {
                 status = status
             )
             
-            variants.forEach { product.addVariant(it) }
+            variants.forEach {
+                product.addVariant(it)
+                it.product = product
+            }
             return product
         }
         

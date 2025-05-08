@@ -40,3 +40,9 @@ spring:
     url: jdbc:mysql://localhost:3306/hhplus?characterEncoding=UTF-8&serverTimezone=UTC
     username: application
     password: application
+
+logging:
+  level:
+    org.hibernate:
+      SQL: DEBUG
+      description.sql.BasicBinder: TRACE

@@ -277,9 +277,9 @@ class ProductServiceTestIT @Autowired constructor(
         // Arrange
         val product = testProducts[0]
         val variantId = product.variants[0].id
-        val cmd = ProductCommand.ValidatePurchasability.Root(
+        val cmd = ProductCommand.ValidateAndReduceStock.Root(
             listOf(
-                ProductCommand.ValidatePurchasability.Item(
+                ProductCommand.ValidateAndReduceStock.Item(
                     productId = product.id!!,
                     variantId = variantId!!,
                     quantity = 5
@@ -288,7 +288,7 @@ class ProductServiceTestIT @Autowired constructor(
         )
 
         // Act & Assert
-        productService.validatePurchasability(cmd) // 예외가 발생하지 않아야 함
+        productService.validateAndReduceStock(cmd) // 예외가 발생하지 않아야 함
     }
 
     @Test
@@ -296,9 +296,9 @@ class ProductServiceTestIT @Autowired constructor(
         // Arrange
         val outOfStockProduct = testProducts[2]
         val variantId = outOfStockProduct.variants[0].id
-        val cmd = ProductCommand.ValidatePurchasability.Root(
+        val cmd = ProductCommand.ValidateAndReduceStock.Root(
             listOf(
-                ProductCommand.ValidatePurchasability.Item(
+                ProductCommand.ValidateAndReduceStock.Item(
                     productId = outOfStockProduct.id!!,
                     variantId = variantId!!,
                     quantity = 1
@@ -308,7 +308,7 @@ class ProductServiceTestIT @Autowired constructor(
 
         // Act & Assert
         shouldThrowExactly<ProductUnavailableException> {
-            productService.validatePurchasability(cmd)
+            productService.validateAndReduceStock(cmd)
         }
     }
 
@@ -316,9 +316,9 @@ class ProductServiceTestIT @Autowired constructor(
     fun `❌존재하지 않는 상품은 구매 검증 시 예외가 발생한다`() {
         // Arrange
         val nonExistentProductId = 9999L
-        val cmd = ProductCommand.ValidatePurchasability.Root(
+        val cmd = ProductCommand.ValidateAndReduceStock.Root(
             listOf(
-                ProductCommand.ValidatePurchasability.Item(
+                ProductCommand.ValidateAndReduceStock.Item(
                     productId = nonExistentProductId,
                     variantId = 1L,
                     quantity = 1
@@ -328,7 +328,7 @@ class ProductServiceTestIT @Autowired constructor(
 
         // Act & Assert
         shouldThrowExactly<ResourceNotFoundException> {
-            productService.validatePurchasability(cmd)
+            productService.validateAndReduceStock(cmd)
         }
     }
 
@@ -337,9 +337,9 @@ class ProductServiceTestIT @Autowired constructor(
         // Arrange
         val product = testProducts[0]
         val variant = product.variants[1] // 재고 5개
-        val cmd = ProductCommand.ValidatePurchasability.Root(
+        val cmd = ProductCommand.ValidateAndReduceStock.Root(
             listOf(
-                ProductCommand.ValidatePurchasability.Item(
+                ProductCommand.ValidateAndReduceStock.Item(
                     productId = product.id!!,
                     variantId = variant.id!!,
                     quantity = 10 // 재고보다 많은 수량
@@ -349,7 +349,7 @@ class ProductServiceTestIT @Autowired constructor(
 
         // Act & Assert
         shouldThrowExactly<VariantOutOfStockException> {
-            productService.validatePurchasability(cmd)
+            productService.validateAndReduceStock(cmd)
         }
     }
 
@@ -360,9 +360,9 @@ class ProductServiceTestIT @Autowired constructor(
         val variant = product.variants[0]
         val initialStock = variant.stock
         val quantity = 3
-        val cmd = ProductCommand.ReduceStockByPurchase.Root(
+        val cmd = ProductCommand.ValidateAndReduceStock.Root(
             listOf(
-                ProductCommand.ReduceStockByPurchase.Item(
+                ProductCommand.ValidateAndReduceStock.Item(
                     productId = product.id!!,
                     variantId = variant.id!!,
                     quantity = quantity
@@ -371,7 +371,7 @@ class ProductServiceTestIT @Autowired constructor(
         )
 
         // Act
-        productService.reduceStockByPurchase(cmd)
+        productService.validateAndReduceStock(cmd)
 
         // Assert
         val updatedVariant = productVariantRepository.findById(variant.id!!).getOrNull() ?: throw IllegalStateException()

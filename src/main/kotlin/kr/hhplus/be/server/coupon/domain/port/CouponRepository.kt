@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable
 
 interface CouponRepository{
     fun getById(id: Long): Coupon
+    fun getByIdForUpdate(id: Long): Coupon
     fun save(coupon: Coupon): Coupon
 }
 

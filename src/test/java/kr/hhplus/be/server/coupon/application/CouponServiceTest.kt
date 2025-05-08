@@ -155,7 +155,7 @@ class CouponServiceTest {
         val cmd = CouponCommand.Issue(userId = 1L, couponId = 1L)
         
         // Mock 설정
-        every { couponRepository.getById(1L) } returns coupon
+        every { couponRepository.getByIdForUpdate(1L) } returns coupon
         every { userCouponRepository.save(any()) } returns userCoupon
         every { clockHolder.getNowInLocalDateTime() } returns now
         every { userCouponRepository.findByUserIdAndCouponId(any(), any())} returns null
@@ -165,7 +165,7 @@ class CouponServiceTest {
         
         // assert
         result.status shouldBe UserCouponStatus.UNUSED
-        verify(exactly = 1) { couponRepository.getById(1L) }
+        verify(exactly = 1) { couponRepository.getByIdForUpdate(1L) }
         verify(exactly = 1) { userCouponRepository.save(any()) }
     }
     @Test

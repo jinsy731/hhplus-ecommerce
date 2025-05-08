@@ -6,7 +6,10 @@ import kr.hhplus.be.server.common.exception.DuplicateCouponIssueException
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.DiscountLineRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
+import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.data.domain.Pageable
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -23,7 +26,7 @@ class CouponService(
         userCouponRepository.findByUserIdAndCouponId(cmd.userId, cmd.couponId)
             ?.let { throw DuplicateCouponIssueException() }
 
-        val coupon = couponRepository.getById(cmd.couponId)
+        val coupon = couponRepository.getByIdForUpdate(cmd.couponId)
         val userCoupon = coupon.issueTo(cmd.userId, clockHolder.getNowInLocalDateTime())
 
         val savedUserCoupon = userCouponRepository.save(userCoupon)
@@ -42,6 +45,11 @@ class CouponService(
      * 3. 각 대상에 할인 금액 분배 (물품별 할인 금액 계산을 위해)
      */
     @Transactional
+    @Retryable(
+        value = [OptimisticLockingFailureException::class],
+        maxAttempts = 3,
+        backoff = Backoff(delay = 300, multiplier = 1.5)
+    )
     fun use(cmd: CouponCommand.Use.Root): CouponResult.Use {
         val userCoupons = userCouponRepository.findAllByUserIdAndIdIsIn(cmd.userId, cmd.userCouponIds)
 

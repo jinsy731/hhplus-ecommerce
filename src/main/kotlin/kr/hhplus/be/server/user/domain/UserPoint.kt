@@ -10,6 +10,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
+import jakarta.persistence.Version
 import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.common.exception.InsufficientPointException
 import kr.hhplus.be.server.common.exception.InvalidChargeAmountException
@@ -34,6 +35,8 @@ import java.time.LocalDateTime
     var createdAt: LocalDateTime? = LocalDateTime.now(),
     @Column(nullable = false)
     var updatedAt: LocalDateTime? = LocalDateTime.now(),
+    @Version
+    var version: Long? = null
 ) {
 
     fun charge(amount: Money, now: LocalDateTime) {

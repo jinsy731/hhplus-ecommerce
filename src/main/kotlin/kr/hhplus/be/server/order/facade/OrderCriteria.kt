@@ -18,7 +18,6 @@ class OrderCriteria {
             val userId: Long,
             val items: List<Item>,
             val userCouponIds: List<Long>,
-            val payMethods: List<PayMethod>,
             val timestamp: LocalDateTime = LocalDateTime.now()
         )
 
@@ -26,11 +25,6 @@ class OrderCriteria {
             val productId: Long,
             val variantId: Long,
             val quantity: Int
-        )
-
-        data class PayMethod(
-            val method: String,
-            val amount: Money
         )
     }
 }

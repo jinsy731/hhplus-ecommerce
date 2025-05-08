@@ -17,7 +17,7 @@ class ProductVariant(
     val id: Long? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
+    @JoinColumn(name = "product_id", nullable = false, foreignKey = ForeignKey(ConstraintMode.NO_CONSTRAINT))
     var product: Product? = null,
 
     @Column(nullable = false)
