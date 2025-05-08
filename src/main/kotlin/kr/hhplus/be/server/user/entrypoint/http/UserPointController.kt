@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.user.entrypoint.http
 
-import kr.hhplus.be.server.common.CommonResponse
+import kr.hhplus.be.server.shared.web.CommonResponse
 import kr.hhplus.be.server.user.application.UserPointCommand
 import kr.hhplus.be.server.user.application.UserPointService
 import org.springframework.http.ResponseEntity

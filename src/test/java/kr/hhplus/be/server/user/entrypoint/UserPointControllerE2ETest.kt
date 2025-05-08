@@ -3,8 +3,8 @@ package kr.hhplus.be.server.user.entrypoint
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.common.CommonResponse
-import kr.hhplus.be.server.common.domain.Money
+import kr.hhplus.be.server.shared.web.CommonResponse
+import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.user.UserPointTestFixture
 import kr.hhplus.be.server.user.entrypoint.http.UserPointResponse
 import kr.hhplus.be.server.user.infrastructure.JpaUserPointHistoryRepository

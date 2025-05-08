@@ -5,8 +5,8 @@ import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
-import kr.hhplus.be.server.common.CommonResponse
-import kr.hhplus.be.server.common.ErrorResponse
+import kr.hhplus.be.server.shared.web.CommonResponse
+import kr.hhplus.be.server.shared.web.ErrorResponse
 import org.springframework.data.domain.Pageable
 import org.springframework.web.bind.annotation.*
 

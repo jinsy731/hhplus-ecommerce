@@ -3,8 +3,8 @@ package kr.hhplus.be.server.product.domain
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
-import kr.hhplus.be.server.common.exception.VariantOutOfStockException
-import kr.hhplus.be.server.common.exception.VariantUnavailableException
+import kr.hhplus.be.server.shared.exception.VariantOutOfStockException
+import kr.hhplus.be.server.shared.exception.VariantUnavailableException
 import kr.hhplus.be.server.product.domain.product.ProductVariant
 import kr.hhplus.be.server.product.domain.product.VariantStatus
 import org.junit.jupiter.api.Test

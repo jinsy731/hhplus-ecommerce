@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.order
 
-import kr.hhplus.be.server.common.domain.Money
+import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.order.domain.Order
 import kr.hhplus.be.server.order.domain.OrderItem
 import kr.hhplus.be.server.order.domain.OrderItemStatus

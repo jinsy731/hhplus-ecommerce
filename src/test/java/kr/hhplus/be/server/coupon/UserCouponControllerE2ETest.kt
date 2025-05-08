@@ -4,12 +4,9 @@ import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.TestcontainersConfiguration
-import kr.hhplus.be.server.common.CommonResponse
+import kr.hhplus.be.server.shared.web.CommonResponse
 import kr.hhplus.be.server.coupon.application.CouponCommand
 import kr.hhplus.be.server.coupon.application.CouponService
-import kr.hhplus.be.server.coupon.domain.model.UserCouponStatus
-import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.entrypoint.http.CouponRequest
 import kr.hhplus.be.server.coupon.entrypoint.http.CouponResponse
 import kr.hhplus.be.server.coupon.infrastructure.JpaCouponRepository
@@ -18,12 +15,10 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.context.annotation.Import
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
-import org.springframework.test.context.jdbc.Sql
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 internal class UserCouponControllerE2ETest @Autowired constructor(

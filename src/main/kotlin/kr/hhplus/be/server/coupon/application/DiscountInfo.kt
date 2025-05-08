@@ -1,8 +1,7 @@
 package kr.hhplus.be.server.coupon.application
 
-import kr.hhplus.be.server.common.domain.Money
+import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.coupon.domain.model.DiscountLine
-import java.math.BigDecimal
 
 /**
  * 할인 정보를 나타내는 인터페이스

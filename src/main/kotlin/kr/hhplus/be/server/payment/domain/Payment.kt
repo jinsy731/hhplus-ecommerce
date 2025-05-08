@@ -1,10 +1,9 @@
 package kr.hhplus.be.server.payment.domain
 
 import jakarta.persistence.*
-import kr.hhplus.be.server.common.domain.Money
-import kr.hhplus.be.server.common.entity.BaseTimeEntity
-import kr.hhplus.be.server.common.exception.AlreadyPaidException
-import java.math.BigDecimal
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.domain.BaseTimeEntity
+import kr.hhplus.be.server.shared.exception.AlreadyPaidException
 import java.time.LocalDateTime
 
 /**

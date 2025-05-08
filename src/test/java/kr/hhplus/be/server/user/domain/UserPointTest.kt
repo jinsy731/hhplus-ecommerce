@@ -2,10 +2,7 @@ package kr.hhplus.be.server.user.domain
 
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
-import kr.hhplus.be.server.common.domain.Money
-import kr.hhplus.be.server.common.exception.ErrorCode
-import kr.hhplus.be.server.common.exception.InsufficientPointException
-import kr.hhplus.be.server.common.exception.InvalidChargeAmountException
+import kr.hhplus.be.server.shared.domain.Money
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource

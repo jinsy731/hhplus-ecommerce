@@ -1,11 +1,10 @@
 package kr.hhplus.be.server.coupon.domain.model
 
 import jakarta.persistence.*
-import kr.hhplus.be.server.common.domain.Money
-import kr.hhplus.be.server.common.exception.CouponTargetNotFoundException
-import kr.hhplus.be.server.common.exception.ExceededMaxCouponLimitException
-import kr.hhplus.be.server.common.exception.InvalidCouponStatusException
-import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isActive
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.exception.CouponTargetNotFoundException
+import kr.hhplus.be.server.shared.exception.ExceededMaxCouponLimitException
+import kr.hhplus.be.server.shared.exception.InvalidCouponStatusException
 import java.time.LocalDateTime
 
 /**

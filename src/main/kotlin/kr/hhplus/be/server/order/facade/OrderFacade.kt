@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.order.facade
 
-import kr.hhplus.be.server.common.MessagingService
+import kr.hhplus.be.server.shared.messaging.MessagingService
 import kr.hhplus.be.server.coupon.application.CouponService
 import kr.hhplus.be.server.order.application.OrderCommand
 import kr.hhplus.be.server.order.application.OrderService

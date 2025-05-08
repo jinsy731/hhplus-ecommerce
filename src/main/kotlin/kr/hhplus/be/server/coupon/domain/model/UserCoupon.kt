@@ -12,8 +12,8 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import jakarta.persistence.Version
-import kr.hhplus.be.server.common.exception.ExpiredCouponException
-import kr.hhplus.be.server.common.exception.InvalidCouponStatusException
+import kr.hhplus.be.server.shared.exception.ExpiredCouponException
+import kr.hhplus.be.server.shared.exception.InvalidCouponStatusException
 import java.time.LocalDateTime
 
 /**

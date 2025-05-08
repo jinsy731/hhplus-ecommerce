@@ -3,7 +3,7 @@ package kr.hhplus.be.server.user.application
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.common.domain.Money
+import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.user.UserPointTestFixture
 import kr.hhplus.be.server.user.domain.TransactionType
 import kr.hhplus.be.server.user.domain.UserPointHistoryRepository

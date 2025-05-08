@@ -1,22 +1,16 @@
 package kr.hhplus.be.server.product.application
 
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import kr.hhplus.be.server.common.domain.Money
+import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.product.ProductTestFixture
 import kr.hhplus.be.server.product.domain.product.ProductRepository
 import kr.hhplus.be.server.product.domain.product.ProductStatus
-import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyRepository
 import kr.hhplus.be.server.product.infrastructure.JpaPopularProductsDailyRepository
-import kr.hhplus.be.server.product.infrastructure.JpaProductSalesAggregationDailyRepository
 import kr.hhplus.be.server.product.infrastructure.ProductListDto
-import org.hibernate.query.Page.page
 import org.junit.jupiter.api.Test
-import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
-import java.math.BigDecimal
 
 class ProductServiceTest {
     private val productRepository: ProductRepository = mockk()

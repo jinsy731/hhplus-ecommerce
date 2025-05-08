@@ -1,8 +1,8 @@
 package kr.hhplus.be.server.coupon.entrypoint.http
 
 import io.swagger.v3.oas.annotations.media.Schema
-import kr.hhplus.be.server.common.PageInfo
-import kr.hhplus.be.server.common.toResponse
+import kr.hhplus.be.server.shared.web.PageInfo
+import kr.hhplus.be.server.shared.web.toResponse
 import kr.hhplus.be.server.coupon.application.CouponResult
 import java.time.LocalDateTime
 

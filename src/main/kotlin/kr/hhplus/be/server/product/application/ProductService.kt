@@ -1,8 +1,8 @@
 package kr.hhplus.be.server.product.application
 
-import kr.hhplus.be.server.common.exception.ResourceNotFoundException
-import kr.hhplus.be.server.common.lock.LockType
-import kr.hhplus.be.server.common.lock.WithMultiDistributedLock
+import kr.hhplus.be.server.shared.exception.ResourceNotFoundException
+import kr.hhplus.be.server.lock.executor.LockType
+import kr.hhplus.be.server.lock.annotation.WithMultiDistributedLock
 import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductRepository
 import kr.hhplus.be.server.product.domain.stats.PopularProductDailyId

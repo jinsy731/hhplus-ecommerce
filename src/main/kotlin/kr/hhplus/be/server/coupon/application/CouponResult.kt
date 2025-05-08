@@ -1,10 +1,8 @@
 package kr.hhplus.be.server.coupon.application
 
-import kr.hhplus.be.server.common.PageResult
-import kr.hhplus.be.server.coupon.domain.model.Coupon
+import kr.hhplus.be.server.shared.web.PageResult
 import kr.hhplus.be.server.coupon.domain.model.UserCoupon
 import kr.hhplus.be.server.coupon.domain.model.UserCouponStatus
-import org.springframework.data.domain.Page
 import java.time.LocalDateTime
 
 class CouponResult {

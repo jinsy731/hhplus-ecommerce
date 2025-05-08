@@ -5,9 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kr.hhplus.be.server.common.domain.Money
-import kr.hhplus.be.server.common.exception.InsufficientPointException
-import kr.hhplus.be.server.common.exception.InvalidChargeAmountException
+import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.user.domain.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

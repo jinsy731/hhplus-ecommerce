@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.user.domain
 
 import io.kotest.matchers.shouldBe
-import kr.hhplus.be.server.common.domain.Money
+import kr.hhplus.be.server.shared.domain.Money
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 

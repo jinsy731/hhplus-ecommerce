@@ -1,11 +1,11 @@
 package kr.hhplus.be.server.coupon.application
 
-import kr.hhplus.be.server.common.ClockHolder
-import kr.hhplus.be.server.common.PageResult
-import kr.hhplus.be.server.common.exception.DuplicateCouponIssueException
-import kr.hhplus.be.server.common.lock.LockType
-import kr.hhplus.be.server.common.lock.WithDistributedLock
-import kr.hhplus.be.server.common.lock.WithMultiDistributedLock
+import kr.hhplus.be.server.shared.time.ClockHolder
+import kr.hhplus.be.server.shared.web.PageResult
+import kr.hhplus.be.server.shared.exception.DuplicateCouponIssueException
+import kr.hhplus.be.server.lock.executor.LockType
+import kr.hhplus.be.server.lock.annotation.WithDistributedLock
+import kr.hhplus.be.server.lock.annotation.WithMultiDistributedLock
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.DiscountLineRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository

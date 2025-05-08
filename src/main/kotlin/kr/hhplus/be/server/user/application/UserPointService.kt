@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.user.application
 
-import kr.hhplus.be.server.common.lock.LockType
-import kr.hhplus.be.server.common.lock.WithDistributedLock
+import kr.hhplus.be.server.lock.executor.LockType
+import kr.hhplus.be.server.lock.annotation.WithDistributedLock
 import kr.hhplus.be.server.user.domain.UserPointHistory
 import kr.hhplus.be.server.user.domain.UserPointHistoryRepository
 import kr.hhplus.be.server.user.domain.UserPointRepository

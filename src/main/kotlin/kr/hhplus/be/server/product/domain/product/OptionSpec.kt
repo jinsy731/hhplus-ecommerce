@@ -1,8 +1,7 @@
 package kr.hhplus.be.server.product.domain.product
 
 import jakarta.persistence.*
-import kr.hhplus.be.server.common.entity.BaseTimeEntity
-import java.math.BigDecimal
+import kr.hhplus.be.server.shared.domain.BaseTimeEntity
 
 @Entity
 @Table(name = "option_specs")

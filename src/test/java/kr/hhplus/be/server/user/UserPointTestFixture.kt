@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.user
 
-import kr.hhplus.be.server.common.domain.Money
+import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.user.domain.TransactionType
 import kr.hhplus.be.server.user.domain.UserPoint
 import kr.hhplus.be.server.user.domain.UserPointHistory
