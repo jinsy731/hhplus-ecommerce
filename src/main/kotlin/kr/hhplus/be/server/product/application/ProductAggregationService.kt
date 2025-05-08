@@ -13,6 +13,7 @@ import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyRepo
 import kr.hhplus.be.server.product.domain.stats.ProductSalesLog
 import kr.hhplus.be.server.product.domain.stats.ProductSalesLogRepository
 import kr.hhplus.be.server.product.domain.stats.TransactionType
+import org.springframework.cache.annotation.CacheEvict
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -25,6 +26,10 @@ class ProductAggregationService(
     private val popularProductsDailyRepository: JpaPopularProductsDailyRepository
 ) {
     @Transactional
+    @CacheEvict(
+        cacheNames = ["popularProduct"],
+        key = "'cache:product:popular'"
+    )
     fun aggregateSinceLastSummary(batchSize: Long, now: LocalDate) {
         val lastCheckpoint = productSalesAggregationDailyCheckpointRepository.findLast()
         val lastDailyLogId = lastCheckpoint?.lastAggregatedLogId ?: 0L

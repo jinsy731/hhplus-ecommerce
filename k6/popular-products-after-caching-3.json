@@ -1,0 +1,157 @@
+{
+    "metrics": {
+        "vus": {
+            "value": 13,
+            "min": 5,
+            "max": 499
+        },
+        "popular_product_trend": {
+            "avg": 6.357117882797717,
+            "min": 0.94,
+            "med": 4.329,
+            "max": 138.597,
+            "p(90)": 12.5022,
+            "p(95)": 16.3308,
+            "thresholds": {
+                "p(95)<800": false
+            }
+        },
+        "http_req_waiting": {
+            "avg": 6.091337618147411,
+            "min": 0.902,
+            "med": 4.089,
+            "max": 138.533,
+            "p(90)": 12.066200000000002,
+            "p(95)": 15.9246
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 13225,
+            "value": 0
+        },
+        "http_req_duration{expected_response:true}": {
+            "avg": 6.357117882797717,
+            "min": 0.94,
+            "med": 4.329,
+            "max": 138.597,
+            "p(90)": 12.5022,
+            "p(95)": 16.3308
+        },
+        "api_call_errors": {
+            "passes": 0,
+            "fails": 0,
+            "thresholds": {
+                "rate<0.05": false
+            },
+            "value": 0
+        },
+        "http_req_duration": {
+            "p(90)": 12.5022,
+            "p(95)": 16.3308,
+            "avg": 6.357117882797717,
+            "min": 0.94,
+            "med": 4.329,
+            "max": 138.597,
+            "thresholds": {
+                "p(95)<300": false,
+                "p(99)<500": false
+            }
+        },
+        "http_req_receiving": {
+            "p(90)": 0.399,
+            "p(95)": 0.7237999999999994,
+            "avg": 0.22398858223062215,
+            "min": 0.006,
+            "med": 0.083,
+            "max": 32.134
+        },
+        "data_received": {
+            "count": 6533150,
+            "rate": 53234.0963264542
+        },
+        "http_req_connecting": {
+            "avg": 0.027075916824196588,
+            "min": 0,
+            "med": 0,
+            "max": 10.802,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "http_req_blocked": {
+            "avg": 0.04377315689980872,
+            "min": 0.001,
+            "med": 0.007,
+            "max": 10.892,
+            "p(90)": 0.019,
+            "p(95)": 0.059
+        },
+        "http_req_tls_handshaking": {
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "http_reqs": {
+            "rate": 107.76132859606113,
+            "count": 13225
+        },
+        "checks": {
+            "passes": 26450,
+            "fails": 0,
+            "value": 1
+        },
+        "vus_max": {
+            "value": 500,
+            "min": 500,
+            "max": 500
+        },
+        "iterations": {
+            "count": 13225,
+            "rate": 107.76132859606113
+        },
+        "data_sent": {
+            "count": 2129225,
+            "rate": 17349.573903965844
+        },
+        "iteration_duration": {
+            "p(90)": 3008.5156422,
+            "p(95)": 3012.2960588,
+            "avg": 2002.1311949894114,
+            "min": 1001.198333,
+            "med": 2005.8915,
+            "max": 3114.774667
+        },
+        "http_req_sending": {
+            "min": 0.003,
+            "med": 0.022,
+            "max": 7.167,
+            "p(90)": 0.056,
+            "p(95)": 0.08,
+            "avg": 0.04179168241965864
+        }
+    },
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "Popular Products - Status 200": {
+                    "fails": 0,
+                    "name": "Popular Products - Status 200",
+                    "path": "::Popular Products - Status 200",
+                    "id": "02296cd88a67733e3c7f60b73358df10",
+                    "passes": 13225
+                },
+                "Popular Products - Has Content": {
+                    "fails": 0,
+                    "name": "Popular Products - Has Content",
+                    "path": "::Popular Products - Has Content",
+                    "id": "a43ef0bbb047d35977a839b74ff17c23",
+                    "passes": 13225
+                }
+            }
+    }
+}

@@ -1,21 +1,42 @@
 package kr.hhplus.be.server.product.application
 
 import io.kotest.matchers.collections.shouldHaveSize
+import io.mockk.Runs
+import io.mockk.clearMocks
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
-import kr.hhplus.be.server.shared.domain.Money
+import io.mockk.verify
+import jodd.time.TimeUtil.fromDate
 import kr.hhplus.be.server.product.ProductTestFixture
 import kr.hhplus.be.server.product.domain.product.ProductRepository
 import kr.hhplus.be.server.product.domain.product.ProductStatus
+import kr.hhplus.be.server.product.domain.stats.PopularProductDailyId
+import kr.hhplus.be.server.product.domain.stats.PopularProductsDaily
 import kr.hhplus.be.server.product.infrastructure.JpaPopularProductsDailyRepository
 import kr.hhplus.be.server.product.infrastructure.ProductListDto
+import kr.hhplus.be.server.shared.domain.Money
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.redis.core.RedisTemplate
+import org.springframework.data.redis.core.StringRedisTemplate
+import org.springframework.data.redis.core.ValueOperations
+import java.math.BigDecimal
+import java.time.Duration
+import java.time.LocalDate
 
 class ProductServiceTest {
-    private val productRepository: ProductRepository = mockk()
-    private val mockPopularProductDailyRepository = mockk<JpaPopularProductsDailyRepository>()
-    private val productService = ProductService(productRepository, mockPopularProductDailyRepository)
+    val productRepository = mockk<ProductRepository>()
+    val popularProductsDailyRepository = mockk<JpaPopularProductsDailyRepository>()
+
+    val productService = ProductService(productRepository, popularProductsDailyRepository)
+
+    @AfterEach
+    fun tearDown() {
+        clearMocks(productRepository)
+        clearMocks(popularProductsDailyRepository)
+    }
     
     @Test
     fun `✅상품 목록 조회`() {
@@ -31,7 +52,7 @@ class ProductServiceTest {
             basePrice = Money.of(1000),
             status = ProductStatus.ON_SALE
         ))
-        every { productRepository.searchByNameContaining(any(), any(), any()) } returns productListDto
+        every { productRepository.searchByKeyword(any(), any(), any()) } returns productListDto
 
         // act
         val result = productService.retrieveList(cmd)
@@ -39,5 +60,4 @@ class ProductServiceTest {
         // assert
         result.products shouldHaveSize 1
     }
-
 }

@@ -1,0 +1,156 @@
+{
+    "metrics": {
+        "vus": {
+            "value": 24,
+            "min": 8,
+            "max": 200
+        },
+        "product_search_trend": {
+            "p(95)": 23.763999999999996,
+            "avg": 12.721093382644353,
+            "min": 5.213,
+            "med": 9.958,
+            "max": 365.377,
+            "p(90)": 18.315,
+            "thresholds": {
+                "p(95)<200": false
+            }
+        },
+        "http_reqs": {
+            "count": 7571,
+            "rate": 61.56075933924124
+        },
+        "http_req_duration{expected_response:true}": {
+            "p(95)": 23.763999999999996,
+            "avg": 12.721093382644353,
+            "min": 5.213,
+            "med": 9.958,
+            "max": 365.377,
+            "p(90)": 18.315
+        },
+        "http_req_sending": {
+            "avg": 0.0414136837934214,
+            "min": 0.003,
+            "med": 0.024,
+            "max": 15.518,
+            "p(90)": 0.046,
+            "p(95)": 0.073
+        },
+        "http_req_receiving": {
+            "avg": 0.1719216748117821,
+            "min": 0.013,
+            "med": 0.09,
+            "max": 12.496,
+            "p(90)": 0.251,
+            "p(95)": 0.445499999999999
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 7571,
+            "value": 0
+        },
+        "iteration_duration": {
+            "avg": 2019.7806979910279,
+            "min": 1006.364,
+            "med": 2011.7515,
+            "max": 3390.651834,
+            "p(90)": 3014.180291,
+            "p(95)": 3018.1501875
+        },
+        "checks": {
+            "passes": 15142,
+            "fails": 0,
+            "value": 1
+        },
+        "http_req_duration": {
+            "med": 9.958,
+            "max": 365.377,
+            "p(90)": 18.315,
+            "p(95)": 23.763999999999996,
+            "avg": 12.721093382644353,
+            "min": 5.213,
+            "thresholds": {
+                "p(95)<200": false
+            }
+        },
+        "data_received": {
+            "count": 22023372,
+            "rate": 179074.8254564237
+        },
+        "api_call_errors": {
+            "passes": 0,
+            "fails": 0,
+            "thresholds": {
+                "rate<0.05": false
+            },
+            "value": 0
+        },
+        "http_req_tls_handshaking": {
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "http_req_blocked": {
+            "min": 0.001,
+            "med": 0.007,
+            "max": 8.983,
+            "p(90)": 0.012,
+            "p(95)": 0.028,
+            "avg": 0.03327169462422228
+        },
+        "vus_max": {
+            "max": 200,
+            "value": 200,
+            "min": 200
+        },
+        "iterations": {
+            "count": 7571,
+            "rate": 61.56075933924124
+        },
+        "http_req_connecting": {
+            "min": 0,
+            "med": 0,
+            "max": 3.759,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0.014405494650640614
+        },
+        "http_req_waiting": {
+            "max": 363.996,
+            "p(90)": 18.088,
+            "p(95)": 23.499,
+            "avg": 12.507758024039097,
+            "min": 5.152,
+            "med": 9.78
+        },
+        "data_sent": {
+            "count": 1642901,
+            "rate": 13358.635989855866
+        }
+    },
+    "root_group": {
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "Product Search - Status 200": {
+                    "name": "Product Search - Status 200",
+                    "path": "::Product Search - Status 200",
+                    "id": "e5c587dfc6629db2b8ad1afa46eef1f1",
+                    "passes": 7571,
+                    "fails": 0
+                },
+                "Product Search - Has Results": {
+                    "name": "Product Search - Has Results",
+                    "path": "::Product Search - Has Results",
+                    "id": "c908abbb3571732714eb3d3800997c4b",
+                    "passes": 7571,
+                    "fails": 0
+                }
+            },
+        "name": "",
+        "path": ""
+    }
+}

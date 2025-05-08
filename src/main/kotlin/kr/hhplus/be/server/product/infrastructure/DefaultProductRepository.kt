@@ -16,13 +16,19 @@ import org.springframework.stereotype.Repository
 import kotlin.jvm.optionals.getOrNull
 
 @Repository
-class DefaultProductRepository(private val jpaRepository: ProductJpaRepository): ProductRepository {
-    override fun searchByNameContaining(
+class DefaultProductRepository(
+    private val jpaRepository: ProductJpaRepository,
+    ): ProductRepository {
+    override fun searchByKeyword(
         keyword: String?,
         lastId: Long?,
         pageable: Pageable
     ): List<ProductListDto> {
         return jpaRepository.findByNameWithNoOffset(keyword, lastId,pageable)
+    }
+
+    override fun searchIdsByKeyword(keyword: String?): List<Long> {
+        return jpaRepository.findIdsByName(keyword)
     }
 
     override fun findAll(ids: List<Long>): List<Product> {
@@ -39,6 +45,10 @@ class DefaultProductRepository(private val jpaRepository: ProductJpaRepository):
 
     override fun getById(id: Long): Product {
         return jpaRepository.findById(id).getOrNull() ?: throw ResourceNotFoundException()
+    }
+
+    override fun findSummaryByIds(ids: List<Long>): List<ProductListDto> {
+        return jpaRepository.findSummaryByIds(ids)
     }
 }
 
@@ -59,6 +69,13 @@ interface ProductJpaRepository: JpaRepository<Product, Long> {
     ): List<ProductListDto>
 
     @Query("""
+        SELECT p.id FROM Product p
+        WHERE p.name LIKE %:name%
+        ORDER BY p.id DESC
+    """)
+    fun findIdsByName(@Param("name") name: String?): List<Long>
+
+    @Query("""
         SELECT p
         FROM Product p
         WHERE p.id in :ids
@@ -66,6 +83,15 @@ interface ProductJpaRepository: JpaRepository<Product, Long> {
     """)
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     fun findAllByIdForUpdate(@Param("ids") ids: List<Long>): List<Product>
+
+    @Query("""
+        SELECT new kr.hhplus.be.server.product.infrastructure.ProductListDto(
+            p.id, p.name, p.basePrice, p.status
+        )
+        FROM Product p
+        WHERE p.id in :ids
+    """)
+    fun findSummaryByIds(@Param("ids") ids: List<Long>): List<ProductListDto>
 }
 
 interface ProductVariantJpaRepository: JpaRepository<ProductVariant, Long> {

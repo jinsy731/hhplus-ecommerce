@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
@@ -34,6 +35,9 @@ class ProductAggregationServiceTestIT {
 
     @Autowired
     lateinit var productSalesAggregationDailyCheckpointRepository: ProductSalesAggregationDailyCheckpointRepository
+
+    @Autowired
+    lateinit var redisTemplate: RedisTemplate<String, Any>
 
     private val today = LocalDate.now()
     private val now = LocalDateTime.now()
@@ -228,5 +232,19 @@ class ProductAggregationServiceTestIT {
         val checkpoint = productSalesAggregationDailyCheckpointRepository.findLast()
         checkpoint.shouldNotBeNull()
         checkpoint.lastAggregatedLogId shouldBeGreaterThanOrEqual 1L
+    }
+
+    @Test
+    fun `aggregateSinceLastSummary 실행 시 popularProduct 캐시 evict`() {
+        // arrange
+        val cacheKey = "popularProduct::cache:product:popular"
+        redisTemplate.opsForValue().set(cacheKey, "dummy-value")
+
+        // act
+        productAggregationService.aggregateSinceLastSummary(100L, LocalDate.now())
+
+        // assert
+        val cached = redisTemplate.opsForValue().get(cacheKey)
+        cached shouldBe null
     }
 }

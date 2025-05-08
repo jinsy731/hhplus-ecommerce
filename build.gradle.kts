@@ -59,6 +59,7 @@ dependencies {
 	// Kotlin
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
     // Spring
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -68,6 +69,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-aop")
 	implementation("org.redisson:redisson-spring-boot-starter:3.23.2")
 	implementation("org.springframework.boot:spring-boot-starter-data-redis")
+	implementation("org.springframework.boot:spring-boot-starter-cache")
     // DB
 	runtimeOnly("com.mysql:mysql-connector-j")
 

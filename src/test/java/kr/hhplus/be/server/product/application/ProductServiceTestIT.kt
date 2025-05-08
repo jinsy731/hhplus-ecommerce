@@ -4,7 +4,14 @@ import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldHaveSameHashCodeAs
+import io.mockk.every
+import io.mockk.spyk
+import io.mockk.verify
 import kr.hhplus.be.server.MySqlDatabaseCleaner
+import kr.hhplus.be.server.RedisCleaner
+import kr.hhplus.be.server.product.ProductTestFixture
+import kr.hhplus.be.server.product.ProductTestFixture.product
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.exception.ProductUnavailableException
 import kr.hhplus.be.server.shared.exception.ResourceNotFoundException
@@ -19,13 +26,17 @@ import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDaily
 import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyId
 import kr.hhplus.be.server.product.infrastructure.JpaPopularProductsDailyRepository
 import kr.hhplus.be.server.product.infrastructure.JpaProductSalesAggregationDailyRepository
+import kr.hhplus.be.server.product.infrastructure.ProductJpaRepository
+import kr.hhplus.be.server.product.infrastructure.ProductListDto
 import kr.hhplus.be.server.product.infrastructure.ProductVariantJpaRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
+import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.jvm.optionals.getOrNull
 
@@ -36,7 +47,8 @@ class ProductServiceTestIT @Autowired constructor(
     private val databaseCleaner: MySqlDatabaseCleaner,
     private val productVariantRepository: ProductVariantJpaRepository,
     private val productSalesAggregationDailyRepository: JpaProductSalesAggregationDailyRepository,
-    private val popularProductsDailyRepository: JpaPopularProductsDailyRepository
+    private val popularProductsDailyRepository: JpaPopularProductsDailyRepository,
+    private val productJpaRepository: ProductJpaRepository,
 ) {
     private val testProducts = mutableListOf<Product>()
 
@@ -410,6 +422,7 @@ class ProductServiceTestIT @Autowired constructor(
         result[2].name shouldBe "테스트 상품 1"
         result[2].totalSales shouldBe 300
     }
+
     
     @Test
     fun `✅인기상품 조회 시 limit 수만큼만 조회된다`() {
@@ -434,5 +447,45 @@ class ProductServiceTestIT @Autowired constructor(
         result[0].productId shouldBe testProducts[3].id // 인기 상품 1 (판매량 50)
         result[1].productId shouldBe testProducts[4].id // 인기 상품 2 (판매량 40)
         result[2].productId shouldBe testProducts[0].id // 테스트 상품 1 (판매량 30)
+    }
+
+
+    @Test
+    fun `✅상품 목록 조회(캐싱)_캐시된 경우 DB를 조회하지 않아야 한다`() {
+        // arrange
+        val retrieveListCmd = ProductCommand.RetrieveList(
+            keyword = "테스트",
+            lastId = null,
+            pageable = PageRequest.of(0, 5)
+        )
+
+        productService.retrieveListWithPageCache(retrieveListCmd)
+        productJpaRepository.deleteAll()
+
+        // act
+        val result = productService.retrieveListWithPageCache(retrieveListCmd)
+
+        // assert
+        result.products shouldHaveSize 2
+    }
+
+    @Test
+    fun `✅인기 상품 조회(캐싱)_캐싱된 경우 DB를 조회하지 않아야 한다`() {
+        // arrange
+        val fromDate = LocalDate.now()
+        val toDate = LocalDate.now()
+        val retrievePopularCmd = ProductCommand.RetrievePopularProducts(fromDate, toDate, 5)
+
+        // 첫번째 호출 (Cache Miss)
+        productService.retrievePopularWithCaching(retrievePopularCmd)
+
+        popularProductsDailyRepository.deleteAll()
+
+        // act
+        // 두번째 호출 (Cache Hit)
+        val result = productService.retrievePopularWithCaching(retrievePopularCmd)
+
+        // assert
+        result shouldHaveSize 3
     }
 }
