@@ -1,28 +1,22 @@
 package kr.hhplus.be.server.product.application
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import kr.hhplus.be.server.shared.exception.ResourceNotFoundException
-import kr.hhplus.be.server.lock.executor.LockType
 import kr.hhplus.be.server.lock.annotation.WithMultiDistributedLock
+import kr.hhplus.be.server.lock.executor.LockType
 import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductRepository
 import kr.hhplus.be.server.product.domain.stats.PopularProductDailyId
 import kr.hhplus.be.server.product.infrastructure.JpaPopularProductsDailyRepository
-import kr.hhplus.be.server.product.infrastructure.ProductListDto
+import kr.hhplus.be.server.shared.exception.ResourceNotFoundException
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.redis.core.RedisTemplate
-import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.Duration
-import kotlin.collections.sorted
 
 @Service
 @Transactional(readOnly = true)
 class ProductService(
     private val productRepository: ProductRepository,
     private val popularProductsDailyRepository: JpaPopularProductsDailyRepository,
-    private val stringRedisTemplate: StringRedisTemplate,
     private val productRedisTemplate: RedisTemplate<String, ProductResult.RetrieveList>,
 ) {
     fun retrieveList(cmd: ProductCommand.RetrieveList): ProductResult.RetrieveList {
@@ -33,29 +27,12 @@ class ProductService(
         )
     }
 
-    fun retrieveListWithPageCache(cmd: ProductCommand.RetrieveList): ProductResult.RetrieveList {
-        val keyword = cmd.keyword ?: "all"
-        val pageSize = cmd.pageable.pageSize
-        val lastId = cmd.lastId ?: Long.MAX_VALUE
-        val cacheKey = "product:search:page:$keyword:$lastId:$pageSize"
-
-        // 캐시 조회
-        val cached = productRedisTemplate.opsForValue().get(cacheKey)
-        if (cached != null) {
-            return cached
-        }
-
-        // 캐시 미스 - DB 조회
-        val products = productRepository.searchByKeyword(cmd.keyword, cmd.lastId, cmd.pageable)
-
-        val result = ProductResult.RetrieveList(
-            products = products.map { it.toProductDetail() }
-        )
-
-        // 캐시 저장 (페이지 단위)
-        productRedisTemplate.opsForValue().set(cacheKey, result, Duration.ofMinutes(10))
-        return result
-    }
+    @Cacheable(
+        cacheNames = ["productSearch"],
+        key = "'cache:product:search:' + (#cmd.keyword ?: 'all') + ':' + (#cmd.lastId ?: Long.MAX_VALUE) + ':' + #cmd.pageable.pageSize"
+    )
+    fun retrieveListWithPageCache(cmd: ProductCommand.RetrieveList): ProductResult.RetrieveList =
+        retrieveList(cmd)
 
     @WithMultiDistributedLock(
         keys = [
@@ -77,10 +54,9 @@ class ProductService(
     }
 
     fun retrievePopular(cmd: ProductCommand.RetrievePopularProducts): List<ProductResult.PopularProduct> {
-        // 지정된 날짜로부터 랭킹 조회 (fromDate ~ toDate까지)
         val salesAggregates = popularProductsDailyRepository.findAllById(
             (1..cmd.limit).map { PopularProductDailyId(cmd.toDate, it) }
-        )
+        ).toList()
         val products = productRepository.findAll(salesAggregates.map { it.productId })
         
         return salesAggregates.map { aggregate ->
