@@ -52,13 +52,19 @@ export default function () {
   check(searchResponse, {
     'Product Search - Status 200': (r) => r.status === 200,
     'Product Search - Has Results': (r) => {
-      try {
-        const body = JSON.parse(r.body);
-        return body?.data?.content?.length >= 0;
-      } catch (_) {
-        return false;
+        try {
+          const body = JSON.parse(r.body);
+          const products = body?.data?.products;
+          const isArray = Array.isArray(products);
+          if (!isArray) {
+            console.log("❌ products가 배열이 아님:", products);
+          }
+          return isArray;
+        } catch (err) {
+          console.log("❌ JSON 파싱 에러:", err);
+          return false;
+        }
       }
-    }
   }) || apiCallErrors.add(1);
 
   productSearchTrend.add(searchResponse.timings.duration);
