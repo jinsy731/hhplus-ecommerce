@@ -94,7 +94,8 @@ class ProductService(
 
     @Cacheable(
         cacheNames = ["popularProducts"],
-        key = "'cache:product:popular'"
+        key = "'cache:product:popular'",
+        unless = "#result == null"
     )
     fun retrievePopularWithCaching(cmd: ProductCommand.RetrievePopularProducts): List<ProductResult.PopularProduct>
     = retrievePopular(cmd)

@@ -5,6 +5,7 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
+import kr.hhplus.be.server.RedisCleaner
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.exception.ProductUnavailableException
 import kr.hhplus.be.server.shared.exception.ResourceNotFoundException
@@ -37,7 +38,8 @@ class ProductServiceTestIT @Autowired constructor(
     private val databaseCleaner: MySqlDatabaseCleaner,
     private val productVariantRepository: ProductVariantJpaRepository,
     private val productSalesAggregationDailyRepository: JpaProductSalesAggregationDailyRepository,
-    private val popularProductsDailyRepository: JpaPopularProductsDailyRepository
+    private val popularProductsDailyRepository: JpaPopularProductsDailyRepository,
+    private val redisCleaner: RedisCleaner
 ) {
     private val testProducts = mutableListOf<Product>()
 
@@ -421,6 +423,39 @@ class ProductServiceTestIT @Autowired constructor(
         result[1].name shouldBe "인기 상품 2"
         result[1].totalSales shouldBe 500
         
+        result[2].productId shouldBe testProducts[0].id // 테스트 상품 1 (판매량 30)
+        result[2].name shouldBe "테스트 상품 1"
+        result[2].totalSales shouldBe 300
+    }
+
+    @RepeatedTest(3)
+    fun `✅최근 3일간 인기상품을 판매량 순으로 조회할 수 있다(캐싱)`() {
+        // Arrange
+        val today = LocalDate.now()
+        val fromDate = today.minusDays(2)
+        val limit = 5
+
+        val cmd = ProductCommand.RetrievePopularProducts(
+            fromDate = fromDate,
+            toDate = today,
+            limit = limit
+        )
+
+        // Act
+        val result = productService.retrievePopularWithCaching(cmd)
+
+        // Assert
+        result shouldHaveSize 3
+
+        // 판매량 순으로 정렬되어야 함
+        result[0].productId shouldBe testProducts[3].id // 인기 상품 1 (판매량 50)
+        result[0].name shouldBe "인기 상품 1"
+        result[0].totalSales shouldBe 1000
+
+        result[1].productId shouldBe testProducts[4].id // 인기 상품 2 (판매량 40)
+        result[1].name shouldBe "인기 상품 2"
+        result[1].totalSales shouldBe 500
+
         result[2].productId shouldBe testProducts[0].id // 테스트 상품 1 (판매량 30)
         result[2].name shouldBe "테스트 상품 1"
         result[2].totalSales shouldBe 300
