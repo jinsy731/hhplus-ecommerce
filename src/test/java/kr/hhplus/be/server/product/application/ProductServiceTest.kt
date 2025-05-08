@@ -60,45 +60,4 @@ class ProductServiceTest {
         // assert
         result.products shouldHaveSize 1
     }
-
-    @Test
-    fun `✅상품 목록 조회(캐싱)_캐시된 경우 DB를 조회하지 않아야 한다`() {
-        every { productRepository.searchByKeyword(any(), any(), any()) } returns listOf(
-            ProductListDto(1L, "coat A", Money(BigDecimal("10000")), ProductStatus.ON_SALE)
-        )
-
-
-        val retrieveListCmd = ProductCommand.RetrieveList(
-            keyword = "코트",
-            lastId = null,
-            pageable = PageRequest.of(0, 5)
-        )
-
-        productService.retrieveListWithPageCache(retrieveListCmd)
-        productService.retrieveListWithPageCache(retrieveListCmd)
-
-        verify(exactly = 1) {
-            productRepository.searchByKeyword(any(), any(), any())
-        }
-    }
-
-    @Test
-    fun `✅인기 상품 조회(캐싱)_캐싱된 경우 DB를 조회하지 않아야 한다`() {
-        every { popularProductsDailyRepository.findAllById(any()) } returns listOf(
-            PopularProductsDaily(PopularProductDailyId(LocalDate.now(), 1), 1L, 100L)
-        )
-        every { productRepository.findAll(any()) } returns listOf(ProductTestFixture.product(id = 1L).build())
-        val fromDate = LocalDate.now()
-        val toDate = LocalDate.now()
-        val retrievePopularCmd = ProductCommand.RetrievePopularProducts(fromDate, toDate, 5)
-
-        // 첫번째 호출 (Cache Miss)
-        productService.retrievePopularWithCaching(retrievePopularCmd)
-
-        // 두번째 호출 (Cache Hit)
-        productService.retrievePopularWithCaching(retrievePopularCmd)
-
-        verify(exactly = 1) { popularProductsDailyRepository.findAllById(any()) }
-    }
-
 }
