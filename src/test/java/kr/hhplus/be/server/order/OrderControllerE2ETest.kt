@@ -13,8 +13,8 @@ import kr.hhplus.be.server.order.entrypoint.http.OrderResponse
 import kr.hhplus.be.server.order.infrastructure.JpaOrderRepository
 import kr.hhplus.be.server.product.ProductTestFixture
 import kr.hhplus.be.server.product.infrastructure.ProductJpaRepository
-import kr.hhplus.be.server.user.UserPointTestFixture
-import kr.hhplus.be.server.user.infrastructure.JpaUserPointRepository
+import kr.hhplus.be.server.point.UserPointTestFixture
+import kr.hhplus.be.server.point.infrastructure.JpaUserPointRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired

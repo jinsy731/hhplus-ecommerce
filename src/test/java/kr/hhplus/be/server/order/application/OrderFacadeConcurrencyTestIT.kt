@@ -11,8 +11,8 @@ import kr.hhplus.be.server.order.facade.OrderFacade
 import kr.hhplus.be.server.product.ProductTestFixture
 import kr.hhplus.be.server.product.domain.product.ProductRepository
 import kr.hhplus.be.server.product.infrastructure.ProductVariantJpaRepository
-import kr.hhplus.be.server.user.UserPointTestFixture
-import kr.hhplus.be.server.user.infrastructure.JpaUserPointRepository
+import kr.hhplus.be.server.point.UserPointTestFixture
+import kr.hhplus.be.server.point.infrastructure.JpaUserPointRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.platform.commons.logging.LoggerFactory

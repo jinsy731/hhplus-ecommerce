@@ -9,8 +9,8 @@ import kr.hhplus.be.server.payment.application.PaymentCommand
 import kr.hhplus.be.server.payment.application.PaymentService
 import kr.hhplus.be.server.product.application.ProductCommand
 import kr.hhplus.be.server.product.application.ProductService
-import kr.hhplus.be.server.user.application.UserPointCommand
-import kr.hhplus.be.server.user.application.UserPointService
+import kr.hhplus.be.server.point.application.UserPointCommand
+import kr.hhplus.be.server.point.application.UserPointService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
