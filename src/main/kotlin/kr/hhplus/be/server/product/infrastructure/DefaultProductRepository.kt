@@ -1,8 +1,8 @@
 package kr.hhplus.be.server.product.infrastructure
 
 import jakarta.persistence.LockModeType
-import kr.hhplus.be.server.common.domain.Money
-import kr.hhplus.be.server.common.exception.ResourceNotFoundException
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.exception.ResourceNotFoundException
 import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductRepository
 import kr.hhplus.be.server.product.domain.product.ProductStatus

@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.product.entrypoint.http
 
-import kr.hhplus.be.server.common.CommonResponse
+import kr.hhplus.be.server.shared.web.CommonResponse
 import kr.hhplus.be.server.product.application.ProductCommand
 import kr.hhplus.be.server.product.application.ProductService
 import org.springframework.data.domain.Pageable

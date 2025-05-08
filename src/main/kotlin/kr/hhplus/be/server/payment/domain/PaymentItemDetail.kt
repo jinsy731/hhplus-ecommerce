@@ -1,9 +1,8 @@
 package kr.hhplus.be.server.payment.domain
 
 import jakarta.persistence.*
-import kr.hhplus.be.server.common.domain.Money
-import kr.hhplus.be.server.common.entity.BaseTimeEntity
-import java.math.BigDecimal
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.domain.BaseTimeEntity
 
 /**
  * 결제 항목 상세 엔티티

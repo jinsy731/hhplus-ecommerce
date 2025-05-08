@@ -2,9 +2,9 @@ package kr.hhplus.be.server.order.domain.model
 
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
-import kr.hhplus.be.server.common.domain.Money
-import kr.hhplus.be.server.common.exception.AlreadyPaidOrderException
-import kr.hhplus.be.server.common.exception.ErrorCode
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.exception.AlreadyPaidOrderException
+import kr.hhplus.be.server.shared.exception.ErrorCode
 import kr.hhplus.be.server.coupon.application.DiscountInfo
 import kr.hhplus.be.server.order.OrderTestFixture
 import kr.hhplus.be.server.order.domain.Order

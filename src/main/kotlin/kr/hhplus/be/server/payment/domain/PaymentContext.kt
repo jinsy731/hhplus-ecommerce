@@ -1,7 +1,6 @@
 package kr.hhplus.be.server.payment.domain
 
-import kr.hhplus.be.server.common.domain.Money
-import java.math.BigDecimal
+import kr.hhplus.be.server.shared.domain.Money
 import java.time.LocalDateTime
 
 class PaymentContext {

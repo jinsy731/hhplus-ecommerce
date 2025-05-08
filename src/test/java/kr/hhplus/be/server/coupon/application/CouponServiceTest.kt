@@ -6,9 +6,9 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kr.hhplus.be.server.common.ClockHolder
-import kr.hhplus.be.server.common.domain.Money
-import kr.hhplus.be.server.common.exception.DuplicateCouponIssueException
+import kr.hhplus.be.server.shared.time.ClockHolder
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.exception.DuplicateCouponIssueException
 import kr.hhplus.be.server.coupon.CouponTestFixture
 import kr.hhplus.be.server.coupon.domain.model.*
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
@@ -18,7 +18,6 @@ import kr.hhplus.be.server.order.OrderTestFixture
 import kr.hhplus.be.server.order.application.toUseCouponCommandItem
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
 import java.time.LocalDateTime
 
 class CouponServiceTest {

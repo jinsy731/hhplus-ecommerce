@@ -4,10 +4,10 @@ import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
-import kr.hhplus.be.server.common.domain.Money
-import kr.hhplus.be.server.common.exception.CouponTargetNotFoundException
-import kr.hhplus.be.server.common.exception.ExceededMaxCouponLimitException
-import kr.hhplus.be.server.common.exception.InvalidCouponStatusException
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.exception.CouponTargetNotFoundException
+import kr.hhplus.be.server.shared.exception.ExceededMaxCouponLimitException
+import kr.hhplus.be.server.shared.exception.InvalidCouponStatusException
 import kr.hhplus.be.server.coupon.CouponTestFixture
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime

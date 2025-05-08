@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.coupon.infrastructure
 
-import kr.hhplus.be.server.common.exception.ResourceNotFoundException
+import kr.hhplus.be.server.shared.exception.ResourceNotFoundException
 import kr.hhplus.be.server.coupon.domain.model.Coupon
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import org.springframework.stereotype.Repository

@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.product.entrypoint.http
 
 import io.swagger.v3.oas.annotations.media.Schema
-import kr.hhplus.be.server.common.domain.Money
+import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.product.application.ProductResult
 import kr.hhplus.be.server.product.domain.product.ProductStatus
 import java.math.BigDecimal

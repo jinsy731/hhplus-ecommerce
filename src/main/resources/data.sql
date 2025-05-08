@@ -152,7 +152,7 @@ VALUES ('MINIMUM_AMOUNT', 5000.00, NULL);
 INSERT INTO discount_type (type, discount_amount, max_discount_amount, discount_rate)
 VALUES ('RATE', NULL, 10000.00, 10.00);
 -- 조건 ID = 1, 타입 ID = 1 이라고 가정
-INSERT INTO discount_policy (name, discount_condition_id, discount_type_id)
+INSERT INTO discount_policy (1, name, discount_condition_id, discount_type_id)
 VALUES ('10% 할인 정책', 1, 1);
 INSERT INTO coupons (
     created_at, description, end_at, is_active,
@@ -164,6 +164,96 @@ VALUES (
     0, 1000, '연말 10% 할인 쿠폰',
     '2025-01-01 00:00:00', NOW(), 30, 1
 );
+
+
+-- 1. 무조건 사용 가능한 discount_condition 하나 만들기
+insert into discount_condition (condition_type, min_amount, product_id)
+values ('ALL_PRODUCT', null, null);
+
+-- 2. discount_type (할인 방식 정의, 예를 들면 정액 1000원 할인)
+insert into discount_type (type, discount_amount, max_discount_amount, discount_rate)
+values ('FIXED_AMOUNT_TOTAL', 1000, null, null);
+
+-- 3. discount_policy (위의 condition과 type을 연결) ID=2
+insert into discount_policy (id, name, discount_condition_id, discount_type_id)
+values (2, 'No Condition Policy',
+        (select id from discount_condition where condition_type = 'ALL_PRODUCT' order by id desc limit 1),
+        (select id from discount_type where type = 'FIXED_AMOUNT_TOTAL' order by id desc limit 1)
+);
+
+-- 4. No Condition Coupon 10만개 생성
+insert into coupons (
+    created_at, description, end_at, is_active, issued_count,
+    max_issue_limit, name, start_at, updated_at, valid_days, discount_policy_id
+)
+with recursive coupon_cte as (
+    select 1 as seq
+    union all
+    select seq + 1
+    from coupon_cte
+    where seq < 100000
+)
+select
+    now(),
+    concat('No Condition Coupon #', seq),
+    date_add(now(), interval 30 day),  -- 유효기간 30일
+    b'1',
+    0,
+    1,  -- 1개만 발급 가능
+    concat('Coupon_', seq),
+    now(),
+    now(),
+    30,
+    (select id from discount_policy where name = 'No Condition Policy' order by id desc limit 1)
+from coupon_cte;
+
+-- 5. UserCoupon 생성
+insert into user_coupons (
+    expired_at, issued_at, status, used_at, user_id, coupon_id
+)
+with recursive user_coupon_cte as (
+    select 1 as seq
+    union all
+    select seq + 1
+    from user_coupon_cte
+    where seq < 100000
+)
+select
+    date_add(now(), interval 30 day),
+    now(),
+    'UNUSED',
+    null,
+    seq,  -- user_id = seq (1~100000)
+    (select min(id) from coupons) + seq - 1  -- coupon_id도 생성 순서대로 매칭
+from user_coupon_cte;
+
+-- 아직 발급되지 않은 쿠폰 생성
+insert into coupons (
+    created_at, description, end_at, is_active, issued_count,
+    max_issue_limit, name, start_at, updated_at, valid_days, discount_policy_id
+)
+with recursive unissued_coupon_cte as (
+    select 1 as seq
+    union all
+    select seq + 1
+    from unissued_coupon_cte
+    where seq < 100000
+)
+
+select
+    now(),
+    concat('Unissued Coupon #', seq),
+    date_add(now(), interval 30 day),
+    b'1',
+    0,
+    1,
+    concat('Unissued_Coupon_', seq),
+    now(),
+    now(),
+    30,
+    (select id from discount_policy where name = 'No Condition Policy' order by id desc limit 1)
+from unissued_coupon_cte;
+
 
 
 

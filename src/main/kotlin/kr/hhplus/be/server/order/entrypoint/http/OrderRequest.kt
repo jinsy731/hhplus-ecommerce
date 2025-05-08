@@ -1,9 +1,7 @@
 package kr.hhplus.be.server.order.entrypoint.http
 
 import io.swagger.v3.oas.annotations.media.Schema
-import kr.hhplus.be.server.common.domain.Money
 import kr.hhplus.be.server.order.facade.OrderCriteria
-import java.math.BigDecimal
 
 class OrderRequest {
     class Create {

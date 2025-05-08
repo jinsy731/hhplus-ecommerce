@@ -3,7 +3,7 @@ package kr.hhplus.be.server.order.application
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.common.domain.Money
+import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.executeConcurrently
 import kr.hhplus.be.server.order.domain.OrderRepository
 import kr.hhplus.be.server.order.facade.OrderCriteria
@@ -11,8 +11,8 @@ import kr.hhplus.be.server.order.facade.OrderFacade
 import kr.hhplus.be.server.product.ProductTestFixture
 import kr.hhplus.be.server.product.domain.product.ProductRepository
 import kr.hhplus.be.server.product.infrastructure.ProductVariantJpaRepository
-import kr.hhplus.be.server.user.UserPointTestFixture
-import kr.hhplus.be.server.user.infrastructure.JpaUserPointRepository
+import kr.hhplus.be.server.point.UserPointTestFixture
+import kr.hhplus.be.server.point.infrastructure.JpaUserPointRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.platform.commons.logging.LoggerFactory

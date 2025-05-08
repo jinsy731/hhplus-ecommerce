@@ -4,9 +4,9 @@ import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
-import kr.hhplus.be.server.common.domain.Money
-import kr.hhplus.be.server.common.exception.AlreadyPaidException
-import kr.hhplus.be.server.common.exception.ResourceNotFoundException
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.exception.AlreadyPaidException
+import kr.hhplus.be.server.shared.exception.ResourceNotFoundException
 import kr.hhplus.be.server.payment.domain.PaymentRepository
 import kr.hhplus.be.server.payment.domain.PaymentStatus
 import org.junit.jupiter.api.Test

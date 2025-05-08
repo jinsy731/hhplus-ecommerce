@@ -1,6 +1,8 @@
 package kr.hhplus.be.server.product.application
 
-import kr.hhplus.be.server.common.exception.ResourceNotFoundException
+import kr.hhplus.be.server.shared.exception.ResourceNotFoundException
+import kr.hhplus.be.server.lock.executor.LockType
+import kr.hhplus.be.server.lock.annotation.WithMultiDistributedLock
 import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductRepository
 import kr.hhplus.be.server.product.domain.stats.PopularProductDailyId
@@ -21,9 +23,17 @@ class ProductService(
         )
     }
 
+    @WithMultiDistributedLock(
+        keys = [
+            "#cmd.items.![ 'product:' + #this.productId ]",
+            "#cmd.items.![ 'variant:' + #this.variantId ]"
+       ],
+        type = LockType.PUBSUB,
+        waitTimeMillis = 4000
+    )
     @Transactional
     fun validateAndReduceStock(cmd: ProductCommand.ValidateAndReduceStock.Root) {
-        val products = productRepository.findAllByIdForUpdate(cmd.items.map { it.productId })
+        val products = productRepository.findAllByIdForUpdate(cmd.items.map { it.productId }.sorted())
 
         cmd.items.forEach { item ->
             val product = products.find { it.id == item.productId } ?: throw ResourceNotFoundException()

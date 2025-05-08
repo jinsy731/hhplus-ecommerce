@@ -1,8 +1,7 @@
 package kr.hhplus.be.server.order.domain
 
 import jakarta.persistence.*
-import kr.hhplus.be.server.common.domain.Money
-import java.math.BigDecimal
+import kr.hhplus.be.server.shared.domain.Money
 
 @Entity
 @Table(name = "order_items")
