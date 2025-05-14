@@ -11,6 +11,8 @@ import kr.hhplus.be.server.product.application.ProductCommand
 import kr.hhplus.be.server.product.application.ProductService
 import kr.hhplus.be.server.point.application.UserPointCommand
 import kr.hhplus.be.server.point.application.UserPointService
+import kr.hhplus.be.server.rank.RankingCommand
+import kr.hhplus.be.server.rank.RankingService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -21,7 +23,8 @@ class OrderFacade(
     private val userPointService: UserPointService,
     private val paymentService: PaymentService,
     private val productService: ProductService,
-    private val messagingService: MessagingService
+    private val messagingService: MessagingService,
+    private val rankingService: RankingService
     ) {
 
     @Transactional
@@ -48,6 +51,10 @@ class OrderFacade(
         orderService.completeOrder(order.id)
 
         messagingService.publish(order)
+        rankingService.updateProductRanking(RankingCommand.UpdateProductRanking.Root(
+            items = order.orderItems.map { RankingCommand.UpdateProductRanking.Item(it.productId, it.quantity.toLong()) },
+            timestamp = cri.timestamp
+        ))
 
         return order
     }

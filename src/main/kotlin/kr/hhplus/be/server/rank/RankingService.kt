@@ -1,11 +1,13 @@
 package kr.hhplus.be.server.rank
 
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
 class RankingService(private val productRankingRepository: ProductRankingRepository) {
 
+    @Async
     fun updateProductRanking(cmd: RankingCommand.UpdateProductRanking.Root) {
         cmd.items.forEach { item ->
             productRankingRepository.increaseRanking(
