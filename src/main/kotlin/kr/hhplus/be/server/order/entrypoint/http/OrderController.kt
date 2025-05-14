@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.order.entrypoint.http
 
-import kr.hhplus.be.server.common.CommonResponse
+import kr.hhplus.be.server.shared.web.CommonResponse
 import kr.hhplus.be.server.order.facade.OrderFacade
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping

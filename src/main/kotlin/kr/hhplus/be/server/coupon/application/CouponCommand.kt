@@ -1,9 +1,7 @@
 package kr.hhplus.be.server.coupon.application
 
-import kr.hhplus.be.server.common.domain.Money
-import kr.hhplus.be.server.coupon.domain.model.Coupon
+import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.coupon.domain.model.DiscountContext
-import java.math.BigDecimal
 import java.time.LocalDateTime
 
 class CouponCommand {

@@ -1,9 +1,8 @@
 package kr.hhplus.be.server.coupon.domain.model
 
 import jakarta.persistence.*
-import kr.hhplus.be.server.common.domain.Money
-import kr.hhplus.be.server.common.infrastructure.LongSetConverter
-import java.math.BigDecimal
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.persistence.LongSetConverter
 
 /**
  * 할인 조건을 정의하는 인터페이스

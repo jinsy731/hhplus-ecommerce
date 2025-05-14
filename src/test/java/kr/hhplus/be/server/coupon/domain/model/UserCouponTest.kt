@@ -4,10 +4,10 @@ import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
-import kr.hhplus.be.server.common.domain.Money
-import kr.hhplus.be.server.common.exception.ErrorCode
-import kr.hhplus.be.server.common.exception.ExpiredCouponException
-import kr.hhplus.be.server.common.exception.InvalidCouponStatusException
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.exception.ErrorCode
+import kr.hhplus.be.server.shared.exception.ExpiredCouponException
+import kr.hhplus.be.server.shared.exception.InvalidCouponStatusException
 import kr.hhplus.be.server.coupon.CouponTestFixture
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest

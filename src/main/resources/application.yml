@@ -26,7 +26,7 @@ spring:
       hibernate.default_batch_fetch_size: 100
   sql:
     init:
-      mode: always
+      mode: never
       schema-locations: classpath:schema.sql
       data-locations: classpath:data.sql
       continue-on-error: true
@@ -40,6 +40,11 @@ spring:
     url: jdbc:mysql://localhost:3306/hhplus?characterEncoding=UTF-8&serverTimezone=UTC
     username: application
     password: application
+
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 3000
 
 logging:
   level:

@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 services:
   mysql:
     image: mysql:8.0
@@ -13,6 +13,13 @@ services:
       - ./data/mysql/:/var/lib/mysql
       - ./data/mysql/log/:/var/log/mysql
       - ./data/mysql/conf.d/:/etc/mysql/conf.d/
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+
 
 
 networks:

@@ -11,6 +11,8 @@ fun executeConcurrently(count: Int = 100, block: (Int) -> Any) {
         executor.submit {
             try {
                 block(it)
+            } catch(e: Throwable) {
+                e.printStackTrace()
             } finally {
                 countDownLatch.countDown()
             }

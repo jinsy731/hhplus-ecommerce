@@ -1,11 +1,9 @@
 package kr.hhplus.be.server.coupon.entrypoint.http
 
-import kr.hhplus.be.server.common.CommonResponse
-import kr.hhplus.be.server.common.PageInfo
+import kr.hhplus.be.server.shared.web.CommonResponse
 import kr.hhplus.be.server.coupon.application.CouponService
 import org.springframework.data.domain.Pageable
 import org.springframework.web.bind.annotation.*
-import java.time.LocalDateTime
 
 @RestController
 @RequestMapping("/api/v1/users")

@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.coupon.domain.model
 
 import io.kotest.matchers.shouldBe
-import kr.hhplus.be.server.common.domain.Money
+import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.coupon.CouponTestFixture
 import org.junit.jupiter.api.Test
 

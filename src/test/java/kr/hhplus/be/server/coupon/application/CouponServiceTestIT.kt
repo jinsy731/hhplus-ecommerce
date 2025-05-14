@@ -1,20 +1,14 @@
 package kr.hhplus.be.server.coupon.application
 
-import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.common.ClockHolder
-import kr.hhplus.be.server.common.domain.Money
-import kr.hhplus.be.server.common.exception.CouponTargetNotFoundException
-import kr.hhplus.be.server.common.exception.InvalidCouponStatusException
+import kr.hhplus.be.server.shared.time.ClockHolder
+import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.coupon.CouponTestFixture
-import kr.hhplus.be.server.coupon.CouponTestFixture.coupon
 import kr.hhplus.be.server.coupon.domain.model.*
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
-import kr.hhplus.be.server.coupon.infrastructure.JpaCouponRepository
-import kr.hhplus.be.server.coupon.infrastructure.JpaUserCouponRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.whenever
@@ -22,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
-import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @SpringBootTest

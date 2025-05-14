@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.order.infrastructure
 
-import kr.hhplus.be.server.common.exception.ResourceNotFoundException
+import kr.hhplus.be.server.shared.exception.ResourceNotFoundException
 import kr.hhplus.be.server.order.domain.Order
 import kr.hhplus.be.server.order.domain.OrderRepository
 import org.springframework.stereotype.Repository

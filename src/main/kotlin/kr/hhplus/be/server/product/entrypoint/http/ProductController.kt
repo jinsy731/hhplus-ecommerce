@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.product.entrypoint.http
 
-import kr.hhplus.be.server.common.CommonResponse
+import kr.hhplus.be.server.shared.web.CommonResponse
 import kr.hhplus.be.server.product.application.ProductCommand
 import kr.hhplus.be.server.product.application.ProductService
 import org.springframework.data.domain.Pageable
@@ -21,7 +21,7 @@ class ProductController(private val productService: ProductService): ProductApiS
         @RequestParam keyword: String?,
         @RequestParam lastId: Long?,
     ): ResponseEntity<CommonResponse<ProductResponse.Retrieve.Lists>> {
-        val result = productService.retrieveList(ProductCommand.RetrieveList(pageable,lastId, keyword))
+        val result = productService.retrieveListWithPageCache(ProductCommand.RetrieveList(pageable,lastId, keyword))
         return ResponseEntity.ok(CommonResponse(result.toProductResponse()))
     }
 
@@ -32,7 +32,7 @@ class ProductController(private val productService: ProductService): ProductApiS
         val limit = 5
         
         val cmd = ProductCommand.RetrievePopularProducts(fromDate, toDate, limit)
-        val result = productService.retrievePopular(cmd)
+        val result = productService.retrievePopularWithCaching(cmd)
         
         return ResponseEntity.ok(CommonResponse(result.map { it.toPopularProductResponse() }))
     }

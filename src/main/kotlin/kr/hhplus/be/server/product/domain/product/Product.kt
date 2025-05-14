@@ -1,9 +1,9 @@
 package kr.hhplus.be.server.product.domain.product
 
 import jakarta.persistence.*
-import kr.hhplus.be.server.common.domain.Money
-import kr.hhplus.be.server.common.exception.ProductUnavailableException
-import kr.hhplus.be.server.common.entity.BaseTimeEntity
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.exception.ProductUnavailableException
+import kr.hhplus.be.server.shared.domain.BaseTimeEntity
 
 enum class ProductStatus {
     DRAFT,

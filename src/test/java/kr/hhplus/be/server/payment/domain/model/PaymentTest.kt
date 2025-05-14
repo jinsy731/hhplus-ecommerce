@@ -3,8 +3,8 @@ package kr.hhplus.be.server.payment.domain.model
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import kr.hhplus.be.server.common.domain.Money
-import kr.hhplus.be.server.common.exception.AlreadyPaidException
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.exception.AlreadyPaidException
 import kr.hhplus.be.server.payment.application.PaymentCommand
 import kr.hhplus.be.server.payment.application.toPreparePaymentContext
 import kr.hhplus.be.server.payment.domain.Payment
