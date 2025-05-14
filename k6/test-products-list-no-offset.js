@@ -19,9 +19,9 @@ export let options = {
       executor: 'ramping-vus',
       startVUs: 5,
       stages: [
-        { duration: '30s', target: 20 },
-        { duration: '1m', target: 20 },
-        { duration: '30s', target: 20 }
+        { duration: '30s', target: 100 },
+        { duration: '1m', target: 200 },
+        { duration: '30s', target: 100 }
       ],
       gracefulRampDown: '10s'
     }
@@ -52,13 +52,19 @@ export default function () {
   check(searchResponse, {
     'Product Search - Status 200': (r) => r.status === 200,
     'Product Search - Has Results': (r) => {
-      try {
-        const body = JSON.parse(r.body);
-        return body?.data?.content?.length >= 0;
-      } catch (_) {
-        return false;
+        try {
+          const body = JSON.parse(r.body);
+          const products = body?.data?.products;
+          const isArray = Array.isArray(products);
+          if (!isArray) {
+            console.log("❌ products가 배열이 아님:", products);
+          }
+          return isArray;
+        } catch (err) {
+          console.log("❌ JSON 파싱 에러:", err);
+          return false;
+        }
       }
-    }
   }) || apiCallErrors.add(1);
 
   productSearchTrend.add(searchResponse.timings.duration);
