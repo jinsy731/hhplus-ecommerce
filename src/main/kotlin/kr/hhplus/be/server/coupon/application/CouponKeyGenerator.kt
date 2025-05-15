@@ -20,4 +20,12 @@ object CouponKeyGenerator {
     fun getFailedIssueRequestQueueKey(couponId: Long): String {
         return "coupon:$couponId:issue:failed-requests"
     }
+
+    fun getIssueRequestedCouponIdSetKey(): String {
+        return "coupon:issue:requested-coupon-ids"
+    }
+
+    fun getFailedIssueRequestedCouponIdSetKey(): String {
+        return "coupon:issue:failed-requested-coupon-ids"
+    }
 }
