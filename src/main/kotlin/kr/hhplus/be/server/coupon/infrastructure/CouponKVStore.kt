@@ -1,15 +1,20 @@
 package kr.hhplus.be.server.coupon.infrastructure
 
 interface CouponKVStore {
-    fun existsIssuedUser(userId: Long, couponId: Long)
+    fun existsIssuedUser(userId: Long, couponId: Long): Boolean
     fun setIssuedUser(userId: Long, couponId: Long)
+    fun countIssuedUser(couponId: Long): Long
 
     fun pushToIssueReqeustQueue(issueRequest: CouponIssueRequest)
     fun popBatchFromIssueRequestQueue(couponId: Long, batchSize: Long): List<CouponIssueRequest>
+    fun peekAllFromIssueRequestQueue(couponId: Long): List<CouponIssueRequest>
+    fun peekBatchFromIssueRequestQueue(couponId: Long, batchSize: Long): List<CouponIssueRequest>
+    fun countIssueRequestQueue(couponId: Long): Long
 
     fun pushToFailedIssueRequestQueue(issueRequest: CouponIssueRequest)
     fun pushAllToFailedIssueRequestQueue(failedRequests: List<CouponIssueRequest>)
     fun popBatchFromFailedIssueRequestQueue(couponId: Long, batchSize: Long): List<CouponIssueRequest>
+    fun countFailedIssueRequestQueue(couponId: Long): Long
 
     fun getStock(couponId: Long): CouponStock
     fun getStocks(couponIds: List<Long>): CouponStock
@@ -18,10 +23,17 @@ interface CouponKVStore {
     fun setIssuedStatus(userId: Long, couponId: Long, status: IssuedStatus)
     fun getIssuedStatus(userId: Long, couponId: Long): IssuedStatus
 
-    fun addToIssueRequestedCouponIdSet(couponId: Long)
-    fun popFromIssueRequestedCouponIdSet(): Long?
-    fun addToFailedIssueRequestedCouponIdSet(couponId: Long)
-    fun popFromFailedIssueRequestedCouponIdSet(): Long?
+    fun pushToIssueRequestedCouponIdList(couponId: Long)
+    fun popFromIssueRequestedCouponIdList(): Long?
+    
+    fun pushToFailedIssueRequestedCouponIdList(couponId: Long)
+    fun popFromFailedIssueRequestedCouponIdList(): Long?
+    
+    fun pushToOutOfStockCouponIdList(couponId: Long)
+    fun popFromOutOfStockCouponIdList(): Long?
+
+    fun markAsIssued(userId: Long, couponId: Long): Boolean
+    fun rollbackIssuedMark(userId: Long, couponId: Long): Boolean
 }
 
 data class CouponIssueRequest(
@@ -35,5 +47,5 @@ data class CouponStock(
 )
 
 enum class IssuedStatus {
-    PROCESSING, ISSUED, FAILED
+    PENDING, PROCESSING, ISSUED, FAILED
 }

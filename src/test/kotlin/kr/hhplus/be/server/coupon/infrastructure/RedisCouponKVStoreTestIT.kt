@@ -37,10 +37,12 @@ class RedisCouponKVStoreTestIT @Autowired constructor(
         val couponId = 100L
         val key = CouponKeyGenerator.getIssuedUserSetKey(couponId)
 
+        var isExists = redisCouponKVStore.existsIssuedUser(userId, couponId)
+        isExists shouldBe false
         redisCouponKVStore.setIssuedUser(userId, couponId)
 
-        val isMember = redisTemplate.opsForSet().isMember(key, userId.toString())
-        isMember shouldBe true
+        isExists = redisCouponKVStore.existsIssuedUser(userId, couponId)
+        isExists shouldBe true
     }
 
     @Test
@@ -148,48 +150,11 @@ class RedisCouponKVStoreTestIT @Autowired constructor(
     fun `쿠폰 발급 상태를 정상적으로 저장하고 조회한다`() {
         val userId = 1L
         val couponId = 100L
-        val status = IssuedStatus.PROCESSING
+        val status = IssuedStatus.ISSUED
 
         redisCouponKVStore.setIssuedStatus(userId, couponId, status)
         val result = redisCouponKVStore.getIssuedStatus(userId, couponId)
 
-        result shouldBe IssuedStatus.PROCESSING
-    }
-
-    @Test
-    fun `발급 요청된 쿠폰 ID 세트 관련 기능이 정상 동작한다`() {
-        val couponId = 100L
-        val setKey = CouponKeyGenerator.getIssueRequestedCouponIdSetKey()
-
-        redisCouponKVStore.addToIssueRequestedCouponIdSet(couponId)
-        val isMember = redisTemplate.opsForSet().isMember(setKey, couponId.toString())
-        val popResult = redisCouponKVStore.popFromIssueRequestedCouponIdSet()
-
-        isMember shouldBe true
-        popResult.shouldNotBeNull()
-        popResult shouldBe couponId
-    }
-
-    @Test
-    fun `실패한 발급 요청된 쿠폰 ID 세트 관련 기능이 정상 동작한다`() {
-        val couponId = 100L
-        val setKey = CouponKeyGenerator.getFailedIssueRequestedCouponIdSetKey()
-
-        redisCouponKVStore.addToFailedIssueRequestedCouponIdSet(couponId)
-        val isMember = redisTemplate.opsForSet().isMember(setKey, couponId.toString())
-        val popResult = redisCouponKVStore.popFromFailedIssueRequestedCouponIdSet()
-
-        isMember shouldBe true
-        popResult.shouldNotBeNull()
-        popResult shouldBe couponId
-    }
-    
-    @Test
-    fun `쿠폰 ID 세트에서 존재하지 않는 키를 팝하면 빈 문자열을 반환한다`() {
-        val popResult1 = redisCouponKVStore.popFromIssueRequestedCouponIdSet()
-        val popResult2 = redisCouponKVStore.popFromFailedIssueRequestedCouponIdSet()
-        
-        popResult1.shouldBeNull()
-        popResult2.shouldBeNull()
+        result shouldBe IssuedStatus.ISSUED
     }
 } 

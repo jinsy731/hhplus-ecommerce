@@ -21,11 +21,15 @@ object CouponKeyGenerator {
         return "coupon:$couponId:issue:failed-requests"
     }
 
-    fun getIssueRequestedCouponIdSetKey(): String {
+    fun getIssueRequestedCouponIdListKey(): String {
         return "coupon:issue:requested-coupon-ids"
     }
 
-    fun getFailedIssueRequestedCouponIdSetKey(): String {
+    fun getFailedIssueRequestedCouponIdListKey(): String {
         return "coupon:issue:failed-requested-coupon-ids"
+    }
+
+    fun getOutOfStockCouponIdListKey(): String {
+        return "coupon:issue:out-of-stock-coupon-ids"
     }
 }
