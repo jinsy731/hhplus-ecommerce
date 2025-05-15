@@ -1,6 +1,10 @@
 package kr.hhplus.be.server.rank
 
 import kr.hhplus.be.server.RedisCleaner
+import kr.hhplus.be.server.rank.application.RankingPeriod
+import kr.hhplus.be.server.rank.application.RankingQuery
+import kr.hhplus.be.server.rank.application.RankingService
+import kr.hhplus.be.server.rank.entrypoint.scheduler.RankingRenewalScheduler
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.verify

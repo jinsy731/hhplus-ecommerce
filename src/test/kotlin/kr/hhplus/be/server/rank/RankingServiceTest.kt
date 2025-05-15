@@ -7,6 +7,13 @@ import io.mockk.mockk
 import io.mockk.verify
 import kr.hhplus.be.server.product.ProductTestFixture
 import kr.hhplus.be.server.product.domain.product.ProductRepository
+import kr.hhplus.be.server.rank.application.RankingPeriod
+import kr.hhplus.be.server.rank.application.RankingQuery
+import kr.hhplus.be.server.rank.application.RankingResult
+import kr.hhplus.be.server.rank.application.RankingService
+import kr.hhplus.be.server.rank.infrastructure.persistence.ProductRankingRepository
+import kr.hhplus.be.server.rank.infrastructure.persistence.RankingSetting
+import kr.hhplus.be.server.rank.infrastructure.persistence.RankingSettingRepository
 import kr.hhplus.be.server.shared.cache.CacheKey
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -27,7 +34,8 @@ class RankingServiceTest {
         productRepository = mockk()
         rankingSettingRepository = mockk(relaxed = true)
         cacheManager = mockk()
-        rankingService = RankingService(productRankingRepository, productRepository, rankingSettingRepository, cacheManager)
+        rankingService =
+            RankingService(productRankingRepository, productRepository, rankingSettingRepository, cacheManager)
     }
 
     @Test
@@ -166,7 +174,9 @@ class RankingServiceTest {
         val expectedFrom = today.minusDays(periodType.periodDays)
 
         every { rankingSettingRepository.get(periodType) } returns null // 설정이 없음
-        every { rankingSettingRepository.save(periodType, RankingSetting(defaultTopN)) } returns RankingSetting(defaultTopN) // save 동작 모킹
+        every { rankingSettingRepository.save(periodType, RankingSetting(defaultTopN)) } returns RankingSetting(
+            defaultTopN
+        ) // save 동작 모킹
 
         // when
         val (from, to, topN) = rankingService.resolveQueryProperties(periodType)

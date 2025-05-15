@@ -7,7 +7,7 @@ import kr.hhplus.be.server.point.UserPointTestFixture
 import kr.hhplus.be.server.point.infrastructure.JpaUserPointRepository
 import kr.hhplus.be.server.product.ProductTestFixture
 import kr.hhplus.be.server.product.infrastructure.ProductJpaRepository
-import kr.hhplus.be.server.rank.ProductRankingRepository
+import kr.hhplus.be.server.rank.infrastructure.persistence.ProductRankingRepository
 import kr.hhplus.be.server.shared.domain.Money
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.AfterEach

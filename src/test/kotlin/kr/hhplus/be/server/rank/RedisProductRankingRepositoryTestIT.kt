@@ -2,8 +2,9 @@ package kr.hhplus.be.server.rank
 
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
-import io.lettuce.core.RedisURI.Builder.redis
 import kr.hhplus.be.server.RedisCleaner
+import kr.hhplus.be.server.rank.application.RankingKeyGenerator
+import kr.hhplus.be.server.rank.infrastructure.persistence.RedisProductRankingRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.rank
+package kr.hhplus.be.server.rank.application
 
 import org.springframework.stereotype.Component
 import java.time.LocalDate

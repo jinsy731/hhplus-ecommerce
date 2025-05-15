@@ -1,5 +1,6 @@
-package kr.hhplus.be.server.rank
+package kr.hhplus.be.server.rank.infrastructure.persistence
 
+import kr.hhplus.be.server.rank.application.RankingKeyGenerator
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Repository
 import java.time.LocalDate

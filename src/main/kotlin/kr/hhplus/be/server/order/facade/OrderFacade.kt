@@ -11,8 +11,8 @@ import kr.hhplus.be.server.product.application.ProductCommand
 import kr.hhplus.be.server.product.application.ProductService
 import kr.hhplus.be.server.point.application.UserPointCommand
 import kr.hhplus.be.server.point.application.UserPointService
-import kr.hhplus.be.server.rank.RankingCommand
-import kr.hhplus.be.server.rank.RankingService
+import kr.hhplus.be.server.rank.application.RankingCommand
+import kr.hhplus.be.server.rank.application.RankingService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 

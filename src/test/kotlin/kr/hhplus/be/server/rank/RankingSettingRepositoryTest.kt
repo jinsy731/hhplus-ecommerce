@@ -2,6 +2,9 @@ package kr.hhplus.be.server.rank
 
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.RedisCleaner
+import kr.hhplus.be.server.rank.application.RankingPeriod
+import kr.hhplus.be.server.rank.infrastructure.persistence.RankingSetting
+import kr.hhplus.be.server.rank.infrastructure.persistence.RankingSettingRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired

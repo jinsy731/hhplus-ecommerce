@@ -5,6 +5,10 @@ import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.RedisCleaner
 import kr.hhplus.be.server.product.ProductTestFixture
 import kr.hhplus.be.server.product.infrastructure.ProductJpaRepository
+import kr.hhplus.be.server.rank.application.RankingCommand
+import kr.hhplus.be.server.rank.application.RankingPeriod
+import kr.hhplus.be.server.rank.application.RankingService
+import kr.hhplus.be.server.rank.entrypoint.http.RankingResponse
 import kr.hhplus.be.server.shared.cache.CacheKey
 import kr.hhplus.be.server.shared.web.CommonResponse
 import org.awaitility.Awaitility.await

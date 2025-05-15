@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.rank
 
+import kr.hhplus.be.server.rank.application.RankingKeyGenerator
+import kr.hhplus.be.server.rank.infrastructure.persistence.RedisProductRankingRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.DisplayName

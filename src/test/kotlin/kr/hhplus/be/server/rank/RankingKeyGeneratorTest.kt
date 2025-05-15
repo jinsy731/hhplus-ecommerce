@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.rank
 
+import kr.hhplus.be.server.rank.application.RankingKeyGenerator
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 import java.time.LocalDate

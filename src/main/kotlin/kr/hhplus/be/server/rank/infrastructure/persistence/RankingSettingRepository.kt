@@ -1,6 +1,7 @@
-package kr.hhplus.be.server.rank
+package kr.hhplus.be.server.rank.infrastructure.persistence
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import kr.hhplus.be.server.rank.application.RankingPeriod
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Repository
 

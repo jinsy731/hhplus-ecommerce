@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.rank
+package kr.hhplus.be.server.rank.infrastructure.persistence
 
 import java.time.LocalDate
 

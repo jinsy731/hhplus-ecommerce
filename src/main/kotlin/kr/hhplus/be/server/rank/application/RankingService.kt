@@ -1,10 +1,11 @@
-package kr.hhplus.be.server.rank
+package kr.hhplus.be.server.rank.application
 
 import kr.hhplus.be.server.product.domain.product.ProductRepository
+import kr.hhplus.be.server.rank.infrastructure.persistence.ProductRankingRepository
+import kr.hhplus.be.server.rank.infrastructure.persistence.RankingSetting
+import kr.hhplus.be.server.rank.infrastructure.persistence.RankingSettingRepository
 import kr.hhplus.be.server.shared.cache.CacheKey
 import org.springframework.cache.CacheManager
-import org.springframework.cache.annotation.CacheEvict
-import org.springframework.cache.annotation.CachePut
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service

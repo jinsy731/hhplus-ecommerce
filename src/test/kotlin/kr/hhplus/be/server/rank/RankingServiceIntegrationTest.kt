@@ -5,6 +5,15 @@ import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.RedisCleaner
 import kr.hhplus.be.server.product.ProductTestFixture
 import kr.hhplus.be.server.product.domain.product.ProductRepository
+import kr.hhplus.be.server.rank.application.RankingCommand
+import kr.hhplus.be.server.rank.application.RankingKeyGenerator
+import kr.hhplus.be.server.rank.application.RankingPeriod
+import kr.hhplus.be.server.rank.application.RankingQuery
+import kr.hhplus.be.server.rank.application.RankingResult
+import kr.hhplus.be.server.rank.application.RankingService
+import kr.hhplus.be.server.rank.infrastructure.persistence.ProductRankingRepository
+import kr.hhplus.be.server.rank.infrastructure.persistence.RankingSetting
+import kr.hhplus.be.server.rank.infrastructure.persistence.RankingSettingRepository
 import kr.hhplus.be.server.shared.cache.CacheKey
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.AfterEach
