@@ -134,4 +134,48 @@ class RankingServiceTest {
         verify(exactly = 0) { productRankingRepository.getTopN(any(), any(), any()) }
         verify(exactly = 0) { productRepository.findAll(any<List<Long>>()) }
     }
+
+    @Test
+    fun `resolveQueryProperties는 RankingSetting이 존재할 때 해당 설정값을 반환한다`() {
+        // given
+        val periodType = RankingPeriod.DAILY
+        val expectedTopN = 10L
+        val setting = RankingSetting(expectedTopN)
+        val today = LocalDate.now()
+        val expectedFrom = today.minusDays(periodType.periodDays)
+
+        every { rankingSettingRepository.get(periodType) } returns setting
+
+        // when
+        val (from, to, topN) = rankingService.resolveQueryProperties(periodType)
+
+        // then
+        from shouldBe expectedFrom
+        to shouldBe today
+        topN shouldBe expectedTopN
+        verify(exactly = 1) { rankingSettingRepository.get(periodType) }
+        verify(exactly = 0) { rankingSettingRepository.save(any(), any()) } // save는 호출되지 않아야 함
+    }
+
+    @Test
+    fun `resolveQueryProperties는 RankingSetting이 없을 때 기본값으로 설정하고 반환한다`() {
+        // given
+        val periodType = RankingPeriod.WEEKLY
+        val defaultTopN = 5L // RankingService 내의 DEFAULT_TOP_N 값과 일치해야 함
+        val today = LocalDate.now()
+        val expectedFrom = today.minusDays(periodType.periodDays)
+
+        every { rankingSettingRepository.get(periodType) } returns null // 설정이 없음
+        every { rankingSettingRepository.save(periodType, RankingSetting(defaultTopN)) } returns RankingSetting(defaultTopN) // save 동작 모킹
+
+        // when
+        val (from, to, topN) = rankingService.resolveQueryProperties(periodType)
+
+        // then
+        from shouldBe expectedFrom
+        to shouldBe today
+        topN shouldBe defaultTopN
+        verify(exactly = 1) { rankingSettingRepository.get(periodType) }
+        verify(exactly = 1) { rankingSettingRepository.save(periodType, RankingSetting(defaultTopN)) } // save가 기본값으로 호출되어야 함
+    }
 } 
