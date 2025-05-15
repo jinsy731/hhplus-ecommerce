@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.RedisCleaner
 import kr.hhplus.be.server.product.ProductTestFixture
 import kr.hhplus.be.server.product.domain.product.ProductRepository
+import kr.hhplus.be.server.shared.cache.CacheKey
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -13,6 +14,8 @@ import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.cache.CacheManager
+import org.springframework.cache.get
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import java.time.LocalDateTime
@@ -25,7 +28,8 @@ class RankingServiceIntegrationTest @Autowired constructor(
     private val redisTemplate: RedisTemplate<String, Any>,
     private val rankingKeyGenerator: RankingKeyGenerator,
     private val redisCleaner: RedisCleaner,
-    @Autowired private val productRepository: ProductRepository
+    @Autowired private val productRepository: ProductRepository,
+    @Autowired private val cacheManager: CacheManager
 ) {
     @MockitoSpyBean
     private lateinit var spyProductRepository: ProductRepository
@@ -179,5 +183,73 @@ class RankingServiceIntegrationTest @Autowired constructor(
         // then
         // findAll은 한 번만 호출되어야 함
         verify(spyProductRepository, times(1)).findAll(any())
+    }
+
+    @Test
+    fun `✅상품 랭킹 캐시가 정상적으로 갱신되어야 한다`() {
+        // given
+        val now = LocalDateTime.now()
+        val date = now.toLocalDate()
+
+        // 상품 데이터 저장
+        val product1 = productRepository.save(ProductTestFixture.product(name = "상품1").build())
+        val product2 = productRepository.save(ProductTestFixture.product(name = "상품2").build())
+        val product3 = productRepository.save(ProductTestFixture.product(name = "상품3").build())
+
+
+        // 랭킹 데이터 업데이트
+        val command = RankingCommand.UpdateProductRanking.Root(
+            items = listOf(
+                RankingCommand.UpdateProductRanking.Item(product1.id!!, 3L),
+                RankingCommand.UpdateProductRanking.Item(product2.id!!, 5L),
+                RankingCommand.UpdateProductRanking.Item(product3.id!!, 2L)
+            ),
+            timestamp = now
+        )
+        rankingService.updateProductRanking(command)
+
+        Thread.sleep(500) // 비동기 처리 대기
+
+        val query = RankingQuery.RetrieveProductRanking(
+            from = date,
+            to = date,
+            topN = 2
+        )
+        val existingCache = cacheManager.getCache(CacheKey.PRODUCT_RANKING_CACHE_NAME)
+            ?.get(CacheKey.PRODUCT_RANKING_CACHE_KEY)
+
+        println("existingCache = ${existingCache}")
+
+        // when: 첫 번째 캐시 갱신 (상위 2개)
+        rankingService.renewProductRankingCache(query)
+
+        // then: 캐시된 데이터 확인
+        val cache = cacheManager.getCache(CacheKey.PRODUCT_RANKING_CACHE_NAME)
+        var cachedResult = cache?.get(CacheKey.PRODUCT_RANKING_CACHE_KEY)?.get() as RankingResult.RetrieveProductRanking.Root?
+        
+        cachedResult shouldBe RankingResult.RetrieveProductRanking.Root(
+            products = listOf(
+                RankingResult.RetrieveProductRanking.ProductRanking(1, product2.id!!, "상품2"),
+                RankingResult.RetrieveProductRanking.ProductRanking(2, product1.id!!, "상품1")
+            )
+        )
+
+        // when: 다른 조건으로 캐시 갱신 (상위 3개)
+        val queryTop3 = RankingQuery.RetrieveProductRanking(
+            from = date,
+            to = date,
+            topN = 3
+        )
+        rankingService.renewProductRankingCache(queryTop3)
+
+        // then: 캐시된 데이터가 갱신되었는지 확인
+        cachedResult = cache?.get(CacheKey.PRODUCT_RANKING_CACHE_KEY)?.get() as RankingResult.RetrieveProductRanking.Root?
+        cachedResult shouldBe RankingResult.RetrieveProductRanking.Root(
+            products = listOf(
+                RankingResult.RetrieveProductRanking.ProductRanking(1, product2.id!!, "상품2"),
+                RankingResult.RetrieveProductRanking.ProductRanking(2, product1.id!!, "상품1"),
+                RankingResult.RetrieveProductRanking.ProductRanking(3, product3.id!!, "상품3")
+            )
+        )
     }
 } 

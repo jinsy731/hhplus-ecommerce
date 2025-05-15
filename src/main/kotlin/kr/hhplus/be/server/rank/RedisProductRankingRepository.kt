@@ -27,7 +27,7 @@ class RedisProductRankingRepository(
             .unionAndStore(keys[0],keys.drop(1), unionKey)
 
         return redisTemplate.opsForZSet()
-            .reverseRange(unionKey, 0, topN)
+            .reverseRange(unionKey, 0, topN - 1)
             ?.map { (it as Int).toLong()}
             ?: emptyList()
     }
