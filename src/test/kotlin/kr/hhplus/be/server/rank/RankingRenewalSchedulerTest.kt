@@ -24,7 +24,7 @@ class RankingRenewalSchedulerTest {
 
         // then
         val argumentCaptor = argumentCaptor<RankingQuery.RetrieveProductRanking>()
-        verify(rankingService).retrieveProductRanking(argumentCaptor.capture())
+        verify(rankingService).renewProductRankingCache(argumentCaptor.capture())
 
         val capturedQuery = argumentCaptor.firstValue
         assert(capturedQuery.from == LocalDate.now().minusDays(2))

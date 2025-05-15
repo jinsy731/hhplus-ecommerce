@@ -14,6 +14,6 @@ class RankingRenewalScheduler(private val rankingService: RankingService) {
             to = LocalDate.now(),
             topN = 5
         )
-        rankingService.retrieveProductRanking(query)
+        rankingService.renewProductRankingCache(query)
     }
 }
