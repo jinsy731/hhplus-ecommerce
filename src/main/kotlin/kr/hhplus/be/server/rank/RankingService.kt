@@ -30,7 +30,7 @@ class RankingService(
 
     @Cacheable(
         cacheNames = [CacheKey.PRODUCT_RANKING_CACHE_NAME],
-        key = "'product:daily:topN:' + #query.topN"
+        key = "'product:daily'"
     )
     fun retrieveProductRanking(query: RankingQuery.RetrieveProductRanking): RankingResult.RetrieveProductRanking.Root {
         val topProductIds = productRankingRepository.getTopN(query.from, query.to, query.topN)
