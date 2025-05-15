@@ -95,6 +95,8 @@ class RankingServiceTest {
         val today = LocalDate.now()
         val from = today.minusDays(periodType.periodDays)
         val topN = 2L
+        val cacheName = CacheKey.PRODUCT_RANKING_CACHE_NAME
+        val cacheKey = CacheKey.PRODUCT_RANKING_CACHE_KEY_PREFIX + periodType.name
 
         val productIds = listOf(2L, 1L)
         val products = listOf(
@@ -109,7 +111,7 @@ class RankingServiceTest {
         )
 
         val cache = mockk<Cache>(relaxed = true)
-        every { cacheManager.getCache(CacheKey.PRODUCT_RANKING_CACHE_NAME) } returns cache
+        every { cacheManager.getCache(cacheName) } returns cache
         every { rankingSettingRepository.get(periodType) } returns RankingSetting(topN)
         every { productRankingRepository.getTopN(from, today, topN) } returns productIds
         every { productRepository.findAll(productIds) } returns products
@@ -118,11 +120,11 @@ class RankingServiceTest {
         rankingService.renewProductRankingCache(query)
 
         // then
-        verify(exactly = 1) { cacheManager.getCache(CacheKey.PRODUCT_RANKING_CACHE_NAME) }
+        verify(exactly = 1) { cacheManager.getCache(cacheName) }
         verify(exactly = 1) { rankingSettingRepository.get(periodType) }
         verify(exactly = 1) { productRankingRepository.getTopN(from, today, topN) }
         verify(exactly = 1) { productRepository.findAll(productIds) }
-        verify(exactly = 1) { cache.put(CacheKey.PRODUCT_RANKING_CACHE_KEY, expectedRankingResult) }
+        verify(exactly = 1) { cache.put(cacheKey, expectedRankingResult) }
     }
 
     @Test
@@ -130,14 +132,15 @@ class RankingServiceTest {
         // given
         val periodType = RankingPeriod.DAILY
         val query = RankingQuery.RetrieveProductRanking(periodType)
+        val cacheName = CacheKey.PRODUCT_RANKING_CACHE_NAME
 
-        every { cacheManager.getCache(CacheKey.PRODUCT_RANKING_CACHE_NAME) } returns null
+        every { cacheManager.getCache(cacheName) } returns null
 
         // when
         rankingService.renewProductRankingCache(query)
 
         // then
-        verify(exactly = 1) { cacheManager.getCache(CacheKey.PRODUCT_RANKING_CACHE_NAME) }
+        verify(exactly = 1) { cacheManager.getCache(cacheName) }
         verify(exactly = 0) { rankingSettingRepository.get(any()) }
         verify(exactly = 0) { productRankingRepository.getTopN(any(), any(), any()) }
         verify(exactly = 0) { productRepository.findAll(any<List<Long>>()) }
@@ -162,21 +165,21 @@ class RankingServiceTest {
         to shouldBe today
         topN shouldBe expectedTopN
         verify(exactly = 1) { rankingSettingRepository.get(periodType) }
-        verify(exactly = 0) { rankingSettingRepository.save(any(), any()) } // save는 호출되지 않아야 함
+        verify(exactly = 0) { rankingSettingRepository.save(any(), any()) }
     }
 
     @Test
     fun `resolveQueryProperties는 RankingSetting이 없을 때 기본값으로 설정하고 반환한다`() {
         // given
         val periodType = RankingPeriod.WEEKLY
-        val defaultTopN = 5L // RankingService 내의 DEFAULT_TOP_N 값과 일치해야 함
+        val defaultTopN = 5L
         val today = LocalDate.now()
         val expectedFrom = today.minusDays(periodType.periodDays)
 
-        every { rankingSettingRepository.get(periodType) } returns null // 설정이 없음
+        every { rankingSettingRepository.get(periodType) } returns null
         every { rankingSettingRepository.save(periodType, RankingSetting(defaultTopN)) } returns RankingSetting(
             defaultTopN
-        ) // save 동작 모킹
+        )
 
         // when
         val (from, to, topN) = rankingService.resolveQueryProperties(periodType)
@@ -186,6 +189,6 @@ class RankingServiceTest {
         to shouldBe today
         topN shouldBe defaultTopN
         verify(exactly = 1) { rankingSettingRepository.get(periodType) }
-        verify(exactly = 1) { rankingSettingRepository.save(periodType, RankingSetting(defaultTopN)) } // save가 기본값으로 호출되어야 함
+        verify(exactly = 1) { rankingSettingRepository.save(periodType, RankingSetting(defaultTopN)) }
     }
 } 

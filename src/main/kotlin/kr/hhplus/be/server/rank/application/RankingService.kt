@@ -55,7 +55,7 @@ class RankingService(
 
     fun renewProductRankingCache(query: RankingQuery.RetrieveProductRanking) {
         val cacheName = CacheKey.PRODUCT_RANKING_CACHE_NAME
-        val cacheKey = CacheKey.PRODUCT_RANKING_CACHE_KEY
+        val cacheKey = CacheKey.PRODUCT_RANKING_CACHE_KEY_PREFIX + query.periodType.name
         val cache = cacheManager.getCache(cacheName) ?: return
 
         cache.put(cacheKey, retrieveProductRanking(query))

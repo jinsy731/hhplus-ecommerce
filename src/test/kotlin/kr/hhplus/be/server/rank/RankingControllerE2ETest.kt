@@ -43,6 +43,9 @@ class RankingControllerE2ETest @Autowired constructor(
     fun `retrieveTopProducts는 최근 3일 기준 상위 5개 인기 상품을 조회한다`() {
         // arrange: 상품 랭킹 세팅
         val rankingPeriod = RankingPeriod.DAILY
+        val cacheKey = CacheKey.PRODUCT_RANKING_CACHE_KEY_PREFIX + rankingPeriod.name
+        val cacheName = CacheKey.PRODUCT_RANKING_CACHE_NAME
+
         redisCleaner.clean()
         val product1 = ProductTestFixture.product(name = "상품1").build()
         val product2 = ProductTestFixture.product(name = "상품2").build()
@@ -61,7 +64,7 @@ class RankingControllerE2ETest @Autowired constructor(
 
         // act
         await().atMost(10, TimeUnit.SECONDS).untilAsserted {
-            cacheManager.getCache(CacheKey.PRODUCT_RANKING_CACHE_NAME)?.evict(CacheKey.PRODUCT_RANKING_CACHE_KEY)
+            cacheManager.getCache(CacheKey.PRODUCT_RANKING_CACHE_NAME)?.evict(CacheKey.PRODUCT_RANKING_CACHE_KEY_PREFIX)
             val response = restTemplate.exchange(
                 "/api/v1/ranking/products?periodType=$rankingPeriod",
                 HttpMethod.GET,

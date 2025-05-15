@@ -26,6 +26,7 @@ import org.mockito.kotlin.any
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.cache.CacheManager
+import org.springframework.cache.get
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import java.time.LocalDate
@@ -33,7 +34,7 @@ import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
 @SpringBootTest
-class RankingServiceIntegrationTest @Autowired constructor(
+class RankingServiceTestIT @Autowired constructor(
     private val rankingService: RankingService,
     private val productRankingRepository: ProductRankingRepository,
     private val redisTemplate: RedisTemplate<String, Any>,
@@ -126,8 +127,8 @@ class RankingServiceIntegrationTest @Autowired constructor(
     fun `✅상품 랭킹이 정확한 순서로 조회되어야 한다`() {
         // given
         val now = LocalDateTime.now()
-        val date = now.toLocalDate()
-        
+        val periodType = RankingPeriod.DAILY
+
         // 상품 데이터 저장
         val product1 = productRepository.save(ProductTestFixture.product(name = "상품1").build())
         val product2 = productRepository.save(ProductTestFixture.product(name = "상품2").build())
@@ -145,7 +146,7 @@ class RankingServiceIntegrationTest @Autowired constructor(
         Thread.sleep(500)
 
         // when
-        val query = RankingQuery.RetrieveProductRanking(periodType = RankingPeriod.DAILY)
+        val query = RankingQuery.RetrieveProductRanking(periodType)
         val result = rankingService.retrieveProductRanking(query)
 
         // then
@@ -165,6 +166,9 @@ class RankingServiceIntegrationTest @Autowired constructor(
     @Test
     fun `✅캐시된 데이터는 DB 조회를 하지 않아야 한다`() {
         // given
+        val periodType = RankingPeriod.DAILY
+        val cacheKey = CacheKey.PRODUCT_RANKING_CACHE_KEY_PREFIX + periodType.name
+        val cacheName = CacheKey.PRODUCT_RANKING_CACHE_NAME
         val now = LocalDateTime.now()
         val product1 = productRepository.save(ProductTestFixture.product(name = "상품1").build())
         val product2 = productRepository.save(ProductTestFixture.product(name = "상품2").build())
@@ -181,12 +185,11 @@ class RankingServiceIntegrationTest @Autowired constructor(
 
         Thread.sleep(500)
 
-        val query = RankingQuery.RetrieveProductRanking(
-            periodType = RankingPeriod.DAILY
-        )
+        val query = RankingQuery.RetrieveProductRanking(periodType)
 
         // when : 두 번 호출, 두 번쨰는 캐시 타야함.
         Mockito.clearInvocations(spyProductRepository) // save 할 때 findAll이 호출돼서 테스트 간섭 생겨서 추가.. 왜?
+        cacheManager.getCache(cacheName)?.evict(cacheKey)
         rankingService.retrieveProductRanking(query)
         val result = rankingService.retrieveProductRanking(query)
 
@@ -202,6 +205,9 @@ class RankingServiceIntegrationTest @Autowired constructor(
         // given
         val now = LocalDateTime.now()
         val date = now.toLocalDate()
+        val cacheKey = CacheKey.PRODUCT_RANKING_CACHE_KEY_PREFIX + RankingPeriod.DAILY.name
+        val cacheName = CacheKey.PRODUCT_RANKING_CACHE_NAME
+        val periodType = RankingPeriod.DAILY
 
         // 상품 데이터 저장
         val product1 = productRepository.save(ProductTestFixture.product(name = "상품1").build())
@@ -222,17 +228,15 @@ class RankingServiceIntegrationTest @Autowired constructor(
 
         Thread.sleep(500) // 비동기 처리 대기
 
-        val query = RankingQuery.RetrieveProductRanking(
-            periodType = RankingPeriod.DAILY
-        )
-        rankingSettingRepository.save(RankingPeriod.DAILY, RankingSetting(2L)) // 테스트용 topN 설정
+        val query = RankingQuery.RetrieveProductRanking(periodType)
+        rankingSettingRepository.save(periodType, RankingSetting(2L)) // 테스트용 topN 설정
 
         // when: 첫 번째 캐시 갱신 (상위 2개)
         rankingService.renewProductRankingCache(query)
 
         // then: 캐시된 데이터 확인
-        val cache = cacheManager.getCache(CacheKey.PRODUCT_RANKING_CACHE_NAME)
-        var cachedResult = cache?.get(CacheKey.PRODUCT_RANKING_CACHE_KEY)?.get() as RankingResult.RetrieveProductRanking.Root?
+        val cache = cacheManager.getCache(cacheName)
+        var cachedResult = cache?.get(cacheKey)?.get() as RankingResult.RetrieveProductRanking.Root?
         
         cachedResult shouldBe RankingResult.RetrieveProductRanking.Root(
             products = listOf(
@@ -242,15 +246,13 @@ class RankingServiceIntegrationTest @Autowired constructor(
         )
 
         // when: 다른 조건으로 캐시 갱신 (상위 3개)
-        val queryTop3 = RankingQuery.RetrieveProductRanking(
-            periodType = RankingPeriod.DAILY
-        )
-        rankingSettingRepository.save(RankingPeriod.DAILY, RankingSetting(3L)) // 테스트용 topN 변경
+        val queryTop3 = RankingQuery.RetrieveProductRanking(periodType)
+        rankingSettingRepository.save(periodType, RankingSetting(3L)) // 테스트용 topN 변경
 
         rankingService.renewProductRankingCache(queryTop3)
 
         // then: 캐시된 데이터가 갱신되었는지 확인
-        cachedResult = cache?.get(CacheKey.PRODUCT_RANKING_CACHE_KEY)?.get() as RankingResult.RetrieveProductRanking.Root?
+        cachedResult = cache?.get(cacheKey)?.get() as RankingResult.RetrieveProductRanking.Root?
         cachedResult shouldBe RankingResult.RetrieveProductRanking.Root(
             products = listOf(
                 RankingResult.RetrieveProductRanking.ProductRanking(1, product2.id!!, "상품2"),
@@ -349,19 +351,20 @@ class RankingServiceIntegrationTest @Autowired constructor(
         val today = LocalDate.now()
         val initialTopN = 5L // @BeforeEach에서 설정된 값
         val updatedTopN = 10L
+        val periodType = RankingPeriod.DAILY
 
         // DAILY - 설정 변경 전 확인
-        var (from, to, topN) = rankingService.resolveQueryProperties(RankingPeriod.DAILY)
+        var (from, to, topN) = rankingService.resolveQueryProperties(periodType)
         topN shouldBe initialTopN
 
         // DAILY - 설정 변경
-        rankingSettingRepository.save(RankingPeriod.DAILY, RankingSetting(updatedTopN))
-        val (updatedFrom, updatedTo, newTopN) = rankingService.resolveQueryProperties(RankingPeriod.DAILY)
-        updatedFrom shouldBe today.minusDays(RankingPeriod.DAILY.periodDays)
+        rankingSettingRepository.save(periodType, RankingSetting(updatedTopN))
+        val (updatedFrom, updatedTo, newTopN) = rankingService.resolveQueryProperties(periodType)
+        updatedFrom shouldBe today.minusDays(periodType.periodDays)
         updatedTo shouldBe today
         newTopN shouldBe updatedTopN
 
         // 테스트 후 원래 값으로 복원 (선택 사항, 다른 테스트에 영향 주지 않기 위함)
-        rankingSettingRepository.save(RankingPeriod.DAILY, RankingSetting(initialTopN))
+        rankingSettingRepository.save(periodType, RankingSetting(initialTopN))
     }
 } 
