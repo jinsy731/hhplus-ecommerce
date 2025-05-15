@@ -8,7 +8,7 @@ import org.mockito.kotlin.argumentCaptor
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
-import java.time.LocalDate
+import org.mockito.Mockito.times
 
 @SpringBootTest
 class RankingRenewalSchedulerTest @Autowired constructor(
@@ -28,11 +28,12 @@ class RankingRenewalSchedulerTest @Autowired constructor(
 
         // then
         val argumentCaptor = argumentCaptor<RankingQuery.RetrieveProductRanking>()
-        verify(rankingService).renewProductRankingCache(argumentCaptor.capture())
+        verify(rankingService, times(RankingPeriod.entries.size)).renewProductRankingCache(argumentCaptor.capture())
 
-        val capturedQuery = argumentCaptor.firstValue
-        assert(capturedQuery.from == LocalDate.now().minusDays(2))
-        assert(capturedQuery.to == LocalDate.now())
-        assert(capturedQuery.topN == 5L)
+        val capturedQueries = argumentCaptor.allValues
+        assert(capturedQueries.size == RankingPeriod.entries.size)
+        capturedQueries.forEach { query ->
+            assert(query is RankingQuery.RetrieveProductRanking)
+        }
     }
 } 

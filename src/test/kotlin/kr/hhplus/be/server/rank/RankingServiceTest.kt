@@ -18,23 +18,26 @@ class RankingServiceTest {
     private lateinit var rankingService: RankingService
     private lateinit var productRankingRepository: ProductRankingRepository
     private lateinit var productRepository: ProductRepository
+    private lateinit var rankingSettingRepository: RankingSettingRepository
     private lateinit var cacheManager: CacheManager
 
     @BeforeEach
     fun setUp() {
         productRankingRepository = mockk()
         productRepository = mockk()
+        rankingSettingRepository = mockk(relaxed = true)
         cacheManager = mockk()
-        rankingService = RankingService(productRankingRepository, productRepository, cacheManager)
+        rankingService = RankingService(productRankingRepository, productRepository, rankingSettingRepository, cacheManager)
     }
 
     @Test
     fun `상품 랭킹을 조회하면 순위대로 정렬된 결과를 반환한다`() {
         // given
-        val from = LocalDate.now()
-        val to = LocalDate.now()
-        val topN = 3L
-        val query = RankingQuery.RetrieveProductRanking(from, to, topN)
+        val periodType = RankingPeriod.DAILY
+        val query = RankingQuery.RetrieveProductRanking(periodType)
+        val today = LocalDate.now()
+        val from = today.minusDays(periodType.periodDays)
+        val topN = 5L
 
         val productIds = listOf(2L, 1L, 3L)
         val products = listOf(
@@ -42,8 +45,9 @@ class RankingServiceTest {
             ProductTestFixture.product(id = 1L, name = "상품1").build(),
             ProductTestFixture.product(id = 3L, name = "상품3").build(),
         )
-
-        every { productRankingRepository.getTopN(from, to, topN) } returns productIds
+        
+        every { rankingSettingRepository.get(periodType) } returns RankingSetting(topN)
+        every { productRankingRepository.getTopN(from, today, topN) } returns productIds
         every { productRepository.findAll(productIds) } returns products
 
         // when
@@ -70,17 +74,19 @@ class RankingServiceTest {
             name shouldBe "상품3"
         }
 
-        verify(exactly = 1) { productRankingRepository.getTopN(from, to, topN) }
+        verify(exactly = 1) { rankingSettingRepository.get(periodType) }
+        verify(exactly = 1) { productRankingRepository.getTopN(from, today, topN) }
         verify(exactly = 1) { productRepository.findAll(productIds) }
     }
 
     @Test
     fun `renewProductRankingCache는 캐시를 갱신해야 한다`() {
         // given
-        val from = LocalDate.now()
-        val to = LocalDate.now()
+        val periodType = RankingPeriod.DAILY
+        val query = RankingQuery.RetrieveProductRanking(periodType)
+        val today = LocalDate.now()
+        val from = today.minusDays(periodType.periodDays)
         val topN = 2L
-        val query = RankingQuery.RetrieveProductRanking(from, to, topN)
 
         val productIds = listOf(2L, 1L)
         val products = listOf(
@@ -96,7 +102,8 @@ class RankingServiceTest {
 
         val cache = mockk<Cache>(relaxed = true)
         every { cacheManager.getCache(CacheKey.PRODUCT_RANKING_CACHE_NAME) } returns cache
-        every { productRankingRepository.getTopN(from, to, topN) } returns productIds
+        every { rankingSettingRepository.get(periodType) } returns RankingSetting(topN)
+        every { productRankingRepository.getTopN(from, today, topN) } returns productIds
         every { productRepository.findAll(productIds) } returns products
 
         // when
@@ -104,16 +111,17 @@ class RankingServiceTest {
 
         // then
         verify(exactly = 1) { cacheManager.getCache(CacheKey.PRODUCT_RANKING_CACHE_NAME) }
+        verify(exactly = 1) { rankingSettingRepository.get(periodType) }
+        verify(exactly = 1) { productRankingRepository.getTopN(from, today, topN) }
+        verify(exactly = 1) { productRepository.findAll(productIds) }
         verify(exactly = 1) { cache.put(CacheKey.PRODUCT_RANKING_CACHE_KEY, expectedRankingResult) }
     }
 
     @Test
     fun `renewProductRankingCache는 캐시가 없으면 아무것도 하지 않아야 한다`() {
         // given
-        val from = LocalDate.now()
-        val to = LocalDate.now()
-        val topN = 2L
-        val query = RankingQuery.RetrieveProductRanking(from, to, topN)
+        val periodType = RankingPeriod.DAILY
+        val query = RankingQuery.RetrieveProductRanking(periodType)
 
         every { cacheManager.getCache(CacheKey.PRODUCT_RANKING_CACHE_NAME) } returns null
 
@@ -122,6 +130,7 @@ class RankingServiceTest {
 
         // then
         verify(exactly = 1) { cacheManager.getCache(CacheKey.PRODUCT_RANKING_CACHE_NAME) }
+        verify(exactly = 0) { rankingSettingRepository.get(any()) }
         verify(exactly = 0) { productRankingRepository.getTopN(any(), any(), any()) }
         verify(exactly = 0) { productRepository.findAll(any<List<Long>>()) }
     }

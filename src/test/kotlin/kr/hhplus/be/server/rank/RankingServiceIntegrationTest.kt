@@ -10,6 +10,7 @@ import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
@@ -29,14 +30,23 @@ class RankingServiceIntegrationTest @Autowired constructor(
     private val rankingKeyGenerator: RankingKeyGenerator,
     private val redisCleaner: RedisCleaner,
     @Autowired private val productRepository: ProductRepository,
-    @Autowired private val cacheManager: CacheManager
+    @Autowired private val cacheManager: CacheManager,
+    @Autowired private val rankingSettingRepository: RankingSettingRepository
 ) {
     @MockitoSpyBean
     private lateinit var spyProductRepository: ProductRepository
 
+    @BeforeEach
+    fun setup() {
+        rankingSettingRepository.save(RankingPeriod.DAILY, RankingSetting(5L))
+        rankingSettingRepository.save(RankingPeriod.WEEKLY, RankingSetting(5L))
+        rankingSettingRepository.save(RankingPeriod.MONTHLY, RankingSetting(5L))
+    }
+
     @AfterEach
     fun tearDown() {
         redisCleaner.clean()
+        Mockito.clearAllCaches()
     }
 
     @Test
@@ -125,11 +135,7 @@ class RankingServiceIntegrationTest @Autowired constructor(
         Thread.sleep(500)
 
         // when
-        val query = RankingQuery.RetrieveProductRanking(
-            from = date,
-            to = date,
-            topN = 2
-        )
+        val query = RankingQuery.RetrieveProductRanking(periodType = RankingPeriod.DAILY)
         val result = rankingService.retrieveProductRanking(query)
 
         // then
@@ -150,9 +156,6 @@ class RankingServiceIntegrationTest @Autowired constructor(
     fun `✅캐시된 데이터는 DB 조회를 하지 않아야 한다`() {
         // given
         val now = LocalDateTime.now()
-        val date = now.toLocalDate()
-
-        // 상품 데이터 저장
         val product1 = productRepository.save(ProductTestFixture.product(name = "상품1").build())
         val product2 = productRepository.save(ProductTestFixture.product(name = "상품2").build())
 
@@ -166,23 +169,20 @@ class RankingServiceIntegrationTest @Autowired constructor(
         )
         rankingService.updateProductRanking(command)
 
-        Thread.sleep(500)
-
         val query = RankingQuery.RetrieveProductRanking(
-            from = date,
-            to = date,
-            topN = 2
+            periodType = RankingPeriod.DAILY
         )
 
-        // when
-        // 첫 번째 호출
+        // when : 두 번 호출, 두 번쨰는 캐시 타야함.
+        Mockito.clearInvocations(spyProductRepository) // save 할 때 findAll이 호출돼서 테스트 간섭 생겨서 추가.. 왜?
         rankingService.retrieveProductRanking(query)
-        // 두 번째 호출 (캐시된 데이터 사용)
-        rankingService.retrieveProductRanking(query)
+        val result = rankingService.retrieveProductRanking(query)
 
         // then
-        // findAll은 한 번만 호출되어야 함
         verify(spyProductRepository, times(1)).findAll(any())
+        result.products.size shouldBe 2
+        result.products[0].name shouldBe "상품2"
+        result.products[1].name shouldBe "상품1"
     }
 
     @Test
@@ -211,10 +211,9 @@ class RankingServiceIntegrationTest @Autowired constructor(
         Thread.sleep(500) // 비동기 처리 대기
 
         val query = RankingQuery.RetrieveProductRanking(
-            from = date,
-            to = date,
-            topN = 2
+            periodType = RankingPeriod.DAILY
         )
+        rankingSettingRepository.save(RankingPeriod.DAILY, RankingSetting(2L)) // 테스트용 topN 설정
 
         // when: 첫 번째 캐시 갱신 (상위 2개)
         rankingService.renewProductRankingCache(query)
@@ -232,10 +231,10 @@ class RankingServiceIntegrationTest @Autowired constructor(
 
         // when: 다른 조건으로 캐시 갱신 (상위 3개)
         val queryTop3 = RankingQuery.RetrieveProductRanking(
-            from = date,
-            to = date,
-            topN = 3
+            periodType = RankingPeriod.DAILY
         )
+        rankingSettingRepository.save(RankingPeriod.DAILY, RankingSetting(3L)) // 테스트용 topN 변경
+
         rankingService.renewProductRankingCache(queryTop3)
 
         // then: 캐시된 데이터가 갱신되었는지 확인

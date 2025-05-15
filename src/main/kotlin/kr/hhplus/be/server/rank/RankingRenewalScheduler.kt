@@ -1,19 +1,17 @@
 package kr.hhplus.be.server.rank
 
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.time.LocalDate
 
 @Component
+@Profile("!test")
 class RankingRenewalScheduler(private val rankingService: RankingService) {
 
     @Scheduled(fixedDelay = 300_000)
     fun renewProductRankingCache() {
-        val query = RankingQuery.RetrieveProductRanking(
-            from = LocalDate.now().minusDays(2),
-            to = LocalDate.now(),
-            topN = 5
-        )
-        rankingService.renewProductRankingCache(query)
+        RankingPeriod.entries.forEach {
+            rankingService.renewProductRankingCache(RankingQuery.RetrieveProductRanking(it)) }
     }
 }

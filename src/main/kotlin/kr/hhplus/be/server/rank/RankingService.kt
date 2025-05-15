@@ -15,6 +15,7 @@ import java.time.LocalDateTime
 class RankingService(
     private val productRankingRepository: ProductRankingRepository,
     private val productRepository: ProductRepository,
+    private val rankingSettingRepository: RankingSettingRepository,
     private val cacheManager: CacheManager
     ) {
 
@@ -30,10 +31,12 @@ class RankingService(
 
     @Cacheable(
         cacheNames = [CacheKey.PRODUCT_RANKING_CACHE_NAME],
-        key = "'product:daily'"
+        key = "'product:' + #query.periodType"
     )
     fun retrieveProductRanking(query: RankingQuery.RetrieveProductRanking): RankingResult.RetrieveProductRanking.Root {
-        val topProductIds = productRankingRepository.getTopN(query.from, query.to, query.topN)
+        val (from, to, topN) = resolveQueryProperties(query.periodType)
+
+        val topProductIds = productRankingRepository.getTopN(from, to, topN)
         val topProducts = productRepository.findAll(topProductIds)
         val productMap = topProducts.associateBy { it.id!! }
         val orderedProducts = topProductIds.mapNotNull { productMap[it] }
@@ -56,6 +59,18 @@ class RankingService(
 
         cache.put(cacheKey, retrieveProductRanking(query))
     }
+
+    fun resolveQueryProperties(periodType: RankingPeriod): Triple<LocalDate, LocalDate, Long> {
+        val DEFAULT_TOP_N = 5L
+        val today = LocalDate.now()
+        val from = today.minusDays(periodType.periodDays)
+        val setting = rankingSettingRepository.get(periodType) ?: let {
+            val defaultSetting = RankingSetting(DEFAULT_TOP_N)
+            rankingSettingRepository.save(periodType, defaultSetting)
+        }
+
+        return Triple(from, today, setting.topN)
+    }
 }
 
 class RankingCommand {
@@ -72,11 +87,15 @@ class RankingCommand {
     }
 }
 
+enum class RankingPeriod(val periodDays: Long) {
+    DAILY(3),
+    WEEKLY(7),
+    MONTHLY(30)
+}
+
 class RankingQuery {
     data class RetrieveProductRanking(
-        val from: LocalDate,
-        val to: LocalDate,
-        val topN: Long
+        val periodType: RankingPeriod
     )
 }
 

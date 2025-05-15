@@ -5,24 +5,26 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import java.time.LocalDate
 
 @RestController
 @RequestMapping("api/v1/ranking")
 class RankingController(private val rankingService: RankingService) {
 
     @GetMapping("/products")
-    fun retrieveTopProducts(): ResponseEntity<CommonResponse<RankingResponse.RetrieveTopProducts.Root>> {
-        val result = rankingService.retrieveProductRanking(RankingQuery.RetrieveProductRanking(
-            from = LocalDate.now().minusDays(2),
-            to = LocalDate.now(),
-            topN = 5
-        ))
+    fun retrieveTopProducts(req: RankingRequest.RetrieveTopProducts): ResponseEntity<CommonResponse<RankingResponse.RetrieveTopProducts.Root>> {
+        val result = rankingService.retrieveProductRanking(req.toQuery())
 
         return ResponseEntity.ok(CommonResponse(result.toResponse()))
     }
 }
 
+class RankingRequest {
+    data class RetrieveTopProducts(val periodType: RankingPeriod)
+}
+
+fun RankingRequest.RetrieveTopProducts.toQuery(): RankingQuery.RetrieveProductRanking {
+    return RankingQuery.RetrieveProductRanking(periodType)
+}
 
 class RankingResponse {
     class RetrieveTopProducts {
