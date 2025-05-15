@@ -2,6 +2,9 @@ package kr.hhplus.be.server.rank
 
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.lettuce.core.RedisURI.Builder.redis
+import kr.hhplus.be.server.RedisCleaner
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -10,17 +13,12 @@ import org.springframework.data.redis.core.RedisTemplate
 import java.time.LocalDate
 
 @SpringBootTest
-class RedisProductRankingRepositoryTestIT {
-
-    @Autowired
-    lateinit var redisTemplate: RedisTemplate<String, Any>
-
-    @Autowired
-    lateinit var rankingKeyGenerator: RankingKeyGenerator
-
-    @Autowired
-    lateinit var productRankingRepository: RedisProductRankingRepository
-
+class RedisProductRankingRepositoryTestIT @Autowired constructor(
+    private val redisTemplate: RedisTemplate<String, Any>,
+    private val rankingKeyGenerator: RankingKeyGenerator,
+    private val productRankingRepository: RedisProductRankingRepository,
+    private val redisCleaner: RedisCleaner
+){
     @BeforeEach
     fun setUp() {
         // 테스트 전 Redis 데이터 초기화
@@ -28,6 +26,11 @@ class RedisProductRankingRepositoryTestIT {
         if (!keys.isNullOrEmpty()) {
             redisTemplate.delete(keys)
         }
+    }
+
+    @AfterEach
+    fun tearDown() {
+        redisCleaner.clean()
     }
 
     @Test

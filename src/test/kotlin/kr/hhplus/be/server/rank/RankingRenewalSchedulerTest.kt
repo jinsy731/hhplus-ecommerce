@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.rank
 
+import kr.hhplus.be.server.RedisCleaner
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.argumentCaptor
@@ -9,14 +11,16 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 import java.time.LocalDate
 
 @SpringBootTest
-class RankingRenewalSchedulerTest {
+class RankingRenewalSchedulerTest @Autowired constructor(
+    private val rankingRenewalScheduler: RankingRenewalScheduler,
+    @MockitoBean private val rankingService: RankingService,
+    private val redisCleaner: RedisCleaner
+){
 
-    @Autowired
-    private lateinit var rankingRenewalScheduler: RankingRenewalScheduler
-
-    @MockitoBean
-    private lateinit var rankingService: RankingService
-
+    @AfterEach
+    fun tearDown() {
+        redisCleaner.clean()
+    }
     @Test
     fun `renewProductRankingCache는 rankingService의 retrieveProductRanking을 올바른 인자와 함께 호출한다`() {
         // when

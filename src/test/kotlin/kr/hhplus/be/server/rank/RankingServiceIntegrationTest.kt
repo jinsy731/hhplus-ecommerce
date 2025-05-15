@@ -8,6 +8,7 @@ import kr.hhplus.be.server.product.domain.product.ProductRepository
 import kr.hhplus.be.server.shared.cache.CacheKey
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
@@ -15,7 +16,6 @@ import org.mockito.kotlin.any
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.cache.CacheManager
-import org.springframework.cache.get
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import java.time.LocalDateTime
@@ -215,10 +215,6 @@ class RankingServiceIntegrationTest @Autowired constructor(
             to = date,
             topN = 2
         )
-        val existingCache = cacheManager.getCache(CacheKey.PRODUCT_RANKING_CACHE_NAME)
-            ?.get(CacheKey.PRODUCT_RANKING_CACHE_KEY)
-
-        println("existingCache = ${existingCache}")
 
         // when: 첫 번째 캐시 갱신 (상위 2개)
         rankingService.renewProductRankingCache(query)
