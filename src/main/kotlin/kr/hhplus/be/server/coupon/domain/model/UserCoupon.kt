@@ -11,6 +11,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import jakarta.persistence.Version
 import kr.hhplus.be.server.shared.exception.ExpiredCouponException
 import kr.hhplus.be.server.shared.exception.InvalidCouponStatusException
@@ -20,7 +21,12 @@ import java.time.LocalDateTime
  * 사용자 쿠폰 엔티티 (발급된 쿠폰)
  */
 @Entity
-@Table(name = "user_coupons")
+@Table(
+    name = "user_coupons",
+    uniqueConstraints = [
+        UniqueConstraint(name = "uk_user_coupon", columnNames = ["userId", "coupon_id"])
+    ]
+)
 class UserCoupon(
 
     @Id

@@ -94,4 +94,13 @@ class Coupon(
             expiredAt = now.plusDays(this.validDays.toLong()),
         )
     }
+
+    fun asyncIssueTo(userId: Long, now: LocalDateTime = LocalDateTime.now()): UserCoupon {
+        return UserCoupon(
+            userId = userId,
+            coupon = this,
+            issuedAt = now,
+            expiredAt = now.plusDays(this.validDays.toLong()),
+        )
+    }
 }

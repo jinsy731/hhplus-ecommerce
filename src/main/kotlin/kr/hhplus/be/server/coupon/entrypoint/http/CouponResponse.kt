@@ -55,6 +55,26 @@ class CouponResponse {
         @Schema(description = "쿠폰 만료일", example = "2025-05-01`T`10:00:00")
         val expiredAt: LocalDateTime
     )
+
+    @Schema(description = "비동기 쿠폰 발급 결과 응답")
+    data class AsyncIssue(
+        @Schema(description = "쿠폰 ID", example = "123")
+        val couponId: Long,
+        @Schema(description = "상태", example = "PENDING")
+        val status: String
+    )
+
+    @Schema(description = "비동기 쿠폰 발급 상태 조회 응답")
+    data class AsyncIssueStatus(
+        @Schema(description = "쿠폰 ID", example = "123")
+        val couponId: Long,
+        
+        @Schema(description = "상태", example = "ISSUED")
+        val status: String,
+        
+        @Schema(description = "유저 쿠폰 ID", example = "456")
+        val userCouponId: Long?
+    )
 }
 
 fun CouponResult.Issue.toResponse() = CouponResponse.Issue(
@@ -77,4 +97,15 @@ fun CouponResult.UserCouponData.toResponse() = CouponResponse.UserCouponData(
     value = this.value,
     status = this.status,
     expiredAt = this.expiredAt
+)
+
+fun CouponResult.AsyncIssue.toResponse() = CouponResponse.AsyncIssue(
+    couponId = this.couponId,
+    status = this.status
+)
+
+fun CouponResult.AsyncIssueStatus.toResponse() = CouponResponse.AsyncIssueStatus(
+    couponId = this.couponId,
+    status = this.status,
+    userCouponId = this.userCouponId
 )

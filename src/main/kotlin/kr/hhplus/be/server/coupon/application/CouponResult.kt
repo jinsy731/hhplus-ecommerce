@@ -16,6 +16,17 @@ class CouponResult {
         val expiredAt: LocalDateTime
     )
 
+    data class AsyncIssue(
+        val couponId: Long,
+        val status: String
+    )
+
+    data class AsyncIssueStatus(
+        val couponId: Long,
+        val status: String,
+        val userCouponId: Long? = null
+    )
+
     data class RetrieveList(
         val coupons: List<UserCouponData>,
         val pageResult: PageResult
