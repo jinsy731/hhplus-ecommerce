@@ -4,6 +4,7 @@ import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
 import kr.hhplus.be.server.coupon.infrastructure.CouponKVStore
 import kr.hhplus.be.server.coupon.infrastructure.IssuedStatus
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -14,19 +15,24 @@ class CouponIssueBatchService(
     private val couponRepository: CouponRepository,
     private val userCouponRepository: UserCouponRepository
 ) {
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     @Transactional
     fun processIssueRequest() {
+        logger.info("[processIssueRequest] start")
         // 발급 요청된 쿠폰 ID 리스트에서 하나 꺼내기 (원자적 연산)
         val couponId = couponKVStore.popFromIssueRequestedCouponIdList() ?: return
         
         try {
             // 해당 쿠폰의 최대 발급 수량 확인
             val stock = couponKVStore.getStock(couponId)
+            logger.info("[processIssueRequest] stock: $stock")
             // 현재까지 발급된 수량 확인
             val issuedCount = couponKVStore.countIssuedUser(couponId)
+            logger.info("[processIssueRequest] issuedCount: $issuedCount")
             // 발급 가능한 수량 계산
             val availableCount = stock.stock - issuedCount
+            logger.info("[processIssueRequest] availableCount: $availableCount")
             
             if (availableCount <= 0) {
                 // 재고가 부족한 경우 - 쿠폰 ID는 나중에 별도 프로세스에서 처리
@@ -36,6 +42,7 @@ class CouponIssueBatchService(
             
             // 발급 가능한 수량만큼 큐에서 요청 꺼내기
             val requests = couponKVStore.popBatchFromIssueRequestQueue(couponId, availableCount)
+            logger.info("[processIssueRequest] requests: ${requests.size}")
             if (requests.isEmpty()) {
                 return
             }
@@ -79,6 +86,8 @@ class CouponIssueBatchService(
                     }.isSuccess
             }
 
+            logger.info("[processIssueRequest] validUserCoupons: ${validUserCoupons.size}")
+
             validUserCoupons.forEach { userCoupon ->
                 runCatching { userCouponRepository.save(userCoupon) }
                     .onFailure { e ->
@@ -87,7 +96,8 @@ class CouponIssueBatchService(
                         couponKVStore.pushToFailedIssueRequestedCouponIdList(couponId)
                     }
             }
-            
+
+            logger.info("[processIssueRequest] processed requests: ${requests.size}")
             // 현재 큐에 남은 요청 수 확인
             val remainingRequests = couponKVStore.countIssueRequestQueue(couponId)
             

@@ -1,31 +1,58 @@
 package kr.hhplus.be.server.coupon.application
 
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.shared.time.ClockHolder
-import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.coupon.CouponTestFixture
 import kr.hhplus.be.server.coupon.domain.model.*
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
+import kr.hhplus.be.server.coupon.infrastructure.CouponIssueRequest
+import kr.hhplus.be.server.coupon.infrastructure.CouponKVStore
+import kr.hhplus.be.server.coupon.infrastructure.CouponStock
+import kr.hhplus.be.server.coupon.infrastructure.IssuedStatus
+import kr.hhplus.be.server.coupon.infrastructure.JpaUserCouponRepository
+import kr.hhplus.be.server.executeConcurrently
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.exception.CouponOutOfStockException
+import kr.hhplus.be.server.shared.exception.DuplicateCouponIssueException
+import kr.hhplus.be.server.shared.time.ClockHolder
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.platform.commons.logging.LoggerFactory
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import java.time.LocalDateTime
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 @SpringBootTest
 class CouponServiceTestIT @Autowired constructor(
     private val couponService: CouponService,
+    private val couponIssueBatchService: CouponIssueBatchService,
     private val couponRepository: CouponRepository,
+    private val userCouponJpaRepository: JpaUserCouponRepository,
     private val userCouponRepository: UserCouponRepository,
+    private val couponKVStore: CouponKVStore,
     @MockitoBean private val mockClockHolder: ClockHolder,
     private val databaseCleaner: MySqlDatabaseCleaner,
 ){
+    private val logger = LoggerFactory.getLogger(javaClass)
+
+    @BeforeEach
+    fun setup() {
+        whenever(mockClockHolder.getNowInLocalDateTime()).thenReturn(LocalDateTime.now())
+    }
 
     @AfterEach
     fun clean() {
@@ -64,6 +91,339 @@ class CouponServiceTestIT @Autowired constructor(
         // 쿠폰의 발급 횟수가 증가했는지 확인
         val updatedCoupon = couponRepository.getById(couponId)
         updatedCoupon.issuedCount shouldBe 1
+    }
+
+    @Test
+    fun `✅비동기 쿠폰 발급을 요청하고 배치 처리하면 사용자 쿠폰이 생성된다`() {
+        // given
+        val userId = 100L
+        val now = LocalDateTime.now()
+        whenever(mockClockHolder.getNowInLocalDateTime()).thenReturn(now)
+        val coupon = CouponTestFixture.coupon().build()
+        val savedCoupon = couponRepository.save(coupon)
+        val couponId = savedCoupon.id!!
+
+        // Redis 쿠폰 재고 설정
+        couponKVStore.setStock(CouponStock(couponId, 100))
+
+        val issueCommand = CouponCommand.Issue(
+            userId = userId,
+            couponId = couponId
+        )
+
+        // when
+        // 1. 비동기 쿠폰 발급 요청
+        val result = couponService.issueCouponAsync(issueCommand)
+
+        // 2. 배치 서비스 실행하여 실제 쿠폰 발급 처리
+        couponIssueBatchService.processIssueRequest()
+
+        // then
+        // 쿠폰 발급 결과 확인
+        result.couponId shouldBe couponId
+        result.status shouldBe IssuedStatus.PENDING.name
+
+        // 사용자 쿠폰이 실제로 발급되었는지 확인
+        val userCoupon = userCouponRepository.findByUserIdAndCouponId(userId, couponId)
+        userCoupon shouldNotBe null
+        userCoupon!!.userId shouldBe userId
+        userCoupon.coupon.id shouldBe couponId
+        userCoupon.status shouldBe UserCouponStatus.UNUSED
+
+        // Redis에 발급 완료로 표시되었는지 확인
+        couponKVStore.existsIssuedUser(userId, couponId) shouldBe true
+        
+        // 큐에서 요청이 제거되었는지 확인
+        val requests = couponKVStore.peekAllFromIssueRequestQueue(couponId)
+        requests shouldHaveSize 0
+    }
+
+    @Test
+    fun `⛔️이미 발급 요청된 쿠폰은 중복 발급할 수 없다`() {
+        // given
+        val userId = 200L
+        val coupon = CouponTestFixture.coupon().build()
+        val savedCoupon = couponRepository.save(coupon)
+        val couponId = savedCoupon.id!!
+
+        // Redis 쿠폰 재고 설정
+        couponKVStore.setStock(CouponStock(couponId, 100))
+
+        // Redis에 발급된 사용자로 표시
+        couponKVStore.setIssuedUser(userId, couponId)
+
+        val issueCommand = CouponCommand.Issue(
+            userId = userId,
+            couponId = couponId
+        )
+
+        // when & then
+        shouldThrow<DuplicateCouponIssueException> {
+            couponService.issueCouponAsync(issueCommand)
+        }
+    }
+
+    @Test
+    fun `⛔️쿠폰 재고가 소진되면 발급할 수 없다`() {
+        // given
+        val userId = 300L
+        val coupon = CouponTestFixture.coupon().build()
+        val savedCoupon = couponRepository.save(coupon)
+        val couponId = savedCoupon.id!!
+
+        // Redis 쿠폰 재고 설정 (소진 상태)
+        couponKVStore.setStock(CouponStock(couponId, 10))
+        
+        // 이미 10명이 발급받은 상태로 설정
+        repeat(10) { i ->
+            couponKVStore.setIssuedUser(i.toLong(), couponId)
+        }
+
+        val issueCommand = CouponCommand.Issue(
+            userId = userId,
+            couponId = couponId
+        )
+
+        // when & then
+        shouldThrow<CouponOutOfStockException> {
+            couponService.issueCouponAsync(issueCommand)
+        }
+    }
+
+    @Test
+    fun `✅동일 유저가 동일 쿠폰에 대해 동시에 여러 요청을 보내면 중복 발급 방지가 작동한다`() {
+        // given
+        val userId = 400L
+        val now = LocalDateTime.now()
+        whenever(mockClockHolder.getNowInLocalDateTime()).thenReturn(now)
+        val coupon = CouponTestFixture.coupon().build()
+        val savedCoupon = couponRepository.save(coupon)
+        val couponId = savedCoupon.id!!
+
+        // Redis 쿠폰 재고 설정
+        couponKVStore.setStock(CouponStock(couponId, 100))
+
+        val successCount = AtomicInteger(0)
+        val failCount = AtomicInteger(0)
+
+        // when
+        // 1. 동시에 여러 요청 처리
+        executeConcurrently(10) {
+            try {
+                val issueCommand = CouponCommand.Issue(
+                    userId = userId,
+                    couponId = couponId
+                )
+                couponService.issueCouponAsync(issueCommand)
+                // 비동기 응답은 항상 정상이므로 요청 성공으로 카운트
+                successCount.incrementAndGet()
+            } catch (e: DuplicateCouponIssueException) {
+                failCount.incrementAndGet()
+            }
+        }
+
+        // then
+        // 비동기 요청은 중복 체크 후 Redis에 저장하기 때문에 모든 요청이 성공해야 함
+        successCount.get() shouldBe 10
+        failCount.get() shouldBe 0
+
+        // Redis에 첫 번째 요청이 저장되었는지 확인
+//        couponKVStore.countRequestsInQueue(couponId) shouldBe 1
+        
+        // Redis에 사용자 발급 요청 상태가 PENDING으로 저장되었는지 확인
+        val status = couponKVStore.getIssuedStatus(userId, couponId)
+        status shouldBe IssuedStatus.PENDING
+
+        // 2. 배치 서비스 실행하여 실제 쿠폰 발급 처리
+        couponIssueBatchService.processIssueRequest()
+
+        // 배치 처리 후 DB에 사용자 쿠폰이 하나만 생성되었는지 확인
+        val userCoupons = userCouponRepository.findAllByUserId(userId, PageRequest.of(0, 10))
+        userCoupons.content.size shouldBe 1
+        userCoupons.content[0].userId shouldBe userId
+        userCoupons.content[0].coupon.id shouldBe couponId
+        
+        // Redis에 발급 완료로 표시되었는지 확인
+        couponKVStore.existsIssuedUser(userId, couponId) shouldBe true
+    }
+
+    @Test
+    fun `✅병렬 요청 처리와 배치 프로세스가 동시에 실행될 때 정상 작동한다`() {
+        // given
+        val userCount = 50
+        val batchRunCount = 5
+        val coupon = CouponTestFixture.coupon().build()
+        val savedCoupon = couponRepository.save(coupon)
+        val couponId = savedCoupon.id!!
+
+        // Redis 쿠폰 재고 설정
+        couponKVStore.setStock(CouponStock(couponId, 100))
+
+        val latch = CountDownLatch(1)
+        val batchCompleteLatch = CountDownLatch(batchRunCount)
+        
+        // 배치 프로세스를 실행할 스레드 생성
+        val batchExecutor = Executors.newSingleThreadExecutor()
+        batchExecutor.submit {
+            try {
+                // 메인 스레드에서 요청 실행이 시작될 때까지 대기
+                latch.await()
+                
+                // 배치 프로세스를 여러 번 실행
+                repeat(batchRunCount) {
+                    logger.info { "[${Thread.currentThread().name}] batch run" }
+                    couponIssueBatchService.processIssueRequest()
+                    Thread.sleep(100) // 약간의 지연 추가
+                    batchCompleteLatch.countDown()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+
+
+        // when
+        // 1. 여러 사용자가 동시에 쿠폰 발급 요청
+        executeConcurrently(userCount) { index ->
+            try {
+                val userId = 1000L + index
+                val issueCommand = CouponCommand.Issue(
+                    userId = userId,
+                    couponId = couponId
+                )
+                
+                // 첫 번째 요청 전에 latch를 카운트다운하여 배치 프로세스 스레드를 시작
+                if (index == 0) {
+                    latch.countDown()
+                }
+
+                logger.info { "[${Thread.currentThread().name}] issue request" }
+                couponService.issueCouponAsync(issueCommand)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        
+        // 배치 프로세스가 완료될 때까지 대기
+        batchCompleteLatch.await(10, TimeUnit.SECONDS)
+        batchExecutor.shutdown()
+        
+        // 추가로 배치 프로세스를 한 번 더 실행하여 남은 요청 처리
+        couponIssueBatchService.processIssueRequest()
+
+        // then
+        // 실제로 발급된 쿠폰 수 확인
+        val issuedUserCoupons = userCouponJpaRepository.findAll()
+        issuedUserCoupons.size shouldBe userCount
+        
+        // 큐에 남은 요청이 없는지 확인
+        val remainingRequests = couponKVStore.countIssueRequestQueue(couponId)
+        remainingRequests shouldBe 0
+        
+        // 모든 사용자가 쿠폰을 받았는지 확인
+        (0 until userCount).forEach { index ->
+            val userId = 1000L + index
+            val userCoupon = userCouponRepository.findByUserIdAndCouponId(userId, couponId)
+            userCoupon shouldNotBe null
+            userCoupon!!.userId shouldBe userId
+            userCoupon.coupon.id shouldBe couponId
+            userCoupon.status shouldBe UserCouponStatus.UNUSED
+            
+            // Redis에 발급 완료로 표시되었는지 확인
+            couponKVStore.existsIssuedUser(userId, couponId) shouldBe true
+        }
+    }
+
+    @Test
+    fun `✅비동기 쿠폰 발급 실패 후 재처리 시 성공한다`() {
+        // given
+        val userId = 600L
+        val now = LocalDateTime.now()
+        whenever(mockClockHolder.getNowInLocalDateTime()).thenReturn(now)
+        val coupon = CouponTestFixture.coupon().build()
+        val savedCoupon = couponRepository.save(coupon)
+        val couponId = savedCoupon.id!!
+
+        // Redis 쿠폰 재고 설정
+        couponKVStore.setStock(CouponStock(couponId, 100))
+
+        val issueCommand = CouponCommand.Issue(
+            userId = userId,
+            couponId = couponId
+        )
+
+        // 1. 비동기 쿠폰 발급 요청
+        couponService.issueCouponAsync(issueCommand)
+        
+        // 2. 수동으로 실패 큐에 추가 (실패 시나리오 재현)
+        val request = CouponIssueRequest(couponId, userId)
+        couponKVStore.pushToFailedIssueRequestQueue(request)
+        couponKVStore.pushToFailedIssueRequestedCouponIdList(couponId)
+        
+        // 3. 실패 재처리 배치 실행
+        couponIssueBatchService.processFailedIssueRequest()
+        
+        // then
+        // 사용자 쿠폰이 실제로 발급되었는지 확인
+        val userCoupon = userCouponRepository.findByUserIdAndCouponId(userId, couponId)
+        userCoupon shouldNotBe null
+        userCoupon!!.userId shouldBe userId
+        userCoupon.coupon.id shouldBe couponId
+        userCoupon.status shouldBe UserCouponStatus.UNUSED
+        
+        // Redis에 발급 완료로 표시되었는지 확인
+        couponKVStore.existsIssuedUser(userId, couponId) shouldBe true
+    }
+
+    @Test
+    fun `✅쿠폰 재고 소진 시 남은 요청은 실패 처리된다`() {
+        // given
+        val coupon = CouponTestFixture.coupon().build()
+        val savedCoupon = couponRepository.save(coupon)
+        val couponId = savedCoupon.id!!
+        val stockLimit = 5L
+
+        // Redis 쿠폰 재고 설정 (5개 제한)
+        couponKVStore.setStock(CouponStock(couponId, stockLimit))
+
+        // 10명이 쿠폰 발급 요청 (재고는 5개)
+        repeat(10) { index ->
+            val userId = 700L + index
+            val issueCommand = CouponCommand.Issue(userId = userId, couponId = couponId)
+            try {
+                couponService.issueCouponAsync(issueCommand)
+            } catch (e: Exception) {
+                // 예외가 발생해도 계속 진행
+            }
+        }
+
+        // 1. 배치 서비스 실행하여 실제 쿠폰 발급 처리
+        couponIssueBatchService.processIssueRequest()
+        
+        // 2. 재고 소진된 쿠폰 요청 처리 실행
+        couponIssueBatchService.processOutOfStockRequests()
+
+        // then
+        // DB에 사용자 쿠폰이 재고 수량만큼만 생성되었는지 확인
+        val issuedUserCoupons = userCouponJpaRepository.findAll()
+        issuedUserCoupons.size shouldBe stockLimit.toInt()
+        
+        // 재고 소진으로 표시된 요청 큐 확인 (남은 요청이 FAILED로 처리되었는지)
+        val requests = couponKVStore.peekAllFromIssueRequestQueue(couponId)
+        requests.size shouldBe 5 // 남은 요청은 5개
+        
+        // 요청 상태가 FAILED로 변경되었는지 확인
+        val failedUserIds = (5..9).map { 700L + it }
+        failedUserIds.forEach { userId ->
+            val status = couponKVStore.getIssuedStatus(userId, couponId)
+            status shouldBe IssuedStatus.FAILED
+        }
+    }
+
+    @Test
+    fun `✅레이스 컨디션에서 쿠폰 발급 중복 방지가 정상 작동한다`() {
+
     }
 
     @Test
