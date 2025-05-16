@@ -44,4 +44,13 @@ class UserCouponController(private val couponService: CouponService): UserCoupon
         val result = couponService.retrieveLists(userId, pageable)
         return CommonResponse(result.toResponse())
     }
+
+    @GetMapping("/{userId}/coupons/{couponId}/status")
+    override fun getAsyncIssueStatus(
+        @PathVariable userId: Long,
+        @PathVariable couponId: Long
+    ): CommonResponse<CouponResponse.AsyncIssueStatus> {
+        val result = couponService.getIssueStatus(userId, couponId)
+        return CommonResponse(result.toResponse())
+    }
 }

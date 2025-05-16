@@ -42,4 +42,18 @@ interface UserCouponApiSpec {
         @PathVariable userId: Long,
         pageable: Pageable,
     ): CommonResponse<CouponResponse.RetrieveLists>
+
+    @Operation(
+        summary = "비동기 쿠폰 발급 상태 조회",
+        description = "비동기 방식으로 요청한 쿠폰 발급의 현재 상태를 조회합니다.",
+        responses = [
+            ApiResponse(responseCode = "200", description = "조회 성공", content = [Content(schema = Schema(implementation = CouponResponse.AsyncIssueStatus::class))]),
+            ApiResponse(responseCode = "404", description = "사용자 또는 쿠폰 없음", content = [Content(schema = Schema(implementation = ErrorResponse::class))])
+        ]
+    )
+    @GetMapping("/{userId}/coupons/{couponId}/status")
+    fun getAsyncIssueStatus(
+        @PathVariable userId: Long,
+        @PathVariable couponId: Long
+    ): CommonResponse<CouponResponse.AsyncIssueStatus>
 }

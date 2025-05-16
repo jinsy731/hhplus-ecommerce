@@ -91,6 +91,29 @@ class CouponService(
     }
 
     /**
+     * 비동기 쿠폰 발급 상태 조회
+     * KVStore에서 발급 상태를 확인하고 결과를 반환
+     */
+    @Transactional(readOnly = true)
+    fun getIssueStatus(userId: Long, couponId: Long): CouponResult.AsyncIssueStatus {
+        // KVStore에서 발급 상태 조회
+        val status = couponKVStore.getIssuedStatus(userId, couponId)
+        
+        // 발급 완료 상태인 경우 DB에서 유저 쿠폰 ID 조회
+        val userCouponId = if (status == IssuedStatus.ISSUED) {
+            userCouponRepository.findByUserIdAndCouponId(userId, couponId)?.id
+        } else {
+            null
+        }
+        
+        return CouponResult.AsyncIssueStatus(
+            couponId = couponId,
+            status = status.name,
+            userCouponId = userCouponId
+        )
+    }
+
+    /**
      * 쿠폰 적용 메서드
      * 1. 할인 적용 대상 필터링
      * 2. 적용 대상 전체에 대한 할인 금액 계산

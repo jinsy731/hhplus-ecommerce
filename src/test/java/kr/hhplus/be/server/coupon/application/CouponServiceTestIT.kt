@@ -249,6 +249,92 @@ class CouponServiceTestIT @Autowired constructor(
     }
 
     @Test
+    fun `✅PENDING 상태의 비동기 쿠폰 발급 상태를 조회한다`() {
+        // given
+        val userId = 1000L
+        val coupon = CouponTestFixture.coupon().build()
+        val savedCoupon = couponRepository.save(coupon)
+        val couponId = savedCoupon.id!!
+
+        // Redis 쿠폰 재고 설정
+        couponKVStore.setStock(CouponStock(couponId, 100))
+
+        // 비동기 쿠폰 발급 요청
+        val issueCommand = CouponCommand.Issue(
+            userId = userId,
+            couponId = couponId
+        )
+        couponService.issueCouponAsync(issueCommand)
+        
+        // when
+        val result = couponService.getIssueStatus(userId, couponId)
+        
+        // then
+        result.couponId shouldBe couponId
+        result.status shouldBe IssuedStatus.PENDING.name
+        result.userCouponId shouldBe null
+    }
+    
+    @Test
+    fun `✅ISSUED 상태의 비동기 쿠폰 발급 상태를 조회한다`() {
+        // given
+        val userId = 1001L
+        val coupon = CouponTestFixture.coupon().build()
+        val savedCoupon = couponRepository.save(coupon)
+        val couponId = savedCoupon.id!!
+
+        // Redis 쿠폰 재고 설정
+        couponKVStore.setStock(CouponStock(couponId, 100))
+
+        // 비동기 쿠폰 발급 요청
+        val issueCommand = CouponCommand.Issue(
+            userId = userId,
+            couponId = couponId
+        )
+        couponService.issueCouponAsync(issueCommand)
+        
+        // 배치 서비스 실행으로 실제 발급 처리
+        couponIssueBatchService.processIssueRequest()
+        
+        // when
+        val result = couponService.getIssueStatus(userId, couponId)
+        
+        // then
+        result.couponId shouldBe couponId
+        result.status shouldBe IssuedStatus.ISSUED.name
+        result.userCouponId shouldNotBe null
+        
+        // DB에 저장된 사용자 쿠폰 확인
+        val userCoupon = userCouponRepository.findById(result.userCouponId!!)
+        userCoupon shouldNotBe null
+        userCoupon!!.userId shouldBe userId
+        userCoupon.coupon.id shouldBe couponId
+    }
+    
+    @Test
+    fun `✅FAILED 상태의 비동기 쿠폰 발급 상태를 조회한다`() {
+        // given
+        val userId = 1002L
+        val coupon = CouponTestFixture.coupon().build()
+        val savedCoupon = couponRepository.save(coupon)
+        val couponId = savedCoupon.id!!
+
+        // Redis 쿠폰 재고 설정 (소진 상태로 만들기 위해 재고 0)
+        couponKVStore.setStock(CouponStock(couponId, 0))
+
+        // 비동기 쿠폰 발급 요청을 생성하고 직접 FAILED 상태로 설정
+        couponKVStore.setIssuedStatus(userId, couponId, IssuedStatus.FAILED)
+        
+        // when
+        val result = couponService.getIssueStatus(userId, couponId)
+        
+        // then
+        result.couponId shouldBe couponId
+        result.status shouldBe IssuedStatus.FAILED.name
+        result.userCouponId shouldBe null
+    }
+
+    @Test
     fun `✅병렬 요청 처리와 배치 프로세스가 동시에 실행될 때 정상 작동한다`() {
         // given
         val userCount = 50

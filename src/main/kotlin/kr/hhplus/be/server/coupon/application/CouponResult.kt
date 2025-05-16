@@ -21,6 +21,12 @@ class CouponResult {
         val status: String
     )
 
+    data class AsyncIssueStatus(
+        val couponId: Long,
+        val status: String,
+        val userCouponId: Long? = null
+    )
+
     data class RetrieveList(
         val coupons: List<UserCouponData>,
         val pageResult: PageResult
