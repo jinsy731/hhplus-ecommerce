@@ -2,10 +2,10 @@ package kr.hhplus.be.server.coupon.application
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
+import kr.hhplus.be.server.RedisCleaner
 import kr.hhplus.be.server.coupon.CouponTestFixture
 import kr.hhplus.be.server.coupon.domain.model.*
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
@@ -30,7 +30,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import java.time.LocalDateTime
-import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -44,6 +43,7 @@ class CouponServiceTestIT @Autowired constructor(
     private val userCouponJpaRepository: JpaUserCouponRepository,
     private val userCouponRepository: UserCouponRepository,
     private val couponKVStore: CouponKVStore,
+    private val redisCleaner: RedisCleaner,
     @MockitoBean private val mockClockHolder: ClockHolder,
     private val databaseCleaner: MySqlDatabaseCleaner,
 ){
@@ -57,6 +57,7 @@ class CouponServiceTestIT @Autowired constructor(
     @AfterEach
     fun clean() {
         databaseCleaner.clean()
+        redisCleaner.clean()
     }
 
     @Test
@@ -391,11 +392,7 @@ class CouponServiceTestIT @Autowired constructor(
         repeat(10) { index ->
             val userId = 700L + index
             val issueCommand = CouponCommand.Issue(userId = userId, couponId = couponId)
-            try {
-                couponService.issueCouponAsync(issueCommand)
-            } catch (e: Exception) {
-                // 예외가 발생해도 계속 진행
-            }
+            couponService.issueCouponAsync(issueCommand)
         }
 
         // 1. 배치 서비스 실행하여 실제 쿠폰 발급 처리
@@ -419,11 +416,6 @@ class CouponServiceTestIT @Autowired constructor(
             val status = couponKVStore.getIssuedStatus(userId, couponId)
             status shouldBe IssuedStatus.FAILED
         }
-    }
-
-    @Test
-    fun `✅레이스 컨디션에서 쿠폰 발급 중복 방지가 정상 작동한다`() {
-
     }
 
     @Test

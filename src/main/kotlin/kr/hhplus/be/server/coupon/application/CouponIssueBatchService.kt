@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.coupon.application
 
+import kr.hhplus.be.server.coupon.domain.model.UserCoupon
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
 import kr.hhplus.be.server.coupon.infrastructure.CouponKVStore
@@ -68,7 +69,7 @@ class CouponIssueBatchService(
             
             // 유효한 요청에 대해 UserCoupon 객체 생성
             val userCoupons = validRequestsMap.values.map { request ->
-                coupon.issueTo(request.userId, now)
+                coupon.asyncIssueTo(userId = request.userId, now = now)
             }
 
             if(userCoupons.isEmpty()) {
