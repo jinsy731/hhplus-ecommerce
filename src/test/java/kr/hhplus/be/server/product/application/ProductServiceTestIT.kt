@@ -45,6 +45,7 @@ class ProductServiceTestIT @Autowired constructor(
     private val productService: ProductService,
     private val productRepository: ProductRepository,
     private val databaseCleaner: MySqlDatabaseCleaner,
+    private val redisCleaner: RedisCleaner,
     private val productVariantRepository: ProductVariantJpaRepository,
     private val productSalesAggregationDailyRepository: JpaProductSalesAggregationDailyRepository,
     private val popularProductsDailyRepository: JpaPopularProductsDailyRepository,
@@ -253,8 +254,9 @@ class ProductServiceTestIT @Autowired constructor(
     }
 
     @AfterEach
-    fun clean() {
+    fun tearDown() {
         databaseCleaner.clean()
+        redisCleaner.clean()
     }
 
     @Test
