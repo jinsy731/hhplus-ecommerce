@@ -13,6 +13,7 @@ interface CouponKVStore {
 
     fun pushToFailedIssueRequestQueue(issueRequest: CouponIssueRequest)
     fun pushAllToFailedIssueRequestQueue(failedRequests: List<CouponIssueRequest>)
+    fun peekBatchFromFailedIssueRequestQueue(couponId: Long, batchSize: Long): List<CouponIssueRequest>
     fun popBatchFromFailedIssueRequestQueue(couponId: Long, batchSize: Long): List<CouponIssueRequest>
     fun countFailedIssueRequestQueue(couponId: Long): Long
 
@@ -29,6 +30,7 @@ interface CouponKVStore {
     
     fun pushToFailedIssueRequestedCouponIdList(couponId: Long)
     fun popFromFailedIssueRequestedCouponIdList(): Long?
+    fun peekFromFailedIssueRequestedCouponIdList(): Long?
     
     fun pushToOutOfStockCouponIdList(couponId: Long)
     fun popFromOutOfStockCouponIdList(): Long?

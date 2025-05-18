@@ -105,6 +105,22 @@ class RedisCouponKVStore(
         return results
     }
 
+    override fun peekBatchFromFailedIssueRequestQueue(
+        couponId: Long,
+        batchSize: Long
+    ): List<CouponIssueRequest> {
+        val key = CouponKeyGenerator.getFailedIssueRequestQueueKey(couponId)
+        val results = mutableListOf<CouponIssueRequest>()
+
+        for (i in 0 until batchSize) {
+            val serializedRequest = redisTemplate.opsForList().index(key, i) ?: break
+            val request = objectMapper.readValue<CouponIssueRequest>(serializedRequest)
+            results.add(request)
+        }
+
+        return results
+    }
+
     override fun getStock(couponId: Long): CouponStock {
         val key = CouponKeyGenerator.getStockKey(couponId)
         val stockStr = redisTemplate.opsForValue().get(key)
@@ -176,7 +192,14 @@ class RedisCouponKVStore(
         
         return value?.toInt()?.toLong()
     }
-    
+
+    override fun peekFromFailedIssueRequestedCouponIdList(): Long? {
+        val listKey = CouponKeyGenerator.getFailedIssueRequestedCouponIdListKey()
+        val value = redisTemplate.opsForList().index(listKey, 0)
+
+        return value?.toInt()?.toLong()
+    }
+
     override fun pushToOutOfStockCouponIdList(couponId: Long) {
         val listKey = CouponKeyGenerator.getOutOfStockCouponIdListKey()
         redisTemplate.opsForList().rightPush(listKey, couponId.toString())

@@ -20,11 +20,14 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.platform.commons.logging.LoggerFactory
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import java.time.LocalDateTime
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -36,7 +39,7 @@ class CouponServiceTestIT @Autowired constructor(
     private val couponIssueBatchService: CouponIssueBatchService,
     private val couponRepository: CouponRepository,
     private val userCouponJpaRepository: JpaUserCouponRepository,
-    private val userCouponRepository: UserCouponRepository,
+    @MockitoSpyBean private val userCouponRepository: UserCouponRepository,
     private val couponKVStore: CouponKVStore,
     private val redisCleaner: RedisCleaner,
     @MockitoBean private val mockClockHolder: ClockHolder,
@@ -128,7 +131,7 @@ class CouponServiceTestIT @Autowired constructor(
 
         // Redis에 발급 완료로 표시되었는지 확인
         couponKVStore.existsIssuedUser(userId, couponId) shouldBe true
-        
+
         // 큐에서 요청이 제거되었는지 확인
         val requests = couponKVStore.peekAllFromIssueRequestQueue(couponId)
         requests shouldHaveSize 0
@@ -169,7 +172,7 @@ class CouponServiceTestIT @Autowired constructor(
 
         // Redis 쿠폰 재고 설정 (소진 상태)
         couponKVStore.setStock(CouponStock(couponId, 10))
-        
+
         // 이미 10명이 발급받은 상태로 설정
         repeat(10) { i ->
             couponKVStore.setIssuedUser(i.toLong(), couponId)
@@ -231,13 +234,16 @@ class CouponServiceTestIT @Autowired constructor(
             couponService.issueCouponAsync(issueCommand)
         }
 
+        batchCompleteLatch.await()
+        batchExecutor.shutdown()
+
         // then
         // 배치 처리 후 DB에 사용자 쿠폰이 하나만 생성되었는지 확인
         val userCoupons = userCouponRepository.findAllByUserId(userId, PageRequest.of(0, 10))
         userCoupons.content.size shouldBe 1
         userCoupons.content[0].userId shouldBe userId
         userCoupons.content[0].coupon.id shouldBe couponId
-        
+
         // Redis에 발급 완료로 표시되었는지 확인
         couponKVStore.existsIssuedUser(userId, couponId) shouldBe true
     }
@@ -259,16 +265,16 @@ class CouponServiceTestIT @Autowired constructor(
             couponId = couponId
         )
         couponService.issueCouponAsync(issueCommand)
-        
+
         // when
         val result = couponService.getIssueStatus(userId, couponId)
-        
+
         // then
         result.couponId shouldBe couponId
         result.status shouldBe IssuedStatus.PENDING.name
         result.userCouponId shouldBe null
     }
-    
+
     @Test
     fun `✅ISSUED 상태의 비동기 쿠폰 발급 상태를 조회한다`() {
         // given
@@ -286,25 +292,25 @@ class CouponServiceTestIT @Autowired constructor(
             couponId = couponId
         )
         couponService.issueCouponAsync(issueCommand)
-        
+
         // 배치 서비스 실행으로 실제 발급 처리
         couponIssueBatchService.processIssueRequest()
-        
+
         // when
         val result = couponService.getIssueStatus(userId, couponId)
-        
+
         // then
         result.couponId shouldBe couponId
         result.status shouldBe IssuedStatus.ISSUED.name
         result.userCouponId shouldNotBe null
-        
+
         // DB에 저장된 사용자 쿠폰 확인
         val userCoupon = userCouponRepository.findById(result.userCouponId!!)
         userCoupon shouldNotBe null
         userCoupon!!.userId shouldBe userId
         userCoupon.coupon.id shouldBe couponId
     }
-    
+
     @Test
     fun `✅FAILED 상태의 비동기 쿠폰 발급 상태를 조회한다`() {
         // given
@@ -318,10 +324,10 @@ class CouponServiceTestIT @Autowired constructor(
 
         // 비동기 쿠폰 발급 요청을 생성하고 직접 FAILED 상태로 설정
         couponKVStore.setIssuedStatus(userId, couponId, IssuedStatus.FAILED)
-        
+
         // when
         val result = couponService.getIssueStatus(userId, couponId)
-        
+
         // then
         result.couponId shouldBe couponId
         result.status shouldBe IssuedStatus.FAILED.name
@@ -342,14 +348,14 @@ class CouponServiceTestIT @Autowired constructor(
 
         val latch = CountDownLatch(1)
         val batchCompleteLatch = CountDownLatch(batchRunCount)
-        
+
         // 배치 프로세스를 실행할 스레드 생성
         val batchExecutor = Executors.newSingleThreadExecutor()
         batchExecutor.submit {
             try {
                 // 메인 스레드에서 요청 실행이 시작될 때까지 대기
                 latch.await()
-                
+
                 // 배치 프로세스를 여러 번 실행
                 repeat(batchRunCount) {
                     logger.info { "[${Thread.currentThread().name}] batch run" }
@@ -371,7 +377,7 @@ class CouponServiceTestIT @Autowired constructor(
                     userId = userId,
                     couponId = couponId
                 )
-                
+
                 // 첫 번째 요청 전에 latch를 카운트다운하여 배치 프로세스 스레드를 시작
                 if (index == 0) {
                     latch.countDown()
@@ -383,11 +389,11 @@ class CouponServiceTestIT @Autowired constructor(
                 e.printStackTrace()
             }
         }
-        
+
         // 배치 프로세스가 완료될 때까지 대기
         batchCompleteLatch.await(10, TimeUnit.SECONDS)
         batchExecutor.shutdown()
-        
+
         // 추가로 배치 프로세스를 한 번 더 실행하여 남은 요청 처리
         couponIssueBatchService.processIssueRequest()
 
@@ -397,11 +403,11 @@ class CouponServiceTestIT @Autowired constructor(
         println("requests.size = ${requests.size}")
         val issuedUserCoupons = userCouponJpaRepository.findAll()
         issuedUserCoupons.size shouldBe userCount
-        
+
         // 큐에 남은 요청이 없는지 확인
         val remainingRequests = couponKVStore.countIssueRequestQueue(couponId)
         remainingRequests shouldBe 0
-        
+
         // 모든 사용자가 쿠폰을 받았는지 확인
         (0 until userCount).forEach { index ->
             val userId = 1000L + index
@@ -410,7 +416,7 @@ class CouponServiceTestIT @Autowired constructor(
             userCoupon!!.userId shouldBe userId
             userCoupon.coupon.id shouldBe couponId
             userCoupon.status shouldBe UserCouponStatus.UNUSED
-            
+
             // Redis에 발급 완료로 표시되었는지 확인
             couponKVStore.existsIssuedUser(userId, couponId) shouldBe true
         }
@@ -436,15 +442,15 @@ class CouponServiceTestIT @Autowired constructor(
 
         // 1. 비동기 쿠폰 발급 요청
         couponService.issueCouponAsync(issueCommand)
-        
+
         // 2. 수동으로 실패 큐에 추가 (실패 시나리오 재현)
         val request = CouponIssueRequest(couponId, userId)
         couponKVStore.pushToFailedIssueRequestQueue(request)
         couponKVStore.pushToFailedIssueRequestedCouponIdList(couponId)
-        
+
         // 3. 실패 재처리 배치 실행
         couponIssueBatchService.processFailedIssueRequest()
-        
+
         // then
         // 사용자 쿠폰이 실제로 발급되었는지 확인
         val userCoupon = userCouponRepository.findByUserIdAndCouponId(userId, couponId)
@@ -452,7 +458,7 @@ class CouponServiceTestIT @Autowired constructor(
         userCoupon!!.userId shouldBe userId
         userCoupon.coupon.id shouldBe couponId
         userCoupon.status shouldBe UserCouponStatus.UNUSED
-        
+
         // Redis에 발급 완료로 표시되었는지 확인
         couponKVStore.existsIssuedUser(userId, couponId) shouldBe true
     }
@@ -482,7 +488,7 @@ class CouponServiceTestIT @Autowired constructor(
         // DB에 사용자 쿠폰이 재고 수량만큼만 생성되었는지 확인
         val issuedUserCoupons = userCouponJpaRepository.findAll()
         issuedUserCoupons.size shouldBe stockLimit.toInt()
-        
+
         // 요청 상태가 FAILED로 변경되었는지 확인
         val failedUserIds = (5..9).map { 700L + it }
         failedUserIds.forEach { userId ->
