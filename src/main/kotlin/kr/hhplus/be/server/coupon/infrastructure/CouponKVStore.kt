@@ -25,6 +25,7 @@ interface CouponKVStore {
 
     fun pushToIssueRequestedCouponIdList(couponId: Long)
     fun popFromIssueRequestedCouponIdList(): Long?
+    fun peekFromIssueRequestedCouponIdList(): Long?
     
     fun pushToFailedIssueRequestedCouponIdList(couponId: Long)
     fun popFromFailedIssueRequestedCouponIdList(): Long?

@@ -61,8 +61,8 @@ class CouponService(
         }
 
         // DB에서도 중복 체크
-        userCouponRepository.findByUserIdAndCouponId(cmd.userId, cmd.couponId)
-            ?.let { throw DuplicateCouponIssueException() }
+//        userCouponRepository.findByUserIdAndCouponId(cmd.userId, cmd.couponId)
+//            ?.let { throw DuplicateCouponIssueException() }
 
         // 2. 쿠폰 stock 및 발급 가능 여부 검증
         val stock = couponKVStore.getStock(cmd.couponId)

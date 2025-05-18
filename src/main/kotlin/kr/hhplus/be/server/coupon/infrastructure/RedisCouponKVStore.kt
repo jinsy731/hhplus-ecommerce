@@ -157,7 +157,14 @@ class RedisCouponKVStore(
         
         return value?.toInt()?.toLong()
     }
-    
+
+    override fun peekFromIssueRequestedCouponIdList(): Long? {
+        val listKey = CouponKeyGenerator.getIssueRequestedCouponIdListKey()
+        val value = redisTemplate.opsForList().index(listKey, 0)
+
+        return value?.toInt()?.toLong()
+    }
+
     override fun pushToFailedIssueRequestedCouponIdList(couponId: Long) {
         val listKey = CouponKeyGenerator.getFailedIssueRequestedCouponIdListKey()
         redisTemplate.opsForList().rightPush(listKey, couponId.toString())
