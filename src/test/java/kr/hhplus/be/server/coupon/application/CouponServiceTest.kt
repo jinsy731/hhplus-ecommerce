@@ -14,6 +14,7 @@ import kr.hhplus.be.server.coupon.domain.model.*
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.DiscountLineRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
+import kr.hhplus.be.server.coupon.infrastructure.CouponKVStore
 import kr.hhplus.be.server.order.OrderTestFixture
 import kr.hhplus.be.server.order.application.toUseCouponCommandItem
 import org.junit.jupiter.api.BeforeEach
@@ -27,6 +28,7 @@ class CouponServiceTest {
     private lateinit var discountLineRepository: DiscountLineRepository
     private lateinit var couponService: CouponService
     private lateinit var clockHolder: ClockHolder
+    private lateinit var couponKVStore: CouponKVStore
 
     @BeforeEach
     fun setUp() {
@@ -34,7 +36,8 @@ class CouponServiceTest {
         userCouponRepository = mockk()
         discountLineRepository = mockk()
         clockHolder = mockk()
-        couponService = CouponService(couponRepository, userCouponRepository, discountLineRepository, clockHolder)
+        couponKVStore = mockk()
+        couponService = CouponService(couponRepository, userCouponRepository, discountLineRepository, couponKVStore, clockHolder)
     }
     
     @Test
