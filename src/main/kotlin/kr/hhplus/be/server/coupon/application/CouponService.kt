@@ -3,12 +3,18 @@ package kr.hhplus.be.server.coupon.application
 import kr.hhplus.be.server.shared.time.ClockHolder
 import kr.hhplus.be.server.shared.web.PageResult
 import kr.hhplus.be.server.shared.exception.DuplicateCouponIssueException
+import kr.hhplus.be.server.shared.exception.ExceededMaxCouponLimitException
+import kr.hhplus.be.server.shared.exception.CouponOutOfStockException
 import kr.hhplus.be.server.lock.executor.LockType
 import kr.hhplus.be.server.lock.annotation.WithDistributedLock
 import kr.hhplus.be.server.lock.annotation.WithMultiDistributedLock
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.DiscountLineRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
+import kr.hhplus.be.server.coupon.infrastructure.CouponIssueRequest
+import kr.hhplus.be.server.coupon.infrastructure.CouponKVStore
+import kr.hhplus.be.server.coupon.infrastructure.IssuedStatus
+import org.slf4j.LoggerFactory
 import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.data.domain.Pageable
 import org.springframework.retry.annotation.Backoff
@@ -21,8 +27,10 @@ class CouponService(
     private val couponRepository: CouponRepository,
     private val userCouponRepository: UserCouponRepository,
     private val discountLineRepository: DiscountLineRepository,
+    private val couponKVStore: CouponKVStore,
     private val clockHolder: ClockHolder
     ) {
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     @WithDistributedLock(
         key = "'coupon:' + #cmd.couponId",
@@ -42,6 +50,62 @@ class CouponService(
             userCouponId = savedUserCoupon.id,
             status = savedUserCoupon.status,
             expiredAt = savedUserCoupon.expiredAt
+        )
+    }
+
+    @Transactional
+    fun issueCouponAsync(cmd: CouponCommand.Issue): CouponResult.AsyncIssue {
+        // 1. 중복 검증
+        if (couponKVStore.existsIssuedUser(cmd.userId, cmd.couponId)) {
+            throw DuplicateCouponIssueException()
+        }
+
+        // 2. 쿠폰 stock 및 발급 가능 여부 검증
+        val stock = couponKVStore.getStock(cmd.couponId)
+        val issuedCount = couponKVStore.countIssuedUser(cmd.couponId)
+        
+        if (stock.stock <= issuedCount) {
+            throw CouponOutOfStockException()
+        }
+
+        // 3. 처리중 상태로 설정
+        couponKVStore.setIssuedStatus(cmd.userId, cmd.couponId, IssuedStatus.PENDING)
+        
+        // 4. 쿠폰 발급 요청 큐에 삽입
+        val issueRequest = CouponIssueRequest(cmd.couponId, cmd.userId)
+        couponKVStore.pushToIssueReqeustQueue(issueRequest)
+        logger.info("[issueCouponAsync] pushed to issue request queue: $issueRequest")
+        
+        // 5. 요청 처리를 위해 쿠폰 ID 리스트에 추가
+        couponKVStore.pushToIssueRequestedCouponIdList(cmd.couponId)
+        
+        // 6. 처리중 응답 반환
+        return CouponResult.AsyncIssue(
+            couponId = cmd.couponId,
+            status = IssuedStatus.PENDING.name
+        )
+    }
+
+    /**
+     * 비동기 쿠폰 발급 상태 조회
+     * KVStore에서 발급 상태를 확인하고 결과를 반환
+     */
+    @Transactional(readOnly = true)
+    fun getIssueStatus(userId: Long, couponId: Long): CouponResult.AsyncIssueStatus {
+        // KVStore에서 발급 상태 조회
+        val status = couponKVStore.getIssuedStatus(userId, couponId)
+        
+        // 발급 완료 상태인 경우 DB에서 유저 쿠폰 ID 조회
+        val userCouponId = if (status == IssuedStatus.ISSUED) {
+            userCouponRepository.findByUserIdAndCouponId(userId, couponId)?.id
+        } else {
+            null
+        }
+        
+        return CouponResult.AsyncIssueStatus(
+            couponId = couponId,
+            status = status.name,
+            userCouponId = userCouponId
         )
     }
 

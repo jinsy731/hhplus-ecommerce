@@ -2,6 +2,7 @@ package kr.hhplus.be.server.shared.redis
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.cache.CacheManager
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.cache.RedisCacheConfiguration
@@ -17,7 +18,7 @@ class RedisCacheConfig(@Qualifier("redisObjectMapper") private val objectMapper:
     @Bean
     fun redisCacheManager(
         redisConnectionFactory: RedisConnectionFactory,
-    ): RedisCacheManager {
+    ): CacheManager {
         val serializer = GenericJackson2JsonRedisSerializer(objectMapper)
 
         val cacheConfig = RedisCacheConfiguration.defaultCacheConfig()
