@@ -12,8 +12,6 @@ import org.springframework.transaction.annotation.Transactional
 class FakeOrderResultSender : OrderResultSender {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @Async
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     override fun send(order: Order) {
         logger.info("Order Message Published..")
     }
