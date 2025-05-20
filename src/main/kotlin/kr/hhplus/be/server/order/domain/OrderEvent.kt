@@ -5,9 +5,10 @@ import java.math.BigDecimal
 
 class OrderEvent {
     data class Completed(
-        override val eventType: String = "order.completed",
         override val payload: OrderEventPayload.Order
-    ): DomainEvent<OrderEventPayload.Order>()
+    ): DomainEvent<OrderEventPayload.Order>() {
+        override val eventType: String = "order.completed"
+    }
 }
 
 class OrderEventPayload {
