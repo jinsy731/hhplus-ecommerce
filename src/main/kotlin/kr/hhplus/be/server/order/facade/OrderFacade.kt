@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.order.facade
 
-import kr.hhplus.be.server.shared.messaging.MessagingService
+import kr.hhplus.be.server.order.application.OrderResultSender
 import kr.hhplus.be.server.coupon.application.CouponService
 import kr.hhplus.be.server.order.application.OrderCommand
 import kr.hhplus.be.server.order.application.OrderService
@@ -23,7 +23,7 @@ class OrderFacade(
     private val userPointService: UserPointService,
     private val paymentService: PaymentService,
     private val productService: ProductService,
-    private val messagingService: MessagingService,
+    private val orderResultSender: OrderResultSender,
     private val rankingService: RankingService
     ) {
 
@@ -50,7 +50,7 @@ class OrderFacade(
         paymentService.completePayment(PaymentCommand.Complete(payment.id))
         orderService.completeOrder(order.id)
 
-        messagingService.publish(order)
+        orderResultSender.send(order)
         rankingService.updateProductRanking(RankingCommand.UpdateProductRanking.Root(
             items = order.orderItems.map { RankingCommand.UpdateProductRanking.Item(it.productId, it.quantity.toLong()) },
             timestamp = cri.timestamp
