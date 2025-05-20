@@ -2,8 +2,10 @@ package kr.hhplus.be.server.order.facade
 
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
+import kr.hhplus.be.server.order.application.OrderResultSender
 import kr.hhplus.be.server.order.domain.OrderEvent
 import kr.hhplus.be.server.order.domain.model.OrderStatus
+import kr.hhplus.be.server.order.infrastructure.persistence.JpaOrderRepository
 import kr.hhplus.be.server.point.UserPointTestFixture
 import kr.hhplus.be.server.point.infrastructure.JpaUserPointRepository
 import kr.hhplus.be.server.product.ProductTestFixture
@@ -45,6 +47,12 @@ class OrderFacadeTestIT {
 
     @Autowired
     private lateinit var databaseCleaner: MySqlDatabaseCleaner
+
+    @MockitoSpyBean
+    private lateinit var orderResultSender: OrderResultSender
+
+    @Autowired
+    private lateinit var orderJpaRepository: JpaOrderRepository
 
 
     @AfterEach
@@ -131,6 +139,32 @@ class OrderFacadeTestIT {
             .stream(OrderEvent.Completed::class.java)
             .findFirst()
             .get().payload.order shouldBe order
+    }
+
+    @Test
+    fun `❌ 주문 완료 후 OrderEvent Completed 이벤트 처리 중 오류가 발생해도 주문 결과엔 영향을 미치지 않는다`() {
+        // given
+        val userId = 1L
+        val savedProduct = ProductTestFixture
+            .product()
+            .withVariant(ProductTestFixture.variant())
+            .build().let { productJpaRepository.save(it) }
+        userPointJpaRepository.save(UserPointTestFixture.userPoint(userId = userId, balance = Money.of(100000)).build())
+        val cri = createOrderCriteria(
+            productId = savedProduct.id!!,
+            variantId = savedProduct.variants.first().id!!,
+            userId = userId)
+
+        doThrow(RuntimeException())
+            .`when`(orderResultSender)
+            .send(any())
+
+        // when
+        val order = orderFacade.placeOrder(cri)
+
+        // then
+        val findOrder = orderJpaRepository.findById(order.id).get()
+        findOrder.status shouldBe OrderStatus.PAID
     }
 
     private fun createOrderCriteria(
