@@ -2,6 +2,7 @@ package kr.hhplus.be.server.order.facade
 
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
+import kr.hhplus.be.server.order.domain.OrderEvent
 import kr.hhplus.be.server.order.domain.model.OrderStatus
 import kr.hhplus.be.server.point.UserPointTestFixture
 import kr.hhplus.be.server.point.infrastructure.JpaUserPointRepository
@@ -18,17 +19,32 @@ import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
+import org.springframework.test.context.event.ApplicationEvents
+import org.springframework.test.context.event.RecordApplicationEvents
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
 @SpringBootTest
-class OrderFacadeTestIT @Autowired constructor(
-    private val productJpaRepository: ProductJpaRepository,
-    private val userPointJpaRepository: JpaUserPointRepository,
-    private val orderFacade: OrderFacade,
-    @MockitoSpyBean private val productRankingRepository: ProductRankingRepository,
-    private val databaseCleaner: MySqlDatabaseCleaner,
-) {
+@RecordApplicationEvents
+class OrderFacadeTestIT {
+
+    @Autowired
+    private lateinit var applicationEvents: ApplicationEvents // 생성자 주입 안됨
+
+    @Autowired
+    private lateinit var orderFacade: OrderFacade
+
+    @Autowired
+    private lateinit var productJpaRepository: ProductJpaRepository
+
+    @Autowired
+    private lateinit var userPointJpaRepository: JpaUserPointRepository
+
+    @MockitoSpyBean
+    private lateinit var productRankingRepository: ProductRankingRepository
+
+    @Autowired
+    private lateinit var databaseCleaner: MySqlDatabaseCleaner
 
 
     @AfterEach
@@ -91,6 +107,30 @@ class OrderFacadeTestIT @Autowired constructor(
                     any()
                 )
             }
+    }
+
+    @Test
+    fun `✅주문 완료 후 OrderEvent Completed 이벤트가 발행된다`() {
+        // given
+        val userId = 1L
+        val savedProduct = ProductTestFixture
+            .product()
+            .withVariant(ProductTestFixture.variant())
+            .build().let { productJpaRepository.save(it) }
+        userPointJpaRepository.save(UserPointTestFixture.userPoint(userId = userId, balance = Money.of(100000)).build())
+        val cri = createOrderCriteria(
+            productId = savedProduct.id!!,
+            variantId = savedProduct.variants.first().id!!,
+            userId = userId)
+
+        // when
+        val order = orderFacade.placeOrder(cri)
+
+        // then
+        applicationEvents
+            .stream(OrderEvent.Completed::class.java)
+            .findFirst()
+            .get().payload.order shouldBe order
     }
 
     private fun createOrderCriteria(
