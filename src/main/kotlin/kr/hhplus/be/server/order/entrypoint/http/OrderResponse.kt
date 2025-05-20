@@ -1,8 +1,8 @@
 package kr.hhplus.be.server.order.entrypoint.http
 
 import io.swagger.v3.oas.annotations.media.Schema
-import kr.hhplus.be.server.order.domain.Order
-import kr.hhplus.be.server.order.domain.OrderStatus
+import kr.hhplus.be.server.order.domain.model.Order
+import kr.hhplus.be.server.order.domain.model.OrderStatus
 import java.math.BigDecimal
 
 class OrderResponse {

@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.point.domain
+package kr.hhplus.be.server.point.domain.model
 
 import jakarta.persistence.AttributeOverride
 import jakarta.persistence.Column

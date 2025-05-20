@@ -1,9 +1,10 @@
-package kr.hhplus.be.server.order.domain
+package kr.hhplus.be.server.order.domain.model
 
 import jakarta.persistence.*
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.exception.AlreadyPaidOrderException
-import kr.hhplus.be.server.coupon.application.DiscountInfo
+import kr.hhplus.be.server.coupon.application.dto.DiscountInfo
+import kr.hhplus.be.server.order.domain.model.OrderStatus
 import java.time.LocalDateTime
 
 @Entity

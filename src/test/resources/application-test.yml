@@ -5,7 +5,7 @@ spring:
     defer-datasource-initialization: true # SQL 스크립트를 Hibernate 초기화 후에 실행
   sql:
     init:
-      mode: always # 항상 SQL 스크립트를 실행
+      mode: never # 항상 SQL 스크립트를 실행
 
 logging:
   level:

@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.payment.domain
+package kr.hhplus.be.server.payment.domain.model
 
 import java.math.BigDecimal
 

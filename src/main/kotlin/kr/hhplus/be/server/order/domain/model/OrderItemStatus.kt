@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.order.domain
+package kr.hhplus.be.server.order.domain.model
 
 /**
  * 주문 항목 상태

@@ -2,6 +2,9 @@ package kr.hhplus.be.server.product.application
 
 import kr.hhplus.be.server.lock.annotation.WithMultiDistributedLock
 import kr.hhplus.be.server.lock.executor.LockType
+import kr.hhplus.be.server.product.application.dto.ProductCommand
+import kr.hhplus.be.server.product.application.dto.ProductResult
+import kr.hhplus.be.server.product.application.dto.toProductDetail
 import kr.hhplus.be.server.product.domain.product.Product
 import kr.hhplus.be.server.product.domain.product.ProductRepository
 import kr.hhplus.be.server.product.domain.stats.PopularProductDailyId

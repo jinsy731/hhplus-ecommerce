@@ -7,10 +7,15 @@ import io.kotest.matchers.shouldNotBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.RedisCleaner
 import kr.hhplus.be.server.coupon.CouponTestFixture
+import kr.hhplus.be.server.coupon.application.dto.CouponCommand
 import kr.hhplus.be.server.coupon.domain.model.UserCouponStatus
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
-import kr.hhplus.be.server.coupon.infrastructure.*
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponIssueRequest
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponKVStore
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponStock
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.IssuedStatus
+import kr.hhplus.be.server.coupon.infrastructure.persistence.JpaUserCouponRepository
 import kr.hhplus.be.server.executeConcurrently
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.exception.CouponOutOfStockException
@@ -20,8 +25,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.platform.commons.logging.LoggerFactory
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -49,6 +52,7 @@ class CouponServiceTestIT @Autowired constructor(
 
     @BeforeEach
     fun setup() {
+        redisCleaner.clean()
         whenever(mockClockHolder.getNowInLocalDateTime()).thenReturn(LocalDateTime.now())
     }
 

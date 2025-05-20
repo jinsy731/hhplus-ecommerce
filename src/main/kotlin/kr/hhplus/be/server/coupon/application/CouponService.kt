@@ -1,9 +1,13 @@
 package kr.hhplus.be.server.coupon.application
 
+import kr.hhplus.be.server.coupon.application.dto.CouponCommand
+import kr.hhplus.be.server.coupon.application.dto.CouponResult
+import kr.hhplus.be.server.coupon.application.dto.toDiscountContext
+import kr.hhplus.be.server.coupon.application.dto.toDiscountInfoList
+import kr.hhplus.be.server.coupon.application.dto.toUserCouponData
 import kr.hhplus.be.server.shared.time.ClockHolder
 import kr.hhplus.be.server.shared.web.PageResult
 import kr.hhplus.be.server.shared.exception.DuplicateCouponIssueException
-import kr.hhplus.be.server.shared.exception.ExceededMaxCouponLimitException
 import kr.hhplus.be.server.shared.exception.CouponOutOfStockException
 import kr.hhplus.be.server.lock.executor.LockType
 import kr.hhplus.be.server.lock.annotation.WithDistributedLock
@@ -11,9 +15,9 @@ import kr.hhplus.be.server.lock.annotation.WithMultiDistributedLock
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.DiscountLineRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
-import kr.hhplus.be.server.coupon.infrastructure.CouponIssueRequest
-import kr.hhplus.be.server.coupon.infrastructure.CouponKVStore
-import kr.hhplus.be.server.coupon.infrastructure.IssuedStatus
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponIssueRequest
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponKVStore
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.IssuedStatus
 import org.slf4j.LoggerFactory
 import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.data.domain.Pageable

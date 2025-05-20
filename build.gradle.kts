@@ -91,5 +91,6 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+	systemProperty("spring.profiles.active", "test")
 	systemProperty("user.timezone", "UTC")
 }

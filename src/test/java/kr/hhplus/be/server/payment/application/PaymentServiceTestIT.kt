@@ -8,7 +8,7 @@ import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.exception.AlreadyPaidException
 import kr.hhplus.be.server.shared.exception.ResourceNotFoundException
 import kr.hhplus.be.server.payment.domain.PaymentRepository
-import kr.hhplus.be.server.payment.domain.PaymentStatus
+import kr.hhplus.be.server.payment.domain.model.PaymentStatus
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest

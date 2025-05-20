@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.product.application
+package kr.hhplus.be.server.product.application.dto
 
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.product.domain.product.OptionSpec

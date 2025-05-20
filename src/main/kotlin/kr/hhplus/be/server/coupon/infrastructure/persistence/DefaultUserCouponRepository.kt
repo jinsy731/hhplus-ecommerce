@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.coupon.infrastructure
+package kr.hhplus.be.server.coupon.infrastructure.persistence
 
 import kr.hhplus.be.server.coupon.domain.model.UserCoupon
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository

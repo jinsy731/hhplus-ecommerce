@@ -1,12 +1,12 @@
 package kr.hhplus.be.server.coupon.infrastructure
 
-import io.kotest.matchers.nulls.shouldBeNull
-import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldBeEmpty
-import io.kotest.matchers.string.shouldNotBeEmpty
 import kr.hhplus.be.server.RedisCleaner
 import kr.hhplus.be.server.coupon.application.CouponKeyGenerator
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponIssueRequest
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponStock
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.IssuedStatus
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.RedisCouponKVStore
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

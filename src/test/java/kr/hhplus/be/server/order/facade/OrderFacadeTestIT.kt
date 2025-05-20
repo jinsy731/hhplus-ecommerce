@@ -2,7 +2,7 @@ package kr.hhplus.be.server.order.facade
 
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.order.domain.OrderStatus
+import kr.hhplus.be.server.order.domain.model.OrderStatus
 import kr.hhplus.be.server.point.UserPointTestFixture
 import kr.hhplus.be.server.point.infrastructure.JpaUserPointRepository
 import kr.hhplus.be.server.product.ProductTestFixture

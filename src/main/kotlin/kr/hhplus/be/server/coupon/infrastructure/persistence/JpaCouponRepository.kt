@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.coupon.infrastructure
+package kr.hhplus.be.server.coupon.infrastructure.persistence
 
 import jakarta.persistence.LockModeType
 import kr.hhplus.be.server.coupon.domain.model.Coupon

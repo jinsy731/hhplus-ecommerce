@@ -6,9 +6,9 @@ import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.shared.web.CommonResponse
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.coupon.CouponTestFixture
-import kr.hhplus.be.server.coupon.infrastructure.JpaCouponRepository
-import kr.hhplus.be.server.coupon.infrastructure.JpaUserCouponRepository
-import kr.hhplus.be.server.order.domain.OrderStatus
+import kr.hhplus.be.server.coupon.infrastructure.persistence.JpaCouponRepository
+import kr.hhplus.be.server.coupon.infrastructure.persistence.JpaUserCouponRepository
+import kr.hhplus.be.server.order.domain.model.OrderStatus
 import kr.hhplus.be.server.order.entrypoint.http.OrderResponse
 import kr.hhplus.be.server.order.infrastructure.JpaOrderRepository
 import kr.hhplus.be.server.product.ProductTestFixture

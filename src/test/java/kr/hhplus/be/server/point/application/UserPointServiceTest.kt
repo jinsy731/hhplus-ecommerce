@@ -7,6 +7,9 @@ import io.mockk.mockk
 import io.mockk.verify
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.point.domain.*
+import kr.hhplus.be.server.point.domain.model.TransactionType
+import kr.hhplus.be.server.point.domain.model.UserPoint
+import kr.hhplus.be.server.point.domain.model.UserPointHistory
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime

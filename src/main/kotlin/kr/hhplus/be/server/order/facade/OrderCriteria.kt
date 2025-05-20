@@ -1,11 +1,11 @@
 package kr.hhplus.be.server.order.facade
 
-import kr.hhplus.be.server.coupon.application.CouponCommand
+import kr.hhplus.be.server.coupon.application.dto.CouponCommand
 import kr.hhplus.be.server.order.application.OrderCommand
 import kr.hhplus.be.server.order.application.toPreparePaymentCommandItem
 import kr.hhplus.be.server.order.application.toUseCouponCommandItem
-import kr.hhplus.be.server.product.application.toCreateOrderProductInfo
-import kr.hhplus.be.server.order.domain.Order
+import kr.hhplus.be.server.product.application.dto.toCreateOrderProductInfo
+import kr.hhplus.be.server.order.domain.model.Order
 import kr.hhplus.be.server.payment.application.PaymentCommand
 import kr.hhplus.be.server.product.domain.product.Product
 import java.time.LocalDateTime

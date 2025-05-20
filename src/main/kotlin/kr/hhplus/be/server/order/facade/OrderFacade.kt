@@ -4,10 +4,10 @@ import kr.hhplus.be.server.shared.messaging.MessagingService
 import kr.hhplus.be.server.coupon.application.CouponService
 import kr.hhplus.be.server.order.application.OrderCommand
 import kr.hhplus.be.server.order.application.OrderService
-import kr.hhplus.be.server.order.domain.Order
+import kr.hhplus.be.server.order.domain.model.Order
 import kr.hhplus.be.server.payment.application.PaymentCommand
 import kr.hhplus.be.server.payment.application.PaymentService
-import kr.hhplus.be.server.product.application.ProductCommand
+import kr.hhplus.be.server.product.application.dto.ProductCommand
 import kr.hhplus.be.server.product.application.ProductService
 import kr.hhplus.be.server.point.application.UserPointCommand
 import kr.hhplus.be.server.point.application.UserPointService

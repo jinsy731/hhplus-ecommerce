@@ -10,11 +10,12 @@ import kr.hhplus.be.server.shared.time.ClockHolder
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.exception.DuplicateCouponIssueException
 import kr.hhplus.be.server.coupon.CouponTestFixture
+import kr.hhplus.be.server.coupon.application.dto.CouponCommand
 import kr.hhplus.be.server.coupon.domain.model.*
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.DiscountLineRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
-import kr.hhplus.be.server.coupon.infrastructure.CouponKVStore
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponKVStore
 import kr.hhplus.be.server.order.OrderTestFixture
 import kr.hhplus.be.server.order.application.toUseCouponCommandItem
 import org.junit.jupiter.api.BeforeEach
@@ -83,7 +84,8 @@ class CouponServiceTest {
             userId = userId,
             userCouponIds = listOf(1L),
             totalAmount = Money.of(1000),
-            items = listOf(CouponCommand.Use.Item(
+            items = listOf(
+                CouponCommand.Use.Item(
                 orderItemId = 1L,
                 productId = 1L,
                 variantId = 1L,

@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.order.domain
+package kr.hhplus.be.server.order.domain.model
 
 import jakarta.persistence.*
 import kr.hhplus.be.server.shared.domain.Money

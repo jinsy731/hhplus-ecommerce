@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.payment.domain
+package kr.hhplus.be.server.payment.domain.model
 
 import kr.hhplus.be.server.shared.domain.Money
 import java.time.LocalDateTime

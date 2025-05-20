@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.shared.messaging
 
-import kr.hhplus.be.server.order.domain.Order
+import kr.hhplus.be.server.order.domain.model.Order
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component

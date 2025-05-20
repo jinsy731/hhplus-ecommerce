@@ -3,7 +3,7 @@ package kr.hhplus.be.server.coupon.entrypoint.http
 import io.swagger.v3.oas.annotations.media.Schema
 import kr.hhplus.be.server.shared.web.PageInfo
 import kr.hhplus.be.server.shared.web.toResponse
-import kr.hhplus.be.server.coupon.application.CouponResult
+import kr.hhplus.be.server.coupon.application.dto.CouponResult
 import java.time.LocalDateTime
 
 class CouponResponse {

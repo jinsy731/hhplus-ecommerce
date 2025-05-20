@@ -2,6 +2,7 @@ package kr.hhplus.be.server.point.domain
 
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.point.domain.model.UserPoint
 import kr.hhplus.be.server.shared.domain.Money
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest

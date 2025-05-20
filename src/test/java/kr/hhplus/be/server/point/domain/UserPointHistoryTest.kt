@@ -1,6 +1,8 @@
 package kr.hhplus.be.server.point.domain
 
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.point.domain.model.TransactionType
+import kr.hhplus.be.server.point.domain.model.UserPointHistory
 import kr.hhplus.be.server.shared.domain.Money
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime

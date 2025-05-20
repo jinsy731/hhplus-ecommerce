@@ -5,9 +5,10 @@ import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.coupon.CouponTestFixture
+import kr.hhplus.be.server.coupon.application.dto.CouponCommand
 import kr.hhplus.be.server.coupon.domain.model.UserCouponStatus
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
-import kr.hhplus.be.server.coupon.infrastructure.JpaUserCouponRepository
+import kr.hhplus.be.server.coupon.infrastructure.persistence.JpaUserCouponRepository
 import kr.hhplus.be.server.executeConcurrently
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test

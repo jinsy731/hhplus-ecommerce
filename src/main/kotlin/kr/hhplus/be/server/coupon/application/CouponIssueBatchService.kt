@@ -4,9 +4,9 @@ import kr.hhplus.be.server.coupon.domain.model.Coupon
 import kr.hhplus.be.server.coupon.domain.model.UserCoupon
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
-import kr.hhplus.be.server.coupon.infrastructure.CouponIssueRequest
-import kr.hhplus.be.server.coupon.infrastructure.CouponKVStore
-import kr.hhplus.be.server.coupon.infrastructure.IssuedStatus
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponIssueRequest
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponKVStore
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.IssuedStatus
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -53,7 +53,7 @@ class CouponIssueBatchService(
         val couponId = couponKVStore.peekFromFailedIssueRequestedCouponIdList() ?: return
         
         try {
-            val failedRequests = couponKVStore.popBatchFromFailedIssueRequestQueue(couponId, 100)
+            val failedRequests = couponKVStore.peekBatchFromFailedIssueRequestQueue(couponId, 100)
 
             val coupon = couponRepository.getByIdForUpdate(couponId)
             val now = LocalDateTime.now()

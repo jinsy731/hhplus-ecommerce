@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.coupon.entrypoint.http
 
 import io.swagger.v3.oas.annotations.media.Schema
-import kr.hhplus.be.server.coupon.application.CouponCommand
+import kr.hhplus.be.server.coupon.application.dto.CouponCommand
 
 class CouponRequest {
     @Schema(description = "쿠폰 발급 요청")

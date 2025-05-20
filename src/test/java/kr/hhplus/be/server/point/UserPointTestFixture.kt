@@ -1,9 +1,9 @@
 package kr.hhplus.be.server.point
 
 import kr.hhplus.be.server.shared.domain.Money
-import kr.hhplus.be.server.point.domain.TransactionType
-import kr.hhplus.be.server.point.domain.UserPoint
-import kr.hhplus.be.server.point.domain.UserPointHistory
+import kr.hhplus.be.server.point.domain.model.TransactionType
+import kr.hhplus.be.server.point.domain.model.UserPoint
+import kr.hhplus.be.server.point.domain.model.UserPointHistory
 import java.time.LocalDateTime
 
 /**

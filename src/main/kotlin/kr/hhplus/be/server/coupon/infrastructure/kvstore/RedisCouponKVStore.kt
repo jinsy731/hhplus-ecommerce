@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.coupon.infrastructure
+package kr.hhplus.be.server.coupon.infrastructure.kvstore
 
 import kr.hhplus.be.server.coupon.application.CouponKeyGenerator
 import org.springframework.data.redis.core.RedisTemplate

@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.coupon.infrastructure
+package kr.hhplus.be.server.coupon.infrastructure.kvstore
 
 interface CouponKVStore {
     fun existsIssuedUser(userId: Long, couponId: Long): Boolean

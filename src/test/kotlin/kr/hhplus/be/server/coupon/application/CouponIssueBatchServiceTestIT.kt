@@ -8,7 +8,12 @@ import kr.hhplus.be.server.coupon.CouponTestFixture
 import kr.hhplus.be.server.coupon.domain.model.Coupon
 import kr.hhplus.be.server.coupon.domain.model.UserCouponStatus
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
-import kr.hhplus.be.server.coupon.infrastructure.*
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponIssueRequest
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponKVStore
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponStock
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.IssuedStatus
+import kr.hhplus.be.server.coupon.infrastructure.persistence.JpaCouponRepository
+import kr.hhplus.be.server.coupon.infrastructure.persistence.JpaUserCouponRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

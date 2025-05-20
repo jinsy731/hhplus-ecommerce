@@ -4,14 +4,9 @@ import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldHaveSameHashCodeAs
-import io.mockk.every
-import io.mockk.spyk
-import io.mockk.verify
 import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.RedisCleaner
-import kr.hhplus.be.server.product.ProductTestFixture
-import kr.hhplus.be.server.product.ProductTestFixture.product
+import kr.hhplus.be.server.product.application.dto.ProductCommand
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.exception.ProductUnavailableException
 import kr.hhplus.be.server.shared.exception.ResourceNotFoundException
@@ -27,16 +22,13 @@ import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyId
 import kr.hhplus.be.server.product.infrastructure.JpaPopularProductsDailyRepository
 import kr.hhplus.be.server.product.infrastructure.JpaProductSalesAggregationDailyRepository
 import kr.hhplus.be.server.product.infrastructure.ProductJpaRepository
-import kr.hhplus.be.server.product.infrastructure.ProductListDto
 import kr.hhplus.be.server.product.infrastructure.ProductVariantJpaRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
-import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.jvm.optionals.getOrNull
 

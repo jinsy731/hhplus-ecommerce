@@ -1,8 +1,7 @@
 package kr.hhplus.be.server.order.application
 
 import jakarta.transaction.Transactional
-import kr.hhplus.be.server.coupon.application.DiscountInfo
-import kr.hhplus.be.server.order.domain.Order
+import kr.hhplus.be.server.order.domain.model.Order
 import kr.hhplus.be.server.order.domain.OrderRepository
 import org.springframework.stereotype.Service
 

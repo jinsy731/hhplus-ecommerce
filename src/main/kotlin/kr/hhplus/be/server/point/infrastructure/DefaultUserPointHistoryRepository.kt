@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.point.infrastructure
 
-import kr.hhplus.be.server.point.domain.UserPointHistory
+import kr.hhplus.be.server.point.domain.model.UserPointHistory
 import kr.hhplus.be.server.point.domain.UserPointHistoryRepository
 import org.springframework.stereotype.Repository
 

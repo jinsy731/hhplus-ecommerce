@@ -1,9 +1,11 @@
 package kr.hhplus.be.server.coupon.application
 
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
+@Profile("!test")
 class CouponIssueBatchScheduler(
     private val couponIssueBatchService: CouponIssueBatchService
 ) {

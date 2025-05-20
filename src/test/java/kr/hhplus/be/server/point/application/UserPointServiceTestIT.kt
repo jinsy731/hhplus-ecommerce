@@ -5,7 +5,7 @@ import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.point.UserPointTestFixture
-import kr.hhplus.be.server.point.domain.TransactionType
+import kr.hhplus.be.server.point.domain.model.TransactionType
 import kr.hhplus.be.server.point.domain.UserPointHistoryRepository
 import kr.hhplus.be.server.point.domain.UserPointRepository
 import org.junit.jupiter.api.AfterEach

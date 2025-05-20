@@ -5,11 +5,9 @@ import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.exception.AlreadyPaidOrderException
 import kr.hhplus.be.server.shared.exception.ErrorCode
-import kr.hhplus.be.server.coupon.application.DiscountInfo
+import kr.hhplus.be.server.coupon.application.dto.DiscountInfo
 import kr.hhplus.be.server.order.OrderTestFixture
-import kr.hhplus.be.server.order.domain.Order
-import kr.hhplus.be.server.order.domain.OrderContext
-import kr.hhplus.be.server.order.domain.OrderStatus
+import kr.hhplus.be.server.order.domain.model.OrderStatus
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 

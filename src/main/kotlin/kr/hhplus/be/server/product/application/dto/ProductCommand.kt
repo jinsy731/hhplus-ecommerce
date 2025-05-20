@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.product.application
+package kr.hhplus.be.server.product.application.dto
 
 import org.springframework.data.domain.Pageable
 import java.time.LocalDate

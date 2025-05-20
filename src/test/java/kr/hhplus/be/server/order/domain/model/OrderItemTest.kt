@@ -2,8 +2,6 @@ package kr.hhplus.be.server.order.domain.model
 
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.shared.domain.Money
-import kr.hhplus.be.server.order.domain.OrderItem
-import kr.hhplus.be.server.order.domain.OrderItemStatus
 import org.junit.jupiter.api.Test
 
 class OrderItemTest {

@@ -3,6 +3,7 @@ package kr.hhplus.be.server.product.application
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.executeConcurrently
 import kr.hhplus.be.server.product.ProductTestFixture
+import kr.hhplus.be.server.product.application.dto.ProductCommand
 import kr.hhplus.be.server.product.domain.product.ProductRepository
 import kr.hhplus.be.server.product.infrastructure.ProductVariantJpaRepository
 import org.junit.jupiter.api.Test
@@ -30,12 +31,14 @@ class ProductServiceConcurrencyTestIT @Autowired constructor(
 
             val savedProduct = productRepository.save(product)
             variantIds.addAll(savedProduct.variants.map { it.id!! })
-            items.add(ProductCommand.ValidateAndReduceStock.Item(
+            items.add(
+                ProductCommand.ValidateAndReduceStock.Item(
                 productId = savedProduct.id!!,
                 variantId = savedProduct.variants[0].id!!,
                 quantity = quantity
             ))
-            items.add(ProductCommand.ValidateAndReduceStock.Item(
+            items.add(
+                ProductCommand.ValidateAndReduceStock.Item(
                 productId = savedProduct.id!!,
                 variantId = savedProduct.variants[1].id!!,
                 quantity = quantity

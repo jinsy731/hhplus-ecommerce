@@ -2,7 +2,7 @@ package kr.hhplus.be.server.point.application
 
 import kr.hhplus.be.server.lock.executor.LockType
 import kr.hhplus.be.server.lock.annotation.WithDistributedLock
-import kr.hhplus.be.server.point.domain.UserPointHistory
+import kr.hhplus.be.server.point.domain.model.UserPointHistory
 import kr.hhplus.be.server.point.domain.UserPointHistoryRepository
 import kr.hhplus.be.server.point.domain.UserPointRepository
 import org.springframework.dao.OptimisticLockingFailureException

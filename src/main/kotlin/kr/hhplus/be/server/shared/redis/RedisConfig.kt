@@ -1,9 +1,7 @@
 package kr.hhplus.be.server.shared.redis
 
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import kr.hhplus.be.server.product.application.ProductResult
+import kr.hhplus.be.server.product.application.dto.ProductResult
 import kr.hhplus.be.server.product.infrastructure.ProductListDto
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean

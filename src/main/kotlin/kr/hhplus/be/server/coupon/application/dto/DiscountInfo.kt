@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.coupon.application
+package kr.hhplus.be.server.coupon.application.dto
 
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.coupon.domain.model.DiscountLine

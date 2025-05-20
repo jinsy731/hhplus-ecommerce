@@ -7,8 +7,6 @@ import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.exception.AlreadyPaidException
 import kr.hhplus.be.server.payment.application.PaymentCommand
 import kr.hhplus.be.server.payment.application.toPreparePaymentContext
-import kr.hhplus.be.server.payment.domain.Payment
-import kr.hhplus.be.server.payment.domain.PaymentStatus
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource

@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.payment.application
 
 import kr.hhplus.be.server.shared.domain.Money
-import kr.hhplus.be.server.payment.domain.PaymentContext
+import kr.hhplus.be.server.payment.domain.model.PaymentContext
 import java.time.LocalDateTime
 import kotlin.collections.map
 

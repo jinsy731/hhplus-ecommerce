@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.payment.infrastructure
 
 import kr.hhplus.be.server.shared.exception.ResourceNotFoundException
-import kr.hhplus.be.server.payment.domain.Payment
+import kr.hhplus.be.server.payment.domain.model.Payment
 import kr.hhplus.be.server.payment.domain.PaymentRepository
 import org.springframework.stereotype.Repository
 import kotlin.jvm.optionals.getOrElse

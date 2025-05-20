@@ -5,11 +5,11 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.shared.web.CommonResponse
-import kr.hhplus.be.server.coupon.application.CouponCommand
+import kr.hhplus.be.server.coupon.application.dto.CouponCommand
 import kr.hhplus.be.server.coupon.application.CouponService
 import kr.hhplus.be.server.coupon.entrypoint.http.CouponRequest
 import kr.hhplus.be.server.coupon.entrypoint.http.CouponResponse
-import kr.hhplus.be.server.coupon.infrastructure.JpaCouponRepository
+import kr.hhplus.be.server.coupon.infrastructure.persistence.JpaCouponRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired

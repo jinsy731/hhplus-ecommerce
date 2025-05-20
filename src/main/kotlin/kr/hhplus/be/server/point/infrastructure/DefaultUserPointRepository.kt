@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.point.infrastructure
 
 import kr.hhplus.be.server.shared.exception.ResourceNotFoundException
-import kr.hhplus.be.server.point.domain.UserPoint
+import kr.hhplus.be.server.point.domain.model.UserPoint
 import kr.hhplus.be.server.point.domain.UserPointRepository
 import org.springframework.stereotype.Repository
 

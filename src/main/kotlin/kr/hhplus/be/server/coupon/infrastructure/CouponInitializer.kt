@@ -1,6 +1,9 @@
 package kr.hhplus.be.server.coupon.infrastructure
 
 import jakarta.annotation.PostConstruct
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponKVStore
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponStock
+import kr.hhplus.be.server.coupon.infrastructure.persistence.JpaCouponRepository
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 
