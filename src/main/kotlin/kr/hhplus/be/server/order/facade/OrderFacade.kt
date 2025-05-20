@@ -4,6 +4,8 @@ import kr.hhplus.be.server.order.application.OrderResultSender
 import kr.hhplus.be.server.coupon.application.CouponService
 import kr.hhplus.be.server.order.application.OrderCommand
 import kr.hhplus.be.server.order.application.OrderService
+import kr.hhplus.be.server.order.domain.OrderEvent
+import kr.hhplus.be.server.order.domain.OrderEventPayload
 import kr.hhplus.be.server.order.domain.model.Order
 import kr.hhplus.be.server.payment.application.PaymentCommand
 import kr.hhplus.be.server.payment.application.PaymentService
@@ -13,6 +15,7 @@ import kr.hhplus.be.server.point.application.UserPointCommand
 import kr.hhplus.be.server.point.application.UserPointService
 import kr.hhplus.be.server.rank.application.RankingCommand
 import kr.hhplus.be.server.rank.application.RankingService
+import kr.hhplus.be.server.shared.event.DomainEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -23,8 +26,7 @@ class OrderFacade(
     private val userPointService: UserPointService,
     private val paymentService: PaymentService,
     private val productService: ProductService,
-    private val orderResultSender: OrderResultSender,
-    private val rankingService: RankingService
+    private val eventPublisher: DomainEventPublisher
     ) {
 
     @Transactional
@@ -50,11 +52,7 @@ class OrderFacade(
         paymentService.completePayment(PaymentCommand.Complete(payment.id))
         orderService.completeOrder(order.id)
 
-        orderResultSender.send(order)
-        rankingService.updateProductRanking(RankingCommand.UpdateProductRanking.Root(
-            items = order.orderItems.map { RankingCommand.UpdateProductRanking.Item(it.productId, it.quantity.toLong()) },
-            timestamp = cri.timestamp
-        ))
+        eventPublisher.publish(OrderEvent.Completed(OrderEventPayload.Completed(order)))
 
         return order
     }
