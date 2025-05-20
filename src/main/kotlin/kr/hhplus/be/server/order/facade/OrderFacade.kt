@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.order.facade
 
-import kr.hhplus.be.server.order.application.OrderResultSender
 import kr.hhplus.be.server.coupon.application.CouponService
 import kr.hhplus.be.server.order.application.OrderCommand
 import kr.hhplus.be.server.order.application.OrderService
@@ -13,8 +12,6 @@ import kr.hhplus.be.server.product.application.dto.ProductCommand
 import kr.hhplus.be.server.product.application.ProductService
 import kr.hhplus.be.server.point.application.UserPointCommand
 import kr.hhplus.be.server.point.application.UserPointService
-import kr.hhplus.be.server.rank.application.RankingCommand
-import kr.hhplus.be.server.rank.application.RankingService
 import kr.hhplus.be.server.shared.event.DomainEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

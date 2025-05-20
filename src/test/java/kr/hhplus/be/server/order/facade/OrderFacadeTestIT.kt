@@ -2,7 +2,7 @@ package kr.hhplus.be.server.order.facade
 
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.order.application.OrderResultSender
+import kr.hhplus.be.server.order.domain.OrderResultSender
 import kr.hhplus.be.server.order.domain.OrderEvent
 import kr.hhplus.be.server.order.domain.model.OrderStatus
 import kr.hhplus.be.server.order.infrastructure.persistence.JpaOrderRepository
@@ -10,6 +10,7 @@ import kr.hhplus.be.server.point.UserPointTestFixture
 import kr.hhplus.be.server.point.infrastructure.JpaUserPointRepository
 import kr.hhplus.be.server.product.ProductTestFixture
 import kr.hhplus.be.server.product.infrastructure.ProductJpaRepository
+import kr.hhplus.be.server.rank.application.RankingService
 import kr.hhplus.be.server.rank.infrastructure.persistence.ProductRankingRepository
 import kr.hhplus.be.server.shared.domain.Money
 import org.awaitility.Awaitility.await
@@ -51,6 +52,9 @@ class OrderFacadeTestIT {
     @MockitoSpyBean
     private lateinit var orderResultSender: OrderResultSender
 
+    @MockitoSpyBean
+    private lateinit var rankingService: RankingService
+
     @Autowired
     private lateinit var orderJpaRepository: JpaOrderRepository
 
@@ -86,7 +90,7 @@ class OrderFacadeTestIT {
     }
 
     @Test
-    fun `✅주문 완료 시 상품 랭킹이 비동기적으로 업데이트된다`() {
+    fun `✅주문 완료 후 상품 랭킹이 업데이트된다`() {
         // given
         val userId = 1L
         val quantity = 5
@@ -158,6 +162,9 @@ class OrderFacadeTestIT {
         doThrow(RuntimeException())
             .`when`(orderResultSender)
             .send(any())
+        doThrow(RuntimeException())
+            .`when`(rankingService)
+            .updateProductRanking(any())
 
         // when
         val order = orderFacade.placeOrder(cri)
