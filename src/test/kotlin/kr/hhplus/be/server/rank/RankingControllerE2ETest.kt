@@ -59,7 +59,7 @@ class RankingControllerE2ETest @Autowired constructor(
                     RankingCommand.UpdateProductRanking.Item(products[1].id!!, 5L),
                     RankingCommand.UpdateProductRanking.Item(products[2].id!!, 2L)
                 ),
-                timestamp = LocalDateTime.of(2025, 5, 15, 0, 0, 0)
+                timestamp = LocalDateTime.now()
             ))
 
         // act

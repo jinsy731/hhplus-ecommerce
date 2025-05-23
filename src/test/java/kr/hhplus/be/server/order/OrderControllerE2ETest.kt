@@ -10,7 +10,7 @@ import kr.hhplus.be.server.coupon.infrastructure.persistence.JpaCouponRepository
 import kr.hhplus.be.server.coupon.infrastructure.persistence.JpaUserCouponRepository
 import kr.hhplus.be.server.order.domain.model.OrderStatus
 import kr.hhplus.be.server.order.entrypoint.http.OrderResponse
-import kr.hhplus.be.server.order.infrastructure.JpaOrderRepository
+import kr.hhplus.be.server.order.infrastructure.persistence.JpaOrderRepository
 import kr.hhplus.be.server.product.ProductTestFixture
 import kr.hhplus.be.server.product.infrastructure.ProductJpaRepository
 import kr.hhplus.be.server.point.UserPointTestFixture
