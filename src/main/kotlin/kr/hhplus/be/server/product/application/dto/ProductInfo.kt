@@ -1,8 +1,8 @@
 package kr.hhplus.be.server.product.application.dto
 
+import kr.hhplus.be.server.product.domain.product.model.Product
+import kr.hhplus.be.server.product.domain.product.model.ProductVariant
 import kr.hhplus.be.server.shared.domain.Money
-import kr.hhplus.be.server.product.domain.product.Product
-import kr.hhplus.be.server.product.domain.product.ProductVariant
 
 /**
  * Order <-> Product 사이의 도메인 간 결합도를 낮추기 위한 ACL의 역할을 하는 DTO

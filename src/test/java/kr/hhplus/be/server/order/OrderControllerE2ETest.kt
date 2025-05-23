@@ -3,20 +3,20 @@ package kr.hhplus.be.server.order
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.shared.web.CommonResponse
-import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.coupon.CouponTestFixture
 import kr.hhplus.be.server.coupon.infrastructure.persistence.JpaCouponRepository
 import kr.hhplus.be.server.coupon.infrastructure.persistence.JpaUserCouponRepository
 import kr.hhplus.be.server.order.domain.model.OrderStatus
 import kr.hhplus.be.server.order.entrypoint.http.OrderResponse
-import kr.hhplus.be.server.order.infrastructure.persistence.JpaOrderRepository
-import kr.hhplus.be.server.product.ProductTestFixture
-import kr.hhplus.be.server.product.infrastructure.ProductJpaRepository
 import kr.hhplus.be.server.point.UserPointTestFixture
 import kr.hhplus.be.server.point.infrastructure.JpaUserPointRepository
+import kr.hhplus.be.server.product.ProductTestFixture
+import kr.hhplus.be.server.product.infrastructure.ProductJpaRepository
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.web.CommonResponse
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -34,8 +34,8 @@ internal class OrderControllerE2ETest @Autowired constructor(
     private val userCouponRepository: JpaUserCouponRepository,
     private val productRepository: ProductJpaRepository,
     private val userPointRepository: JpaUserPointRepository,
-    private val orderRepository: JpaOrderRepository
 ){
+    private val logger = LoggerFactory.getLogger(javaClass)
     @AfterEach
     fun clean() {
         databaseCleaner.clean()
@@ -73,7 +73,6 @@ internal class OrderControllerE2ETest @Autowired constructor(
 
         response.statusCode shouldBe HttpStatus.OK
         response.body?.data.shouldNotBeNull()
-        response.body?.data?.status shouldBe OrderStatus.PAID
-        response.body?.data?.finalTotal?.compareTo(BigDecimal(10000)) shouldBe 0
+        response.body?.data?.status shouldBe OrderStatus.CREATED
     }
 }

@@ -1,8 +1,8 @@
 package kr.hhplus.be.server.order.application
 
 import kr.hhplus.be.server.coupon.application.dto.DiscountInfo
-import kr.hhplus.be.server.product.application.dto.ProductInfo
 import kr.hhplus.be.server.order.domain.model.OrderContext
+import kr.hhplus.be.server.product.application.dto.ProductInfo
 import java.time.LocalDateTime
 
 class OrderCommand {
@@ -20,7 +20,10 @@ class OrderCommand {
         )
     }
 
-    data class ApplyDiscount(val orderId: Long, val discountInfos: List<DiscountInfo>)
+    data class ApplyDiscount(
+        val orderId: Long,
+        val discountInfos: List<DiscountInfo>,
+        val context: OrderSagaContext)
 
 }
 

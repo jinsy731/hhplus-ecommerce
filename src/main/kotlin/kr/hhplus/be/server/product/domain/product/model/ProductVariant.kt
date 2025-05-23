@@ -1,11 +1,12 @@
-package kr.hhplus.be.server.product.domain.product
+package kr.hhplus.be.server.product.domain.product.model
 
 import jakarta.persistence.*
+import kr.hhplus.be.server.shared.domain.BaseTimeEntity
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.exception.VariantOutOfStockException
 import kr.hhplus.be.server.shared.exception.VariantUnavailableException
-import kr.hhplus.be.server.shared.domain.BaseTimeEntity
 import kr.hhplus.be.server.shared.persistence.LongSetConverter
+import org.slf4j.LoggerFactory
 
 @Entity
 @Table(name = "product_variants")
@@ -34,6 +35,8 @@ class ProductVariant(
     @Column(nullable = false) @Convert(converter = LongSetConverter::class)
     val optionValues: MutableSet<Long> = mutableSetOf()
 ) : BaseTimeEntity() {
+    @Transient
+    private val logger = LoggerFactory.getLogger(ProductVariant::class.java)
 
     fun checkAvailableToOrder(quantity: Int) {
         check(this.status == VariantStatus.ACTIVE) { throw VariantUnavailableException() }
@@ -43,7 +46,12 @@ class ProductVariant(
     fun reduceStock(quantity: Int) {
         check(this.stock >= quantity) { throw VariantOutOfStockException()  }
         this.stock -= quantity
-        println("stock after reduce(ID: $id): $stock")
+        logger.info("stock after reduce(ID: $id): $stock")
+    }
+
+    fun restoreStock(quantity: Int) {
+        this.stock += quantity
+        logger.info("stock after restore(ID: $id): $stock")
     }
 }
 

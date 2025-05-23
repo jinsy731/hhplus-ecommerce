@@ -1,23 +1,22 @@
 package kr.hhplus.be.server.coupon.application
 
-import kr.hhplus.be.server.coupon.application.dto.CouponCommand
-import kr.hhplus.be.server.coupon.application.dto.CouponResult
-import kr.hhplus.be.server.coupon.application.dto.toDiscountContext
-import kr.hhplus.be.server.coupon.application.dto.toDiscountInfoList
-import kr.hhplus.be.server.coupon.application.dto.toUserCouponData
-import kr.hhplus.be.server.shared.time.ClockHolder
-import kr.hhplus.be.server.shared.web.PageResult
-import kr.hhplus.be.server.shared.exception.DuplicateCouponIssueException
-import kr.hhplus.be.server.shared.exception.CouponOutOfStockException
-import kr.hhplus.be.server.lock.executor.LockType
-import kr.hhplus.be.server.lock.annotation.WithDistributedLock
-import kr.hhplus.be.server.lock.annotation.WithMultiDistributedLock
+import kr.hhplus.be.server.coupon.application.dto.*
+import kr.hhplus.be.server.coupon.domain.CouponEvent
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.DiscountLineRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
 import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponIssueRequest
 import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponKVStore
 import kr.hhplus.be.server.coupon.infrastructure.kvstore.IssuedStatus
+import kr.hhplus.be.server.lock.annotation.WithDistributedLock
+import kr.hhplus.be.server.lock.annotation.WithMultiDistributedLock
+import kr.hhplus.be.server.lock.executor.LockType
+import kr.hhplus.be.server.order.application.OrderSagaContext
+import kr.hhplus.be.server.shared.event.DomainEventPublisher
+import kr.hhplus.be.server.shared.exception.CouponOutOfStockException
+import kr.hhplus.be.server.shared.exception.DuplicateCouponIssueException
+import kr.hhplus.be.server.shared.time.ClockHolder
+import kr.hhplus.be.server.shared.web.PageResult
 import org.slf4j.LoggerFactory
 import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.data.domain.Pageable
@@ -32,7 +31,8 @@ class CouponService(
     private val userCouponRepository: UserCouponRepository,
     private val discountLineRepository: DiscountLineRepository,
     private val couponKVStore: CouponKVStore,
-    private val clockHolder: ClockHolder
+    private val clockHolder: ClockHolder,
+    private val eventPublisher: DomainEventPublisher
     ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -129,16 +129,33 @@ class CouponService(
         maxAttempts = 3,
         backoff = Backoff(delay = 300, multiplier = 1.5)
     )
-    fun use(cmd: CouponCommand.Use.Root): CouponResult.Use {
-        val userCoupons = userCouponRepository.findAllByUserIdAndIdIsIn(cmd.userId, cmd.userCouponIds)
+    fun use(cmd: CouponCommand.Use.Root): Result<CouponResult.Use> {
+        return runCatching {
+            val discountLines = userCouponRepository
+                .findAllByUserIdAndIdIsIn(cmd.userId, cmd.userCouponIds)
+                .flatMap { it.calculateDiscountAndUse(cmd.toDiscountContext()) }
 
-        val discountLines = userCoupons.flatMap {
-            it.calculateDiscountAndUse(cmd.toDiscountContext())
+            val savedDiscountLine = discountLineRepository.saveAll(discountLines)
+
+            CouponResult.Use(discountInfo = savedDiscountLine.toDiscountInfoList())
+        }.onFailure { e ->
+            eventPublisher.publish(CouponEvent.UseFailed(cmd.context.copy(failedReason = e.message ?: "Unknown error")))
+        }.onSuccess {
+            eventPublisher.publish(CouponEvent.Used(cmd.context.copy(discountInfos = it.discountInfo)))
+        }
+    }
+
+    @Transactional
+    fun restoreCoupons(userId: Long, userCouponIds: List<Long>, context: OrderSagaContext) {
+        val userCoupons = userCouponRepository.findAllByUserIdAndIdIsIn(userId, userCouponIds)
+
+        userCoupons.forEach { userCoupon ->
+            userCoupon.restore()
         }
 
-        val savedDiscountLine = discountLineRepository.saveAll(discountLines)
+        userCouponRepository.saveAll(userCoupons)
 
-        return CouponResult.Use(savedDiscountLine.toDiscountInfoList())
+        eventPublisher.publish(CouponEvent.UseRestored(context))
     }
 
     @Transactional(readOnly = true)

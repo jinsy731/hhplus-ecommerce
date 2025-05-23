@@ -2,19 +2,24 @@ package kr.hhplus.be.server.coupon.application
 
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.coupon.CouponTestFixture
 import kr.hhplus.be.server.coupon.application.dto.CouponCommand
 import kr.hhplus.be.server.coupon.domain.model.UserCouponStatus
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.infrastructure.persistence.JpaUserCouponRepository
 import kr.hhplus.be.server.executeConcurrently
+import kr.hhplus.be.server.order.application.OrderSagaContext
+import kr.hhplus.be.server.order.domain.model.Order
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.event.DomainEventPublisher
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.platform.commons.logging.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.jvm.optionals.getOrNull
@@ -25,6 +30,7 @@ class CouponServiceConcurrencyTestIT @Autowired constructor(
     private val couponRepository: CouponRepository,
     private val userCouponRepository: JpaUserCouponRepository,
     private val databaseCleaner: MySqlDatabaseCleaner,
+    @MockitoBean private val eventPublisher: DomainEventPublisher
 ){
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -61,8 +67,9 @@ class CouponServiceConcurrencyTestIT @Autowired constructor(
         // act: 10번의 동시 사용 요청
         executeConcurrently(10) {
             try {
-                couponService.use(createUseCouponCommand(1L, listOf(userCoupon.id!!)))
-                successCnt.incrementAndGet()
+                val result = couponService.use(createUseCouponCommand(1L, listOf(userCoupon.id!!)))
+                if(result.isSuccess) successCnt.incrementAndGet()
+                else throw result.exceptionOrNull() ?: IllegalStateException()
             } catch(e: Throwable) {
                 logger.error { e.message }
                 failureCnt.incrementAndGet()
@@ -82,5 +89,9 @@ class CouponServiceConcurrencyTestIT @Autowired constructor(
         totalAmount = Money.of(1000),
         items = listOf(CouponCommand.Use.Item(1L, 1L, 1L, 10, Money.of(1000))),
         timestamp = LocalDateTime.now(),
+        context = OrderSagaContext(
+            order = mockk<Order>(),
+            timestamp = LocalDateTime.now()
+        )
     )
 }

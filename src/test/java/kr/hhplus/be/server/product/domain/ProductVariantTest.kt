@@ -3,10 +3,10 @@ package kr.hhplus.be.server.product.domain
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.product.domain.product.model.ProductVariant
+import kr.hhplus.be.server.product.domain.product.model.VariantStatus
 import kr.hhplus.be.server.shared.exception.VariantOutOfStockException
 import kr.hhplus.be.server.shared.exception.VariantUnavailableException
-import kr.hhplus.be.server.product.domain.product.ProductVariant
-import kr.hhplus.be.server.product.domain.product.VariantStatus
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -54,5 +54,15 @@ class ProductVariantTest {
         val variant = ProductVariant(stock = 10, status = VariantStatus.ACTIVE)
         // act, assert
         shouldThrowExactly<VariantOutOfStockException> { variant.reduceStock(15) }
+    }
+
+    @Test
+    fun `✅상품 재고 복구`() {
+        // arrange
+        val variant = ProductVariant(stock = 10, status = VariantStatus.ACTIVE)
+        // act
+        variant.restoreStock(5)
+        // assert
+        variant.stock shouldBe 15
     }
 }

@@ -6,7 +6,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kr.hhplus.be.server.product.ProductTestFixture
-import kr.hhplus.be.server.product.domain.product.ProductRepository
+import kr.hhplus.be.server.product.domain.product.model.ProductRepository
 import kr.hhplus.be.server.rank.application.RankingPeriod
 import kr.hhplus.be.server.rank.application.RankingQuery
 import kr.hhplus.be.server.rank.application.RankingResult

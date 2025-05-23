@@ -4,14 +4,19 @@ import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
-import kr.hhplus.be.server.shared.domain.Money
-import kr.hhplus.be.server.shared.exception.AlreadyPaidException
-import kr.hhplus.be.server.shared.exception.ResourceNotFoundException
+import io.mockk.mockk
+import kr.hhplus.be.server.order.application.OrderSagaContext
+import kr.hhplus.be.server.order.domain.model.Order
 import kr.hhplus.be.server.payment.domain.PaymentRepository
 import kr.hhplus.be.server.payment.domain.model.PaymentStatus
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.event.DomainEventPublisher
+import kr.hhplus.be.server.shared.exception.AlreadyPaidException
+import kr.hhplus.be.server.shared.exception.ResourceNotFoundException
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
@@ -24,6 +29,9 @@ class PaymentServiceTestIT {
     @Autowired
     private lateinit var paymentRepository: PaymentRepository
 
+    @MockitoBean
+    private lateinit var eventPublisher: DomainEventPublisher
+
     @Test
     @Transactional
     fun `✅결제 준비를 하면 결제 정보가 저장된다`() {
@@ -31,7 +39,7 @@ class PaymentServiceTestIT {
         val cmd = createPreparePaymentCommand()
 
         // when
-        val payment = paymentService.preparePayment(cmd)
+        val payment = paymentService.preparePayment(cmd).getOrThrow()
 
         // then
         payment.id shouldBeGreaterThan 0L
@@ -54,9 +62,9 @@ class PaymentServiceTestIT {
     fun `✅결제 완료처리를 하면 결제 상태가 PAID로 변경된다`() {
         // given
         val prepareCmd = createPreparePaymentCommand()
-        val payment = paymentService.preparePayment(prepareCmd)
+        val payment = paymentService.preparePayment(prepareCmd).getOrThrow()
         
-        val completeCmd = PaymentCommand.Complete(paymentId = payment.id)
+        val completeCmd = PaymentCommand.Complete(paymentId = payment.id, context = prepareCmd.context)
         
         // when
         paymentService.completePayment(completeCmd)
@@ -71,14 +79,17 @@ class PaymentServiceTestIT {
     fun `❌이미 완료된 결제를 다시 완료처리하면 예외가 발생한다`() {
         // given
         val prepareCmd = createPreparePaymentCommand()
-        val payment = paymentService.preparePayment(prepareCmd)
+        val payment = paymentService.preparePayment(prepareCmd).getOrThrow()
         
-        val completeCmd = PaymentCommand.Complete(paymentId = payment.id)
+        val completeCmd = PaymentCommand.Complete(paymentId = payment.id, context = prepareCmd.context)
         paymentService.completePayment(completeCmd)
         
         // when & then
         shouldThrowExactly<AlreadyPaidException> {
-            paymentService.completePayment(completeCmd)
+            val result = paymentService.completePayment(completeCmd)
+            if(result.isFailure) {
+                throw result.exceptionOrNull()!!
+            }
         }
     }
     
@@ -87,11 +98,14 @@ class PaymentServiceTestIT {
     fun `❌존재하지 않는 결제 ID로 완료처리하면 예외가 발생한다`() {
         // given
         val nonExistentPaymentId = 999999L
-        val completeCmd = PaymentCommand.Complete(paymentId = nonExistentPaymentId)
+        val completeCmd = PaymentCommand.Complete(paymentId = nonExistentPaymentId, context = OrderSagaContext(mockk(), LocalDateTime.now()))
         
         // when & then
         shouldThrowExactly<ResourceNotFoundException> {
-            paymentService.completePayment(completeCmd)
+            val result = paymentService.completePayment(completeCmd)
+            if(result.isFailure) {
+                throw result.exceptionOrNull()!!
+            }
         }
     }
 
@@ -124,6 +138,10 @@ class PaymentServiceTestIT {
         return PaymentCommand.Prepare.Root(
             order = orderInfo,
             timestamp = LocalDateTime.now(),
+            context = OrderSagaContext(
+                order = mockk<Order>(),
+                timestamp = LocalDateTime.now()
+            )
         )
     }
 }

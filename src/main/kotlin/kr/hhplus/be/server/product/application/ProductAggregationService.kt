@@ -1,18 +1,8 @@
 package kr.hhplus.be.server.product.application
 
 import jakarta.transaction.Transactional
-import kr.hhplus.be.server.product.domain.product.Product
+import kr.hhplus.be.server.product.domain.stats.*
 import kr.hhplus.be.server.product.infrastructure.JpaPopularProductsDailyRepository
-import kr.hhplus.be.server.product.domain.stats.PopularProductDailyId
-import kr.hhplus.be.server.product.domain.stats.PopularProductsDaily
-import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDaily
-import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyCheckpoint
-import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyCheckpointRepository
-import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyId
-import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDailyRepository
-import kr.hhplus.be.server.product.domain.stats.ProductSalesLog
-import kr.hhplus.be.server.product.domain.stats.ProductSalesLogRepository
-import kr.hhplus.be.server.product.domain.stats.TransactionType
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.stereotype.Service
 import java.time.LocalDate

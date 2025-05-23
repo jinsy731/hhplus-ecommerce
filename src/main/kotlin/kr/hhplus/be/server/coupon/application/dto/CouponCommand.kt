@@ -1,7 +1,8 @@
 package kr.hhplus.be.server.coupon.application.dto
 
-import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.coupon.domain.model.DiscountContext
+import kr.hhplus.be.server.order.application.OrderSagaContext
+import kr.hhplus.be.server.shared.domain.Money
 import java.time.LocalDateTime
 
 class CouponCommand {
@@ -11,7 +12,8 @@ class CouponCommand {
             val userCouponIds: List<Long>,
             val totalAmount: Money,
             val items: List<Item>,
-            val timestamp: LocalDateTime
+            val timestamp: LocalDateTime,
+            val context: OrderSagaContext
         )
         data class Item(
             val orderItemId: Long,

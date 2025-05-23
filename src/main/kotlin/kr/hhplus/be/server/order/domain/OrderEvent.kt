@@ -1,16 +1,27 @@
 package kr.hhplus.be.server.order.domain
 
-import kr.hhplus.be.server.order.domain.model.Order
+import kr.hhplus.be.server.order.application.OrderSagaContext
 import kr.hhplus.be.server.shared.domain.DomainEvent
 
-class OrderEvent {
-    data class Completed(
-        override val payload: OrderEventPayload.Completed
-    ): DomainEvent<OrderEventPayload.Completed>() {
+sealed class OrderEvent {
+    data class Created(
+        override val payload: OrderSagaContext): DomainEvent<OrderSagaContext>() {
+        override val eventType: String = "order.created"
+    }
+
+    data class Prepared(override val payload: OrderSagaContext) : DomainEvent<OrderSagaContext>() {
+        override val eventType: String = "order.prepared"
+    }// PREPARED
+
+    data class Completed(override val payload: OrderSagaContext) : DomainEvent<OrderSagaContext>() {
         override val eventType: String = "order.completed"
     }
-}
 
-class OrderEventPayload {
-    data class Completed(val order: Order)
+    data class Failed(override val payload: OrderSagaContext) : DomainEvent<OrderSagaContext>() {
+        override val eventType: String = "order.failed"
+    }
+
+    data class CouponApplyFailed(override val payload: OrderSagaContext) : DomainEvent<OrderSagaContext>() {
+        override val eventType: String = "order.coupon.apply.failed"
+    }
 }

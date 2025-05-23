@@ -2,16 +2,20 @@ package kr.hhplus.be.server.point.application
 
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.order.application.OrderSagaContext
 import kr.hhplus.be.server.point.UserPointTestFixture
-import kr.hhplus.be.server.point.domain.model.TransactionType
 import kr.hhplus.be.server.point.domain.UserPointHistoryRepository
 import kr.hhplus.be.server.point.domain.UserPointRepository
+import kr.hhplus.be.server.point.domain.model.TransactionType
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.event.DomainEventPublisher
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import java.time.LocalDateTime
 
 @SpringBootTest
@@ -28,6 +32,9 @@ class UserPointServiceIntegrationTest {
 
     @Autowired
     private lateinit var databaseCleaner: MySqlDatabaseCleaner
+
+    @MockitoBean
+    private lateinit var eventPublisher: DomainEventPublisher
 
     @AfterEach
     fun tearDown() {
@@ -76,7 +83,7 @@ class UserPointServiceIntegrationTest {
 
         val useAmount = Money.of(3000)
         val now = LocalDateTime.now()
-        val command = UserPointCommand.Use(userId, useAmount, now)
+        val command = UserPointCommand.Use(userId, useAmount, now, mockk<OrderSagaContext>())
 
         // Act
         userPointService.use(command)

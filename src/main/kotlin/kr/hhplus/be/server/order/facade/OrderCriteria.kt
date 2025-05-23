@@ -1,13 +1,8 @@
 package kr.hhplus.be.server.order.facade
 
-import kr.hhplus.be.server.coupon.application.dto.CouponCommand
 import kr.hhplus.be.server.order.application.OrderCommand
-import kr.hhplus.be.server.order.application.toPreparePaymentCommandItem
-import kr.hhplus.be.server.order.application.toUseCouponCommandItem
 import kr.hhplus.be.server.product.application.dto.toCreateOrderProductInfo
-import kr.hhplus.be.server.order.domain.model.Order
-import kr.hhplus.be.server.payment.application.PaymentCommand
-import kr.hhplus.be.server.product.domain.product.Product
+import kr.hhplus.be.server.product.domain.product.model.Product
 import java.time.LocalDateTime
 
 class OrderCriteria {
@@ -45,28 +40,28 @@ fun List<OrderCriteria.PlaceOrder.Item>.toCreateOrderCommand(): List<OrderComman
     ) }
 }
 
-
-// Coupon Command
-fun OrderCriteria.PlaceOrder.Root.toUseCouponCommand(order: Order): CouponCommand.Use.Root {
-    return CouponCommand.Use.Root(
-        userId = this.userId,
-        userCouponIds = this.userCouponIds,
-        items = order.orderItems.toUseCouponCommandItem(),
-        timestamp = this.timestamp,
-        totalAmount = order.originalTotal
-    )
-}
-
-// Payment Command
-fun OrderCriteria.PlaceOrder.Root.toPreparePaymentCommand(order: Order): PaymentCommand.Prepare.Root {
-    return PaymentCommand.Prepare.Root(
-        order = PaymentCommand.Prepare.OrderInfo(
-            id = order.id,
-            userId = this.userId,
-            items = order.orderItems.toPreparePaymentCommandItem(),
-            originalTotal = order.originalTotal,
-            discountedAmount = order.discountedAmount
-        ),
-        timestamp = this.timestamp,
-    )
-}
+//
+//// Coupon Command
+//fun OrderCriteria.PlaceOrder.Root.toUseCouponCommand(order: Order): CouponCommand.Use.Root {
+//    return CouponCommand.Use.Root(
+//        userId = this.userId,
+//        userCouponIds = this.userCouponIds,
+//        items = order.orderItems.toUseCouponCommandItem(),
+//        timestamp = this.timestamp,
+//        totalAmount = order.originalTotal
+//    )
+//}
+//
+//// Payment Command
+//fun OrderCriteria.PlaceOrder.Root.toPreparePaymentCommand(order: Order): PaymentCommand.Prepare.Root {
+//    return PaymentCommand.Prepare.Root(
+//        order = PaymentCommand.Prepare.OrderInfo(
+//            id = order.id,
+//            userId = this.userId,
+//            items = order.orderItems.toPreparePaymentCommandItem(),
+//            originalTotal = order.originalTotal,
+//            discountedAmount = order.discountedAmount
+//        ),
+//        timestamp = this.timestamp,
+//    )
+//}

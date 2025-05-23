@@ -1,11 +1,11 @@
 package kr.hhplus.be.server.product.application.dto
 
-import kr.hhplus.be.server.shared.domain.Money
-import kr.hhplus.be.server.product.domain.product.OptionSpec
-import kr.hhplus.be.server.product.domain.product.OptionValue
-import kr.hhplus.be.server.product.domain.product.ProductStatus
-import kr.hhplus.be.server.product.domain.product.ProductVariant
+import kr.hhplus.be.server.product.domain.product.model.OptionSpec
+import kr.hhplus.be.server.product.domain.product.model.OptionValue
+import kr.hhplus.be.server.product.domain.product.model.ProductStatus
+import kr.hhplus.be.server.product.domain.product.model.ProductVariant
 import kr.hhplus.be.server.product.infrastructure.ProductListDto
+import kr.hhplus.be.server.shared.domain.Money
 
 class ProductResult {
     data class RetrieveList(

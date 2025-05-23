@@ -1,17 +1,20 @@
 package kr.hhplus.be.server.point.application
 
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.executeConcurrently
 import kr.hhplus.be.server.executeMultipleFunctionConcurrently
+import kr.hhplus.be.server.order.application.OrderSagaContext
 import kr.hhplus.be.server.point.UserPointTestFixture
 import kr.hhplus.be.server.point.domain.UserPointRepository
+import kr.hhplus.be.server.shared.domain.Money
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.dao.OptimisticLockingFailureException
+import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
 
 @SpringBootTest
@@ -46,7 +49,8 @@ class UserPointServiceConcurrencyTestIT {
         // act: 100개의 요청을 동시 실행
         executeConcurrently(count = 100) {
             try {
-                userPointService.use(UserPointCommand.Use(userId, useAmount))
+                userPointService.use(UserPointCommand.Use(userId, useAmount, LocalDateTime.now(), OrderSagaContext(mockk(),
+                    LocalDateTime.now())))
                 successCnt.incrementAndGet()
             } catch(e: OptimisticLockingFailureException) {
                 failureCnt.incrementAndGet()
@@ -110,7 +114,8 @@ class UserPointServiceConcurrencyTestIT {
             },
             {
                 try {
-                    userPointService.use(UserPointCommand.Use(userId, useAmount))
+                    userPointService.use(UserPointCommand.Use(userId, useAmount, LocalDateTime.now(), OrderSagaContext(mockk(),
+                        LocalDateTime.now())))
                 } catch (e: OptimisticLockingFailureException) {
                     useFailureCnt.incrementAndGet()
                 }

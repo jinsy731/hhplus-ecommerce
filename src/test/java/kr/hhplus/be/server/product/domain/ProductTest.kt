@@ -3,10 +3,12 @@ package kr.hhplus.be.server.product.domain
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.product.ProductTestFixture
+import kr.hhplus.be.server.product.domain.product.model.Product
+import kr.hhplus.be.server.product.domain.product.model.ProductStatus
+import kr.hhplus.be.server.product.domain.product.model.ProductVariant
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.exception.ProductUnavailableException
-import kr.hhplus.be.server.product.ProductTestFixture
-import kr.hhplus.be.server.product.domain.product.ProductVariant
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -15,8 +17,8 @@ import java.math.BigDecimal
 class ProductTest {
     
     @ParameterizedTest
-    @EnumSource(value = kr.hhplus.be.server.product.domain.product.ProductStatus::class, names = ["ON_SALE", "PARTIALLY_OUT_OF_STOCK"])
-    fun `✅주문 시 상품 검증 성공`(status: kr.hhplus.be.server.product.domain.product.ProductStatus) {
+    @EnumSource(value = ProductStatus::class, names = ["ON_SALE", "PARTIALLY_OUT_OF_STOCK"])
+    fun `✅주문 시 상품 검증 성공`(status: ProductStatus) {
         // arrange
         val product = ProductTestFixture.createValidProduct(id = 1L, variantIds = listOf(1,2)).apply { this.status = status }
 
@@ -25,10 +27,10 @@ class ProductTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = kr.hhplus.be.server.product.domain.product.ProductStatus::class, names = ["DRAFT", "OUT_OF_STOCK", "HIDDEN", "DISCONTINUED"])
-    fun `⛔️주문 시 상품 검증 실패`(status: kr.hhplus.be.server.product.domain.product.ProductStatus) {
+    @EnumSource(value = ProductStatus::class, names = ["DRAFT", "OUT_OF_STOCK", "HIDDEN", "DISCONTINUED"])
+    fun `⛔️주문 시 상품 검증 실패`(status: ProductStatus) {
         // arrange
-        val product = kr.hhplus.be.server.product.domain.product.Product(
+        val product = Product(
             name = "상품 A",
             basePrice = Money(BigDecimal(1000)),
             status = status
@@ -40,10 +42,10 @@ class ProductTest {
     @Test
     fun `✅상품 옵션 가격 조회`() {
         // arrange
-        val product = kr.hhplus.be.server.product.domain.product.Product(
+        val product = Product(
             name = "상품 A",
             basePrice = Money(BigDecimal(1000)),
-            status = kr.hhplus.be.server.product.domain.product.ProductStatus.ON_SALE,
+            status = ProductStatus.ON_SALE,
             variants = mutableListOf(
                 ProductVariant(
                     id = 1L,

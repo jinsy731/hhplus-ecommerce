@@ -1,11 +1,10 @@
 package kr.hhplus.be.server.product.entrypoint.http
 
 import io.swagger.v3.oas.annotations.media.Schema
-import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.product.application.dto.ProductResult
-import kr.hhplus.be.server.product.domain.product.ProductStatus
+import kr.hhplus.be.server.product.domain.product.model.ProductStatus
+import kr.hhplus.be.server.shared.domain.Money
 import java.math.BigDecimal
-import kotlin.collections.map
 
 class ProductResponse {
 
