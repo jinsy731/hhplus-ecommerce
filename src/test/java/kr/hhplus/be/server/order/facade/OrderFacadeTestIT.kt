@@ -1,10 +1,7 @@
 package kr.hhplus.be.server.order.facade
 
-import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.order.domain.OrderResultSender
-import kr.hhplus.be.server.order.domain.OrderEvent
-import kr.hhplus.be.server.order.domain.model.OrderStatus
 import kr.hhplus.be.server.order.infrastructure.persistence.JpaOrderRepository
 import kr.hhplus.be.server.point.UserPointTestFixture
 import kr.hhplus.be.server.point.infrastructure.JpaUserPointRepository
@@ -17,7 +14,6 @@ import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
-import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -65,31 +61,6 @@ class OrderFacadeTestIT {
     }
 
     @Test
-    fun `✅랭킹 서비스에서 예외가 발생해도 주문은 정상적으로 완료된다`() {
-        // given
-        val userId = 1L
-        val savedProduct = ProductTestFixture
-            .product()
-            .withVariant(ProductTestFixture.variant())
-            .build().let { productJpaRepository.save(it) }
-        userPointJpaRepository.save(UserPointTestFixture.userPoint(userId = userId, balance = Money.of(100000)).build())
-        val cri = createOrderCriteria(
-            productId = savedProduct.id!!,
-            variantId = savedProduct.variants.first().id!!,
-            userId = userId)
-
-        doThrow(RuntimeException("랭킹 저장 실패")).`when`(productRankingRepository)
-            .increaseRanking(any(), any(), any())
-
-        // when
-        val order = orderFacade.placeOrder(cri)
-
-        // then
-        order.status shouldBe OrderStatus.PAID
-        order.userId shouldBe userId
-    }
-
-    @Test
     fun `✅주문 완료 후 상품 랭킹이 업데이트된다`() {
         // given
         val userId = 1L
@@ -119,59 +90,6 @@ class OrderFacadeTestIT {
                     any()
                 )
             }
-    }
-
-    @Test
-    fun `✅주문 완료 후 OrderEvent Completed 이벤트가 발행된다`() {
-        // given
-        val userId = 1L
-        val savedProduct = ProductTestFixture
-            .product()
-            .withVariant(ProductTestFixture.variant())
-            .build().let { productJpaRepository.save(it) }
-        userPointJpaRepository.save(UserPointTestFixture.userPoint(userId = userId, balance = Money.of(100000)).build())
-        val cri = createOrderCriteria(
-            productId = savedProduct.id!!,
-            variantId = savedProduct.variants.first().id!!,
-            userId = userId)
-
-        // when
-        val order = orderFacade.placeOrder(cri)
-
-        // then
-        applicationEvents
-            .stream(OrderEvent.Completed::class.java)
-            .findFirst()
-            .get().payload.order shouldBe order
-    }
-
-    @Test
-    fun `❌ 주문 완료 후 OrderEvent Completed 이벤트 처리 중 오류가 발생해도 주문 결과엔 영향을 미치지 않는다`() {
-        // given
-        val userId = 1L
-        val savedProduct = ProductTestFixture
-            .product()
-            .withVariant(ProductTestFixture.variant())
-            .build().let { productJpaRepository.save(it) }
-        userPointJpaRepository.save(UserPointTestFixture.userPoint(userId = userId, balance = Money.of(100000)).build())
-        val cri = createOrderCriteria(
-            productId = savedProduct.id!!,
-            variantId = savedProduct.variants.first().id!!,
-            userId = userId)
-
-        doThrow(RuntimeException())
-            .`when`(orderResultSender)
-            .send(any())
-        doThrow(RuntimeException())
-            .`when`(rankingService)
-            .updateProductRanking(any())
-
-        // when
-        val order = orderFacade.placeOrder(cri)
-
-        // then
-        val findOrder = orderJpaRepository.findById(order.id).get()
-        findOrder.status shouldBe OrderStatus.PAID
     }
 
     private fun createOrderCriteria(

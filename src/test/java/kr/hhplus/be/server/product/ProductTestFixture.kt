@@ -1,9 +1,9 @@
 package kr.hhplus.be.server.product
 
+import kr.hhplus.be.server.product.domain.product.model.Product
+import kr.hhplus.be.server.product.domain.product.model.ProductStatus
+import kr.hhplus.be.server.product.domain.product.model.ProductVariant
 import kr.hhplus.be.server.shared.domain.Money
-import kr.hhplus.be.server.product.domain.product.Product
-import kr.hhplus.be.server.product.domain.product.ProductStatus
-import kr.hhplus.be.server.product.domain.product.ProductVariant
 
 /**
  * 상품 관련 테스트 픽스처
