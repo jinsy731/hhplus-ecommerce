@@ -1,18 +1,6 @@
 package kr.hhplus.be.server.coupon.domain.model
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
-import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.Table
-import jakarta.persistence.UniqueConstraint
-import jakarta.persistence.Version
+import jakarta.persistence.*
 import kr.hhplus.be.server.shared.exception.ExpiredCouponException
 import kr.hhplus.be.server.shared.exception.InvalidCouponStatusException
 import java.time.LocalDateTime
@@ -68,6 +56,15 @@ class UserCoupon(
 
         this.usedAt = now
         this.status = UserCouponStatus.USED
+    }
+
+    /**
+     * 쿠폰 복구 처리
+     */
+    fun restore() {
+        check(status == UserCouponStatus.USED) { throw InvalidCouponStatusException() }
+        this.usedAt = null
+        this.status = UserCouponStatus.UNUSED
     }
 
     fun calculateDiscountAndUse(context: DiscountContext.Root): List<DiscountLine> {
