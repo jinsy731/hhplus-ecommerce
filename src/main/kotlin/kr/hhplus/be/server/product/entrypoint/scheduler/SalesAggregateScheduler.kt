@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.product.entrypoint
+package kr.hhplus.be.server.product.entrypoint.scheduler
 
 import kr.hhplus.be.server.product.application.ProductAggregationService
 import org.springframework.context.annotation.Profile
