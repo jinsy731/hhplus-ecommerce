@@ -4,13 +4,8 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.RedisCleaner
 import kr.hhplus.be.server.product.ProductTestFixture
-import kr.hhplus.be.server.product.domain.product.ProductRepository
-import kr.hhplus.be.server.rank.application.RankingCommand
-import kr.hhplus.be.server.rank.application.RankingKeyGenerator
-import kr.hhplus.be.server.rank.application.RankingPeriod
-import kr.hhplus.be.server.rank.application.RankingQuery
-import kr.hhplus.be.server.rank.application.RankingResult
-import kr.hhplus.be.server.rank.application.RankingService
+import kr.hhplus.be.server.product.domain.product.model.ProductRepository
+import kr.hhplus.be.server.rank.application.*
 import kr.hhplus.be.server.rank.infrastructure.persistence.ProductRankingRepository
 import kr.hhplus.be.server.rank.infrastructure.persistence.RankingSetting
 import kr.hhplus.be.server.rank.infrastructure.persistence.RankingSettingRepository
@@ -26,7 +21,6 @@ import org.mockito.kotlin.any
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.cache.CacheManager
-import org.springframework.cache.get
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import java.time.LocalDate

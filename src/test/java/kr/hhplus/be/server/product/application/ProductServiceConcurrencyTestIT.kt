@@ -1,20 +1,25 @@
 package kr.hhplus.be.server.product.application
 
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import kr.hhplus.be.server.executeConcurrently
+import kr.hhplus.be.server.order.application.OrderSagaContext
 import kr.hhplus.be.server.product.ProductTestFixture
 import kr.hhplus.be.server.product.application.dto.ProductCommand
-import kr.hhplus.be.server.product.domain.product.ProductRepository
+import kr.hhplus.be.server.product.domain.product.model.ProductRepository
 import kr.hhplus.be.server.product.infrastructure.ProductVariantJpaRepository
+import kr.hhplus.be.server.shared.event.DomainEventPublisher
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 
 @SpringBootTest
 class ProductServiceConcurrencyTestIT @Autowired constructor(
     private val productService: ProductService,
     private val productRepository: ProductRepository,
-    private val productVariantRepository: ProductVariantJpaRepository
+    private val productVariantRepository: ProductVariantJpaRepository,
+    @MockitoBean private val eventPublisher: DomainEventPublisher
 ) {
     
     @Test
@@ -44,7 +49,7 @@ class ProductServiceConcurrencyTestIT @Autowired constructor(
                 quantity = quantity
             ))
         }
-        val cmd = ProductCommand.ValidateAndReduceStock.Root(items = items)
+        val cmd = ProductCommand.ValidateAndReduceStock.Root(items = items, context = mockk<OrderSagaContext>())
 
         // act: 100개의 동시 요청
         executeConcurrently(100) {

@@ -3,21 +3,24 @@ package kr.hhplus.be.server.order.application
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.executeConcurrently
 import kr.hhplus.be.server.order.domain.OrderRepository
+import kr.hhplus.be.server.order.domain.model.OrderStatus
 import kr.hhplus.be.server.order.facade.OrderCriteria
 import kr.hhplus.be.server.order.facade.OrderFacade
-import kr.hhplus.be.server.product.ProductTestFixture
-import kr.hhplus.be.server.product.domain.product.ProductRepository
-import kr.hhplus.be.server.product.infrastructure.ProductVariantJpaRepository
 import kr.hhplus.be.server.point.UserPointTestFixture
 import kr.hhplus.be.server.point.infrastructure.JpaUserPointRepository
+import kr.hhplus.be.server.product.ProductTestFixture
+import kr.hhplus.be.server.product.domain.product.model.ProductRepository
+import kr.hhplus.be.server.product.infrastructure.ProductVariantJpaRepository
+import kr.hhplus.be.server.shared.domain.Money
+import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.platform.commons.logging.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import java.util.concurrent.TimeUnit
 
 @SpringBootTest
 class OrderFacadeConcurrencyTestIT @Autowired constructor(
@@ -66,14 +69,18 @@ class OrderFacadeConcurrencyTestIT @Autowired constructor(
         }
 
         // assert: 주문은 정확히 100개만 생성, 100명의 유저는 잔액이 0이고 20명의 유저는 잔액이 1500이어야 한다. 재고는 0이어야 한다.
-        val findProduct = productRepository.getById(savedProduct.id!!)
-        val findVariant = productVariantJpaRepository.findByProductId(findProduct.id!!)!!
-        val findUserPoint = jpaUserPointRepository.findAll()
-        val orders = orderRepository.findAll()
 
-        findVariant.stock shouldBe 0
-        findUserPoint.filter { it.balance == Money.Companion.ZERO } shouldHaveSize 100
-        findUserPoint.filter { it.balance == Money.Companion.of(1500) } shouldHaveSize 20
-        orders shouldHaveSize 100
+        await().atMost(30, TimeUnit.SECONDS).untilAsserted {
+            val findProduct = productRepository.getById(savedProduct.id!!)
+            val findVariant = productVariantJpaRepository.findByProductId(findProduct.id!!)!!
+            val findUserPoint = jpaUserPointRepository.findAll()
+            val orders = orderRepository.findAll()
+
+            findVariant.stock shouldBe 0
+            findUserPoint.filter { it.balance == Money.Companion.ZERO } shouldHaveSize 100
+            findUserPoint.filter { it.balance == Money.Companion.of(1500) } shouldHaveSize 20
+            orders.filter { it.status == OrderStatus.PAID } shouldHaveSize 100
+            orders.filter { it.status == OrderStatus.FAILED } shouldHaveSize 20
+        }
     }
 }

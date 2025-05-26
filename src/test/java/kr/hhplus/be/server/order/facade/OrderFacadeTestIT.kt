@@ -1,34 +1,58 @@
 package kr.hhplus.be.server.order.facade
 
-import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.order.domain.model.OrderStatus
+import kr.hhplus.be.server.order.domain.OrderResultSender
+import kr.hhplus.be.server.order.infrastructure.persistence.JpaOrderRepository
 import kr.hhplus.be.server.point.UserPointTestFixture
 import kr.hhplus.be.server.point.infrastructure.JpaUserPointRepository
 import kr.hhplus.be.server.product.ProductTestFixture
 import kr.hhplus.be.server.product.infrastructure.ProductJpaRepository
+import kr.hhplus.be.server.rank.application.RankingService
 import kr.hhplus.be.server.rank.infrastructure.persistence.ProductRankingRepository
 import kr.hhplus.be.server.shared.domain.Money
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
-import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
+import org.springframework.test.context.event.ApplicationEvents
+import org.springframework.test.context.event.RecordApplicationEvents
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
 @SpringBootTest
-class OrderFacadeTestIT @Autowired constructor(
-    private val productJpaRepository: ProductJpaRepository,
-    private val userPointJpaRepository: JpaUserPointRepository,
-    private val orderFacade: OrderFacade,
-    @MockitoSpyBean private val productRankingRepository: ProductRankingRepository,
-    private val databaseCleaner: MySqlDatabaseCleaner,
-) {
+@RecordApplicationEvents
+class OrderFacadeTestIT {
+
+    @Autowired
+    private lateinit var applicationEvents: ApplicationEvents // 생성자 주입 안됨
+
+    @Autowired
+    private lateinit var orderFacade: OrderFacade
+
+    @Autowired
+    private lateinit var productJpaRepository: ProductJpaRepository
+
+    @Autowired
+    private lateinit var userPointJpaRepository: JpaUserPointRepository
+
+    @MockitoSpyBean
+    private lateinit var productRankingRepository: ProductRankingRepository
+
+    @Autowired
+    private lateinit var databaseCleaner: MySqlDatabaseCleaner
+
+    @MockitoSpyBean
+    private lateinit var orderResultSender: OrderResultSender
+
+    @MockitoSpyBean
+    private lateinit var rankingService: RankingService
+
+    @Autowired
+    private lateinit var orderJpaRepository: JpaOrderRepository
 
 
     @AfterEach
@@ -37,32 +61,7 @@ class OrderFacadeTestIT @Autowired constructor(
     }
 
     @Test
-    fun `✅랭킹 서비스에서 예외가 발생해도 주문은 정상적으로 완료된다`() {
-        // given
-        val userId = 1L
-        val savedProduct = ProductTestFixture
-            .product()
-            .withVariant(ProductTestFixture.variant())
-            .build().let { productJpaRepository.save(it) }
-        userPointJpaRepository.save(UserPointTestFixture.userPoint(userId = userId, balance = Money.of(100000)).build())
-        val cri = createOrderCriteria(
-            productId = savedProduct.id!!,
-            variantId = savedProduct.variants.first().id!!,
-            userId = userId)
-
-        doThrow(RuntimeException("랭킹 저장 실패")).`when`(productRankingRepository)
-            .increaseRanking(any(), any(), any())
-
-        // when
-        val order = orderFacade.placeOrder(cri)
-
-        // then
-        order.status shouldBe OrderStatus.PAID
-        order.userId shouldBe userId
-    }
-
-    @Test
-    fun `✅주문 완료 시 상품 랭킹이 비동기적으로 업데이트된다`() {
+    fun `✅주문 완료 후 상품 랭킹이 업데이트된다`() {
         // given
         val userId = 1L
         val quantity = 5

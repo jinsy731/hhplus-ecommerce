@@ -4,17 +4,15 @@ import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.RedisCleaner
+import kr.hhplus.be.server.order.application.OrderSagaContext
 import kr.hhplus.be.server.product.application.dto.ProductCommand
-import kr.hhplus.be.server.shared.domain.Money
-import kr.hhplus.be.server.shared.exception.ProductUnavailableException
-import kr.hhplus.be.server.shared.exception.ResourceNotFoundException
-import kr.hhplus.be.server.shared.exception.VariantOutOfStockException
-import kr.hhplus.be.server.product.domain.product.Product
-import kr.hhplus.be.server.product.domain.product.ProductRepository
-import kr.hhplus.be.server.product.domain.product.ProductStatus
-import kr.hhplus.be.server.product.domain.product.ProductVariant
+import kr.hhplus.be.server.product.domain.product.model.Product
+import kr.hhplus.be.server.product.domain.product.model.ProductRepository
+import kr.hhplus.be.server.product.domain.product.model.ProductStatus
+import kr.hhplus.be.server.product.domain.product.model.ProductVariant
 import kr.hhplus.be.server.product.domain.stats.PopularProductDailyId
 import kr.hhplus.be.server.product.domain.stats.PopularProductsDaily
 import kr.hhplus.be.server.product.domain.stats.ProductSalesAggregationDaily
@@ -23,13 +21,20 @@ import kr.hhplus.be.server.product.infrastructure.JpaPopularProductsDailyReposit
 import kr.hhplus.be.server.product.infrastructure.JpaProductSalesAggregationDailyRepository
 import kr.hhplus.be.server.product.infrastructure.ProductJpaRepository
 import kr.hhplus.be.server.product.infrastructure.ProductVariantJpaRepository
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.event.DomainEventPublisher
+import kr.hhplus.be.server.shared.exception.ProductUnavailableException
+import kr.hhplus.be.server.shared.exception.ResourceNotFoundException
+import kr.hhplus.be.server.shared.exception.VariantOutOfStockException
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlin.jvm.optionals.getOrNull
 
 @SpringBootTest
@@ -42,6 +47,7 @@ class ProductServiceTestIT @Autowired constructor(
     private val productSalesAggregationDailyRepository: JpaProductSalesAggregationDailyRepository,
     private val popularProductsDailyRepository: JpaPopularProductsDailyRepository,
     private val productJpaRepository: ProductJpaRepository,
+    @MockitoBean private val eventPublisher: DomainEventPublisher
 ) {
     private val testProducts = mutableListOf<Product>()
 
@@ -290,7 +296,7 @@ class ProductServiceTestIT @Autowired constructor(
                     variantId = variantId!!,
                     quantity = 5
                 )
-            )
+            ), mockk<OrderSagaContext>()
         )
 
         // Act & Assert
@@ -309,12 +315,15 @@ class ProductServiceTestIT @Autowired constructor(
                     variantId = variantId!!,
                     quantity = 1
                 )
-            )
+            ), OrderSagaContext(mockk(), LocalDateTime.now())
         )
 
         // Act & Assert
         shouldThrowExactly<ProductUnavailableException> {
-            productService.validateAndReduceStock(cmd)
+            val result = productService.validateAndReduceStock(cmd)
+            if(result.isFailure) {
+                throw result.exceptionOrNull()!!
+            }
         }
     }
 
@@ -329,12 +338,15 @@ class ProductServiceTestIT @Autowired constructor(
                     variantId = 1L,
                     quantity = 1
                 )
-            )
+            ), OrderSagaContext(mockk(), LocalDateTime.now())
         )
 
         // Act & Assert
         shouldThrowExactly<ResourceNotFoundException> {
-            productService.validateAndReduceStock(cmd)
+            val result = productService.validateAndReduceStock(cmd)
+            if (result.isFailure) {
+                throw result.exceptionOrNull()!!
+            }
         }
     }
 
@@ -350,12 +362,15 @@ class ProductServiceTestIT @Autowired constructor(
                     variantId = variant.id!!,
                     quantity = 10 // 재고보다 많은 수량
                 )
-            )
+            ), OrderSagaContext(mockk(), LocalDateTime.now())
         )
 
         // Act & Assert
         shouldThrowExactly<VariantOutOfStockException> {
-            productService.validateAndReduceStock(cmd)
+            val result = productService.validateAndReduceStock(cmd)
+            if (result.isFailure) {
+                throw result.exceptionOrNull()!!
+            }
         }
     }
 
@@ -373,7 +388,7 @@ class ProductServiceTestIT @Autowired constructor(
                     variantId = variant.id!!,
                     quantity = quantity
                 )
-            )
+            ), mockk<OrderSagaContext>()
         )
 
         // Act

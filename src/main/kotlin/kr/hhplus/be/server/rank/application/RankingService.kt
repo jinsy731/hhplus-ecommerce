@@ -1,13 +1,12 @@
 package kr.hhplus.be.server.rank.application
 
-import kr.hhplus.be.server.product.domain.product.ProductRepository
+import kr.hhplus.be.server.product.domain.product.model.ProductRepository
 import kr.hhplus.be.server.rank.infrastructure.persistence.ProductRankingRepository
 import kr.hhplus.be.server.rank.infrastructure.persistence.RankingSetting
 import kr.hhplus.be.server.rank.infrastructure.persistence.RankingSettingRepository
 import kr.hhplus.be.server.shared.cache.CacheKey
 import org.springframework.cache.CacheManager
 import org.springframework.cache.annotation.Cacheable
-import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -20,7 +19,6 @@ class RankingService(
     private val cacheManager: CacheManager
     ) {
 
-    @Async
     fun updateProductRanking(cmd: RankingCommand.UpdateProductRanking.Root) {
         cmd.items.forEach { item ->
             productRankingRepository.increaseRanking(
