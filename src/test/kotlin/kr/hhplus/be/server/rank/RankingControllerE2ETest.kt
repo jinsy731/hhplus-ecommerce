@@ -64,14 +64,15 @@ class RankingControllerE2ETest @Autowired constructor(
 
         // act
         await().atMost(10, TimeUnit.SECONDS).untilAsserted {
-            cacheManager.getCache(CacheKey.PRODUCT_RANKING_CACHE_NAME)?.evict(CacheKey.PRODUCT_RANKING_CACHE_KEY_PREFIX)
+            // 캐시 초기화
+            val cacheKey = "product:${rankingPeriod.name}"
+            cacheManager.getCache(CacheKey.PRODUCT_RANKING_CACHE_NAME)?.evict(cacheKey)
+
             val response = restTemplate.exchange(
                 "/api/v1/ranking/products?periodType=$rankingPeriod",
                 HttpMethod.GET,
                 null,
                 object: ParameterizedTypeReference<CommonResponse<RankingResponse.RetrieveTopProducts.Root>>() {})
-
-            redisTemplate.opsForZSet().rangeWithScores("ranking:product:daily:20250515", 0, -1)?.forEach { println("it = ${it}") }
 
             // assert
             response.statusCode.value() shouldBe 200

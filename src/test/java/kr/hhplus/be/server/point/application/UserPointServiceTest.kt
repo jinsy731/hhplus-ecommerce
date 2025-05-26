@@ -5,11 +5,16 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kr.hhplus.be.server.shared.domain.Money
-import kr.hhplus.be.server.point.domain.*
+import kr.hhplus.be.server.order.application.OrderSagaContext
+import kr.hhplus.be.server.order.domain.model.Order
+import kr.hhplus.be.server.point.domain.UserPointHistoryRepository
+import kr.hhplus.be.server.point.domain.UserPointRepository
 import kr.hhplus.be.server.point.domain.model.TransactionType
 import kr.hhplus.be.server.point.domain.model.UserPoint
 import kr.hhplus.be.server.point.domain.model.UserPointHistory
+import kr.hhplus.be.server.shared.domain.DomainEvent
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.event.DomainEventPublisher
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -18,12 +23,15 @@ class UserPointServiceTest {
     private lateinit var userPointRepository: UserPointRepository
     private lateinit var userPointHistoryRepository: UserPointHistoryRepository
     private lateinit var pointService: UserPointService
+    private lateinit var eventPublisher: DomainEventPublisher
 
     @BeforeEach
     fun setUp() {
         userPointRepository = mockk()
         userPointHistoryRepository = mockk()
-        pointService = UserPointService(userPointRepository, userPointHistoryRepository)
+        eventPublisher = mockk()
+        every { eventPublisher.publish(any<DomainEvent<*>>()) } returns Unit
+        pointService = UserPointService(userPointRepository, userPointHistoryRepository, eventPublisher)
     }
 
     @Test
@@ -97,7 +105,8 @@ class UserPointServiceTest {
         val cmd = UserPointCommand.Use(
             userId = userId,
             amount = useAmount,
-            now = time
+            now = time,
+            context = mockk<OrderSagaContext>()
         )
 
         //act
@@ -131,11 +140,18 @@ class UserPointServiceTest {
         val cmd = UserPointCommand.Use(
             userId = userId,
             amount = useAmount,
-            now = time
+            now = time,
+            context = OrderSagaContext(
+                order = mockk<Order>(),
+                timestamp = LocalDateTime.now()
+            )
         )
 
         //act
-        shouldThrowExactly<IllegalArgumentException> { pointService.use(cmd) }
+        shouldThrowExactly<IllegalArgumentException> {
+            val result = pointService.use(cmd)
+            if(result.isFailure) throw result.exceptionOrNull()!!
+        }
 
         //assert
         userPoint.balance shouldBe initialBalance

@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.mockk.mockk
 import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.RedisCleaner
 import kr.hhplus.be.server.coupon.CouponTestFixture
@@ -17,7 +18,10 @@ import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponStock
 import kr.hhplus.be.server.coupon.infrastructure.kvstore.IssuedStatus
 import kr.hhplus.be.server.coupon.infrastructure.persistence.JpaUserCouponRepository
 import kr.hhplus.be.server.executeConcurrently
+import kr.hhplus.be.server.order.application.OrderSagaContext
+import kr.hhplus.be.server.order.domain.model.Order
 import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.event.DomainEventPublisher
 import kr.hhplus.be.server.shared.exception.CouponOutOfStockException
 import kr.hhplus.be.server.shared.exception.DuplicateCouponIssueException
 import kr.hhplus.be.server.shared.time.ClockHolder
@@ -46,6 +50,7 @@ class CouponServiceTestIT @Autowired constructor(
     private val couponKVStore: CouponKVStore,
     private val redisCleaner: RedisCleaner,
     @MockitoBean private val mockClockHolder: ClockHolder,
+    @MockitoBean private val eventPublisher: DomainEventPublisher,
     private val databaseCleaner: MySqlDatabaseCleaner,
 ){
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -537,11 +542,15 @@ class CouponServiceTestIT @Autowired constructor(
                     subTotal = Money.of(20000)
                 )
             ),
-            timestamp = now
+            timestamp = now,
+            context = OrderSagaContext(
+                order = mockk<Order>(),
+                timestamp = LocalDateTime.now()
+            )
         )
 
         // when
-        val result = couponService.use(useCommand)
+        val result = couponService.use(useCommand).getOrThrow()
 
         // then
         result.discountInfo.size shouldBe 1

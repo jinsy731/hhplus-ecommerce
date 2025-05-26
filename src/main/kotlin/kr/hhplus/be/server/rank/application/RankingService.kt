@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.rank.application
 
-import kr.hhplus.be.server.product.domain.product.ProductRepository
+import kr.hhplus.be.server.product.domain.product.model.ProductRepository
 import kr.hhplus.be.server.rank.infrastructure.persistence.ProductRankingRepository
 import kr.hhplus.be.server.rank.infrastructure.persistence.RankingSetting
 import kr.hhplus.be.server.rank.infrastructure.persistence.RankingSettingRepository

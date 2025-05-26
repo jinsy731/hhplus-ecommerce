@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.product.application.dto
 
+import kr.hhplus.be.server.order.application.OrderSagaContext
 import org.springframework.data.domain.Pageable
 import java.time.LocalDate
 
@@ -29,7 +30,20 @@ class ProductCommand {
 
     class ValidateAndReduceStock {
         data class Root(
-            val items: List<Item>
+            val items: List<Item>,
+            val context: OrderSagaContext
+        )
+        data class Item(
+            val productId: Long,
+            val variantId: Long,
+            val quantity: Int
+        )
+    }
+
+    class RestoreStock {
+        data class Root(
+            val items: List<Item>,
+            val context: OrderSagaContext
         )
         data class Item(
             val productId: Long,

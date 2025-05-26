@@ -1,12 +1,12 @@
 package kr.hhplus.be.server.product.infrastructure
 
 import jakarta.persistence.LockModeType
+import kr.hhplus.be.server.product.domain.product.model.Product
+import kr.hhplus.be.server.product.domain.product.model.ProductRepository
+import kr.hhplus.be.server.product.domain.product.model.ProductStatus
+import kr.hhplus.be.server.product.domain.product.model.ProductVariant
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.exception.ResourceNotFoundException
-import kr.hhplus.be.server.product.domain.product.Product
-import kr.hhplus.be.server.product.domain.product.ProductRepository
-import kr.hhplus.be.server.product.domain.product.ProductStatus
-import kr.hhplus.be.server.product.domain.product.ProductVariant
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
@@ -18,6 +18,7 @@ import kotlin.jvm.optionals.getOrNull
 @Repository
 class DefaultProductRepository(
     private val jpaRepository: ProductJpaRepository,
+    private val variantRepository: ProductVariantJpaRepository
     ): ProductRepository {
     override fun searchByKeyword(
         keyword: String?,
@@ -49,6 +50,10 @@ class DefaultProductRepository(
 
     override fun findSummaryByIds(ids: List<Long>): List<ProductListDto> {
         return jpaRepository.findSummaryByIds(ids)
+    }
+
+    override fun findAllVariantsByIdForUpdate(ids: List<Long>): List<ProductVariant> {
+        return variantRepository.findAllByIdForUpdate(ids)
     }
 }
 
@@ -96,6 +101,14 @@ interface ProductJpaRepository: JpaRepository<Product, Long> {
 
 interface ProductVariantJpaRepository: JpaRepository<ProductVariant, Long> {
     fun findByProductId(productId: Long): ProductVariant?
+
+    @Query("""
+        SELECT v
+        FROM ProductVariant v
+        WHERE v.id in :variantIds
+    """)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    fun findAllByIdForUpdate(@Param("variantIds") variantIds: List<Long>): List<ProductVariant>
 }
 
 data class ProductListDto(

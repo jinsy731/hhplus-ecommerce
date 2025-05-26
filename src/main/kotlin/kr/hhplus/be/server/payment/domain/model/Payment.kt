@@ -1,8 +1,8 @@
 package kr.hhplus.be.server.payment.domain.model
 
 import jakarta.persistence.*
-import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.domain.BaseTimeEntity
+import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.exception.AlreadyPaidException
 import java.time.LocalDateTime
 
@@ -68,8 +68,13 @@ class Payment(
         }
     }
 
-    fun completePayment() {
+    fun complete() {
         check(this.status == PaymentStatus.PENDING || this.status == PaymentStatus.FAILED) { throw AlreadyPaidException() }
         this.status = PaymentStatus.PAID
+    }
+
+    fun cancel() {
+        check(this.status == PaymentStatus.PENDING || this.status == PaymentStatus.FAILED) { throw AlreadyPaidException() }
+        this.status = PaymentStatus.FAILED
     }
 }

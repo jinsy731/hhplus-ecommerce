@@ -3,13 +3,14 @@ package kr.hhplus.be.server.order.application
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
-import kr.hhplus.be.server.shared.domain.Money
-import kr.hhplus.be.server.shared.exception.AlreadyPaidOrderException
+import io.mockk.mockk
 import kr.hhplus.be.server.coupon.application.dto.DiscountInfo
-import kr.hhplus.be.server.order.domain.model.Order
 import kr.hhplus.be.server.order.domain.OrderRepository
+import kr.hhplus.be.server.order.domain.model.Order
 import kr.hhplus.be.server.order.domain.model.OrderStatus
 import kr.hhplus.be.server.product.application.dto.ProductInfo
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.exception.AlreadyPaidOrderException
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -62,7 +63,7 @@ class OrderServiceTestIT {
             DiscountInfo(orderItemId = orderItems[0].id, amount = Money.of(2000), sourceId = 1L, sourceType = "COUPON"),
             DiscountInfo(orderItemId = orderItems[1].id, amount = Money.of(3000), sourceId = 1L, sourceType = "COUPON")
         )
-        val cmd = OrderCommand.ApplyDiscount(order.id, discountInfos)
+        val cmd = OrderCommand.ApplyDiscount(order.id, discountInfos, mockk<OrderSagaContext>())
 
         // when
         orderService.applyDiscount(cmd)
@@ -88,7 +89,7 @@ class OrderServiceTestIT {
             DiscountInfo(orderItemId = orderItems[0].id, amount = Money.of(6000), sourceId = 1L, sourceType = "COUPON"),
             DiscountInfo(orderItemId = orderItems[1].id, amount = Money.of(7000), sourceId = 1L, sourceType = "COUPON")
         )
-        val cmd = OrderCommand.ApplyDiscount(order.id, discountInfos)
+        val cmd = OrderCommand.ApplyDiscount(order.id, discountInfos, mockk<OrderSagaContext>())
 
         // when
         orderService.applyDiscount(cmd)
@@ -107,7 +108,10 @@ class OrderServiceTestIT {
         val order = createAndSaveOrder()
 
         // when
-        orderService.completeOrder(order.id)
+        orderService.completeOrder(order.id, OrderSagaContext(
+            order = mockk<Order>(),
+            timestamp = LocalDateTime.now()
+        ))
 
         // then
         val completedOrder = orderRepository.getById(order.id)
@@ -120,11 +124,20 @@ class OrderServiceTestIT {
     fun completingAlreadyPaidOrder_shouldThrowException() {
         // given
         val order = createAndSaveOrder()
-        orderService.completeOrder(order.id)
+        orderService.completeOrder(order.id, OrderSagaContext(
+            order = mockk<Order>(),
+            timestamp = LocalDateTime.now()
+        ))
 
         // when & then
         shouldThrowExactly<AlreadyPaidOrderException> {
-            orderService.completeOrder(order.id)
+            val result = orderService.completeOrder(order.id, OrderSagaContext(
+                order = mockk<Order>(),
+                timestamp = LocalDateTime.now()
+            ))
+            if(result.isFailure) {
+                throw result.exceptionOrNull()!!
+            }
         }
     }
 

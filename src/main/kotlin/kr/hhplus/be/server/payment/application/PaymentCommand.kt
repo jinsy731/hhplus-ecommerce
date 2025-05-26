@@ -1,15 +1,16 @@
 package kr.hhplus.be.server.payment.application
 
-import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.order.application.OrderSagaContext
 import kr.hhplus.be.server.payment.domain.model.PaymentContext
+import kr.hhplus.be.server.shared.domain.Money
 import java.time.LocalDateTime
-import kotlin.collections.map
 
 class PaymentCommand {
     class Prepare {
         data class Root(
             val order: OrderInfo,
             val timestamp: LocalDateTime,
+            val context: OrderSagaContext
         )
 
         data class OrderInfo(
@@ -31,7 +32,13 @@ class PaymentCommand {
 
 
     data class Complete(
-        val paymentId: Long
+        val paymentId: Long,
+        val context: OrderSagaContext
+    )
+
+    data class Cancel(
+        val paymentId: Long,
+        val context: OrderSagaContext
     )
 }
 

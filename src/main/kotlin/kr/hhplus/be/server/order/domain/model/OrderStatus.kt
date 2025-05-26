@@ -15,6 +15,11 @@ enum class OrderStatus {
     PAID,
 
     /**
+     * 기타 실패
+     */
+    FAILED,
+
+    /**
      * 배송 중
      */
     SHIPPING,

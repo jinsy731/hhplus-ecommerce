@@ -3,10 +3,12 @@ package kr.hhplus.be.server.payment.domain.model
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import kr.hhplus.be.server.shared.domain.Money
-import kr.hhplus.be.server.shared.exception.AlreadyPaidException
+import io.mockk.mockk
+import kr.hhplus.be.server.order.application.OrderSagaContext
 import kr.hhplus.be.server.payment.application.PaymentCommand
 import kr.hhplus.be.server.payment.application.toPreparePaymentContext
+import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.exception.AlreadyPaidException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -43,6 +45,7 @@ class PaymentTest {
                 discountedAmount = Money.of(1000)
             ),
             timestamp = now,
+            context = mockk<OrderSagaContext>()
         )
         val context = cmd.toPreparePaymentContext()
         // act
@@ -71,7 +74,7 @@ class PaymentTest {
             status = PaymentStatus.PENDING
         )
         // act
-        payment.completePayment()
+        payment.complete()
         
         // assert
         payment.status shouldBe PaymentStatus.PAID
@@ -89,6 +92,6 @@ class PaymentTest {
             status = status
         )
         // act, assert
-        shouldThrowExactly<AlreadyPaidException> { payment.completePayment() }
+        shouldThrowExactly<AlreadyPaidException> { payment.complete() }
     }
 }

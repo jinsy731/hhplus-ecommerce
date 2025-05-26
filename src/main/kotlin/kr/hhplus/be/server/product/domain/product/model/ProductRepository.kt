@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.product.domain.product
+package kr.hhplus.be.server.product.domain.product.model
 
 import kr.hhplus.be.server.product.infrastructure.ProductListDto
 import org.springframework.data.domain.Pageable
@@ -17,4 +17,5 @@ interface ProductRepository {
     fun findAllByIdForUpdate(ids: List<Long>): List<Product>
 
     fun findSummaryByIds(ids: List<Long>): List<ProductListDto>
+    fun findAllVariantsByIdForUpdate(ids: List<Long>): List<ProductVariant>
 }

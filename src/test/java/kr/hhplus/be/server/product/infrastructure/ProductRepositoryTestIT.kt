@@ -1,10 +1,9 @@
 package kr.hhplus.be.server.product.infrastructure
 
 import io.kotest.matchers.collections.shouldHaveSize
-import jakarta.transaction.Transactional
 import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.product.ProductTestFixture
-import kr.hhplus.be.server.product.domain.product.ProductRepository
+import kr.hhplus.be.server.product.domain.product.model.ProductRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.platform.commons.logging.LoggerFactory
