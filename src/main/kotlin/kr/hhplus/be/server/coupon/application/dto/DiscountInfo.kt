@@ -1,7 +1,6 @@
 package kr.hhplus.be.server.coupon.application.dto
 
 import kr.hhplus.be.server.shared.domain.Money
-import kr.hhplus.be.server.coupon.domain.model.DiscountLine
 
 /**
  * 할인 정보를 나타내는 인터페이스
@@ -14,11 +13,4 @@ data class DiscountInfo (
     val sourceType: String
 )
 
-fun List<DiscountLine>.toDiscountInfoList(): List<DiscountInfo> {
-    return this.mapNotNull { DiscountInfo(
-        orderItemId = it.orderItemId,
-        amount = it.amount,
-        sourceId = it.sourceId,
-        sourceType = it.type.toString()
-    ) }
-}
+// 매핑 함수는 CouponMapper로 이동됨

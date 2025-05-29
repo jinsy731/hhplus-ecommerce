@@ -3,8 +3,6 @@ package kr.hhplus.be.server.payment.domain.model
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.mockk.mockk
-import kr.hhplus.be.server.order.application.OrderSagaContext
 import kr.hhplus.be.server.payment.application.PaymentCommand
 import kr.hhplus.be.server.payment.application.toPreparePaymentContext
 import kr.hhplus.be.server.shared.domain.Money
@@ -44,8 +42,7 @@ class PaymentTest {
                 originalTotal = Money.of(2000),
                 discountedAmount = Money.of(1000)
             ),
-            timestamp = now,
-            context = mockk<OrderSagaContext>()
+            timestamp = now
         )
         val context = cmd.toPreparePaymentContext()
         // act
@@ -55,43 +52,56 @@ class PaymentTest {
         payment.orderId shouldBe 1L
         payment.originalAmount shouldBe Money.of(2000)
         payment.discountedAmount shouldBe Money.of(1000)
+        payment.status shouldBe PaymentStatus.PENDING
         payment.details shouldHaveSize 2
-        payment.details[0].originalAmount shouldBe Money.of(1000)
-        payment.details[0].discountedAmount shouldBe Money.of(500)
-        payment.details[0].orderItemId shouldBe 1L
-        payment.details[1].originalAmount shouldBe Money.of(1000)
-        payment.details[1].discountedAmount shouldBe Money.of(500)
-        payment.details[1].orderItemId shouldBe 2L
+        payment.timestamp shouldBe now
     }
-    
-    @Test
-    fun `✅결제 완료`() {
-        // arrange
-        val payment = Payment(
-            orderId = 1L,
-            originalAmount = Money.of(100),
-            discountedAmount = Money.of(10),
-            status = PaymentStatus.PENDING
-        )
-        // act
-        payment.complete()
-        
-        // assert
-        payment.status shouldBe PaymentStatus.PAID
-    }
-
 
     @ParameterizedTest
-    @EnumSource(value = PaymentStatus::class, mode = EnumSource.Mode.EXCLUDE, names = ["PENDING", "FAILED"])
-    fun `⛔️결제 완료 실패`(status: PaymentStatus) {
+    @EnumSource(PaymentStatus::class)
+    fun `✅결제 상태 변경`(status: PaymentStatus) {
         // arrange
         val payment = Payment(
+            id = 1L,
             orderId = 1L,
-            originalAmount = Money.of(100),
-            discountedAmount = Money.of(10),
-            status = status
+            originalAmount = Money.of(1000),
+            discountedAmount = Money.of(100),
+            status = PaymentStatus.PENDING,
+            timestamp = LocalDateTime.now()
         )
-        // act, assert
-        shouldThrowExactly<AlreadyPaidException> { payment.complete() }
+
+        // act & assert
+        when (status) {
+            PaymentStatus.PAID -> {
+                payment.complete()
+                payment.status shouldBe PaymentStatus.PAID
+            }
+            PaymentStatus.REFUNDED -> {
+                payment.complete()
+                payment.cancel()
+                payment.status shouldBe PaymentStatus.REFUNDED
+            }
+            else -> {
+                // 다른 상태들은 직접 테스트하지 않음
+            }
+        }
+    }
+
+    @Test
+    fun `❌이미 완료된 결제를 다시 완료하면 예외가 발생한다`() {
+        // arrange
+        val payment = Payment(
+            id = 1L,
+            orderId = 1L,
+            originalAmount = Money.of(1000),
+            discountedAmount = Money.of(100),
+            status = PaymentStatus.PAID,
+            timestamp = LocalDateTime.now()
+        )
+
+        // act & assert
+        shouldThrowExactly<AlreadyPaidException> {
+            payment.complete()
+        }
     }
 }

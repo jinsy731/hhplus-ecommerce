@@ -1,11 +1,9 @@
 package kr.hhplus.be.server.point.application
 
 import io.kotest.matchers.shouldBe
-import io.mockk.mockk
 import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.executeConcurrently
 import kr.hhplus.be.server.executeMultipleFunctionConcurrently
-import kr.hhplus.be.server.order.application.OrderSagaContext
 import kr.hhplus.be.server.point.UserPointTestFixture
 import kr.hhplus.be.server.point.domain.UserPointRepository
 import kr.hhplus.be.server.shared.domain.Money
@@ -39,6 +37,7 @@ class UserPointServiceConcurrencyTestIT {
     fun `✅포인트 사용 동시성 테스트_100개의 포인트 사용 요청이 동시에 발생할 때 일부만 성공하고 성공한만큼 잔액에서 차감되어야 한다`() {
         // arrange: 초기 유저 포인트는 10만
         val userId = 1L
+        val orderId = 1L
         val successCnt = AtomicInteger(0)
         val failureCnt = AtomicInteger(0)
         val useAmount = Money.of(1000)
@@ -49,8 +48,12 @@ class UserPointServiceConcurrencyTestIT {
         // act: 100개의 요청을 동시 실행
         executeConcurrently(count = 100) {
             try {
-                userPointService.use(UserPointCommand.Use(userId, useAmount, LocalDateTime.now(), OrderSagaContext(mockk(),
-                    LocalDateTime.now())))
+                userPointService.use(UserPointCommand.Use(
+                    userId = userId,
+                    amount = useAmount,
+                    orderId = orderId,
+                    now = LocalDateTime.now(),
+                ))
                 successCnt.incrementAndGet()
             } catch(e: OptimisticLockingFailureException) {
                 failureCnt.incrementAndGet()
@@ -92,6 +95,8 @@ class UserPointServiceConcurrencyTestIT {
     fun `✅포인트 사용&충전 동시성 테스트_100개의 포인트 사용&충전 요청이 동시에 발생할 때 일부만 성공하고 성공한 만큼 잔액이 변경되어야 한다`() {
         // arrange: 초기 유저 포인트 10만
         val userId = 1L
+        val orderId = 1L
+        val now = LocalDateTime.now()
         val useSuccessCnt = AtomicInteger(0)
         val useFailureCnt = AtomicInteger(0)
         val chargeSuccessCnt = AtomicInteger(0)
@@ -114,8 +119,12 @@ class UserPointServiceConcurrencyTestIT {
             },
             {
                 try {
-                    userPointService.use(UserPointCommand.Use(userId, useAmount, LocalDateTime.now(), OrderSagaContext(mockk(),
-                        LocalDateTime.now())))
+                    userPointService.use(UserPointCommand.Use(
+                        userId = userId,
+                        amount = useAmount,
+                        orderId = orderId,
+                        now = now,
+                    ))
                 } catch (e: OptimisticLockingFailureException) {
                     useFailureCnt.incrementAndGet()
                 }

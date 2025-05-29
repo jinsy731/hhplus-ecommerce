@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.coupon
 
-import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.coupon.domain.model.*
+import kr.hhplus.be.server.shared.domain.Money
 import java.time.LocalDateTime
 
 /**
@@ -60,7 +60,8 @@ object CouponTestFixture {
         issuedAt: LocalDateTime = LocalDateTime.now(),
         expiredAt: LocalDateTime = LocalDateTime.now().plusDays(7),
         usedAt: LocalDateTime? = null,
-        status: UserCouponStatus = UserCouponStatus.UNUSED
+        status: UserCouponStatus = UserCouponStatus.UNUSED,
+        orderId: Long? = null,
     ): UserCouponBuilder {
         return UserCouponBuilder(
             id = id,
@@ -69,7 +70,8 @@ object CouponTestFixture {
             issuedAt = issuedAt,
             expiredAt = expiredAt,
             usedAt = usedAt,
-            status = status
+            status = status,
+            orderId = orderId
         )
     }
 
@@ -355,7 +357,8 @@ object CouponTestFixture {
         private val issuedAt: LocalDateTime,
         private val expiredAt: LocalDateTime,
         private val usedAt: LocalDateTime?,
-        private val status: UserCouponStatus
+        private val status: UserCouponStatus,
+        private val orderId: Long?
     ) {
         fun build(): UserCoupon {
             return UserCoupon(
@@ -377,7 +380,8 @@ object CouponTestFixture {
                 issuedAt = issuedAt,
                 expiredAt = expiredAt,
                 usedAt = usedAt,
-                status = status
+                status = status,
+                orderId = orderId
             )
         }
 
@@ -389,7 +393,8 @@ object CouponTestFixture {
                 issuedAt = issuedAt,
                 expiredAt = expiredAt,
                 usedAt = usedAt,
-                status = status
+                status = status,
+                orderId = orderId
             )
         }
 
@@ -401,7 +406,8 @@ object CouponTestFixture {
                 issuedAt = issuedAt,
                 expiredAt = expiredAt,
                 usedAt = usedAt,
-                status = UserCouponStatus.USED
+                status = UserCouponStatus.USED,
+                orderId = orderId
             )
         }
 
@@ -413,7 +419,8 @@ object CouponTestFixture {
                 issuedAt = issuedAt,
                 expiredAt = LocalDateTime.now().minusDays(1),
                 usedAt = usedAt,
-                status = status
+                status = status,
+                orderId = orderId
             )
         }
     }

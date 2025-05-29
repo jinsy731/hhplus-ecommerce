@@ -9,7 +9,7 @@ class OptionSpec(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "option_spec_id")
-    val id: Long = 0L,
+    val id: Long? = null,
 
     @Column(nullable = false)
     var name: String,

@@ -6,11 +6,19 @@ import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
 
 @Component
-class SpringDomainEventPublisher(private val publisher: ApplicationEventPublisher): DomainEventPublisher {
+class SpringDomainEventPublisher(
+    private val publisher: ApplicationEventPublisher,
+    private val kafkaEventProducer: KafkaEventProducer
+): DomainEventPublisher {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     override fun <T : Any> publish(event: DomainEvent<T>) {
+        // 기존 Spring 이벤트 발행 (로컬 처리용)
         publisher.publishEvent(event)
+        
+        // Kafka로 이벤트 발행 (분산 처리용)
+        kafkaEventProducer.publish(event)
+        
         logger.info("[{}] Event Published: {} {}", Thread.currentThread().name, event.eventId, event.eventType)
     }
 }

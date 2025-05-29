@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.order.domain
 
-import kr.hhplus.be.server.order.domain.model.Order
+import kr.hhplus.be.server.order.domain.event.OrderCompletedPayload
 
 interface OrderResultSender {
-    fun send(order: Order)
+    fun send(orderCompletedPayload: OrderCompletedPayload)
 }

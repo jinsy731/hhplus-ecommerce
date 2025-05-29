@@ -1,8 +1,7 @@
 package kr.hhplus.be.server.coupon.application.dto
 
-import kr.hhplus.be.server.shared.web.PageResult
-import kr.hhplus.be.server.coupon.domain.model.UserCoupon
 import kr.hhplus.be.server.coupon.domain.model.UserCouponStatus
+import kr.hhplus.be.server.shared.web.PageResult
 import java.time.LocalDateTime
 
 class CouponResult {
@@ -44,13 +43,4 @@ class CouponResult {
     )
 }
 
-fun UserCoupon.toUserCouponData() = CouponResult.UserCouponData(
-    id = this.id!!,
-    couponId = this.coupon.id!!,
-    couponName = this.coupon.name,
-    description = this.coupon.description,
-    discountPolicyName = this.coupon.discountPolicy.name,
-    value = this.coupon.discountPolicy.discountType.getDiscountValue(),
-    status = this.status.name,
-    expiredAt = this.expiredAt
-)
+// 매핑 함수는 CouponMapper로 이동됨

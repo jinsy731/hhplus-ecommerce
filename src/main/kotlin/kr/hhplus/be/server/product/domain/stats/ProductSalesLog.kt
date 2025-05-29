@@ -1,18 +1,12 @@
 package kr.hhplus.be.server.product.domain.stats
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
+import jakarta.persistence.*
 import java.time.LocalDateTime
 
 @Entity
 class ProductSalesLog(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) @Column(name = "product_sales_log_id")
-    val id: Long = 0L,
+    val id: Long? = null,
     @Column(nullable = false)
     val orderId: Long,
     @Column(nullable = false)

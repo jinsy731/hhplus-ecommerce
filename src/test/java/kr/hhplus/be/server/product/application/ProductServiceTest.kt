@@ -7,9 +7,9 @@ import io.kotest.matchers.shouldBe
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
-import kr.hhplus.be.server.order.application.OrderSagaContext
 import kr.hhplus.be.server.product.ProductTestFixture
 import kr.hhplus.be.server.product.application.dto.ProductCommand
+import kr.hhplus.be.server.product.application.mapper.ProductMapper
 import kr.hhplus.be.server.product.domain.product.model.Product
 import kr.hhplus.be.server.product.domain.product.model.ProductRepository
 import kr.hhplus.be.server.product.domain.product.model.ProductStatus
@@ -22,7 +22,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.data.domain.PageRequest
-import java.time.LocalDateTime
 
 class ProductServiceTest {
     private lateinit var productService: ProductService
@@ -30,13 +29,19 @@ class ProductServiceTest {
     private lateinit var popularProductsDailyRepository: JpaPopularProductsDailyRepository
     private lateinit var eventPublisher: DomainEventPublisher
     private lateinit var testProducts: List<Product>
+    private val productMapper = ProductMapper()
 
     @BeforeEach
     fun setup() {
         productRepository = mockk()
         eventPublisher = mockk()
         popularProductsDailyRepository = mockk()
-        productService = ProductService(productRepository, popularProductsDailyRepository, eventPublisher)
+        productService = ProductService(
+            productRepository = productRepository,
+            popularProductsDailyRepository = popularProductsDailyRepository,
+            eventPublisher = eventPublisher,
+            productMapper = productMapper
+        )
 
         testProducts = listOf(
             ProductTestFixture.createValidProduct(1L, variantIds = listOf(1,2)),
@@ -74,10 +79,7 @@ class ProductServiceTest {
     @Test
     fun `✅재고 복구가 정상적으로 동작한다`() {
         // arrange
-        val context = OrderSagaContext(
-            order = mockk(),
-            timestamp = LocalDateTime.now()
-        )
+        val orderId = 1L
         val cmd = ProductCommand.RestoreStock.Root(
             items = listOf(
                 ProductCommand.RestoreStock.Item(
@@ -86,7 +88,7 @@ class ProductServiceTest {
                     quantity = 5
                 )
             ),
-            context = context
+            orderId = orderId,
         )
         every { productRepository.findAllByIdForUpdate(any()) } returns listOf(testProducts[0])
         every { productRepository.findAllVariantsByIdForUpdate(any()) } returns testProducts[0].variants
@@ -101,10 +103,6 @@ class ProductServiceTest {
     @Test
     fun `❌재고 복구 시 잘못된 상품 ID가 주어지면 예외가 발생한다`() {
         // arrange
-        val context = OrderSagaContext(
-            order = mockk(),
-            timestamp = LocalDateTime.now()
-        )
         val cmd = ProductCommand.RestoreStock.Root(
             items = listOf(
                 ProductCommand.RestoreStock.Item(
@@ -113,7 +111,7 @@ class ProductServiceTest {
                     quantity = 5
                 )
             ),
-            context = context
+            orderId = 1L
         )
         every { productRepository.findAllByIdForUpdate(any()) } returns emptyList()
         every { productRepository.findAllVariantsByIdForUpdate(any()) } returns emptyList()

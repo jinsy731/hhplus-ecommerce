@@ -5,8 +5,6 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kr.hhplus.be.server.order.application.OrderSagaContext
-import kr.hhplus.be.server.order.domain.model.Order
 import kr.hhplus.be.server.point.domain.UserPointHistoryRepository
 import kr.hhplus.be.server.point.domain.UserPointRepository
 import kr.hhplus.be.server.point.domain.model.TransactionType
@@ -83,19 +81,20 @@ class UserPointServiceTest {
     @Test
     fun `✅ 유저 포인트 사용`() {
         // arrange
-        val time = LocalDateTime.now()
         val userId = 1L
+        val orderId = 1L
+        val now = LocalDateTime.now()
         val initialBalance = Money.of(100)
         val useAmount = Money.of(100)
         val finalBalance = initialBalance - useAmount
 
-        val userPoint = UserPoint(1L, userId, initialBalance).apply { this.createdAt = time }
+        val userPoint = UserPoint(1L, userId, initialBalance).apply { this.createdAt = now }
 
         val expectedHistory = UserPointHistory(
             userId = userId,
             amount = useAmount,
             transactionType = TransactionType.USE,
-            createdAt = time
+            createdAt = now
         )
 
         every { userPointRepository.getByUserId(userId) } returns userPoint
@@ -105,8 +104,8 @@ class UserPointServiceTest {
         val cmd = UserPointCommand.Use(
             userId = userId,
             amount = useAmount,
-            now = time,
-            context = mockk<OrderSagaContext>()
+            now = now,
+            orderId = orderId,
         )
 
         //act
@@ -120,7 +119,7 @@ class UserPointServiceTest {
                 it.userId == userId &&
                         it.amount == useAmount &&
                         it.transactionType == TransactionType.USE &&
-                        it.createdAt == time
+                        it.createdAt == now
             })
         }
     }
@@ -128,23 +127,21 @@ class UserPointServiceTest {
     @Test
     fun `⛔️ 유저 포인트 사용 실패_유저 포인트와 포인트 내역이 저장되지 않아야 한다`() {
         // arrange
-        val time = LocalDateTime.now()
         val userId = 1L
+        val orderId = 1L
+        val now = LocalDateTime.now()
         val initialBalance = Money.of(100)
         val useAmount = Money.of(101)
 
-        val userPoint = UserPoint(1L, userId, initialBalance).apply { this.createdAt = time }
+        val userPoint = UserPoint(1L, userId, initialBalance).apply { this.createdAt = now }
 
         every { userPointRepository.getByUserId(userId) } returns userPoint
 
         val cmd = UserPointCommand.Use(
             userId = userId,
             amount = useAmount,
-            now = time,
-            context = OrderSagaContext(
-                order = mockk<Order>(),
-                timestamp = LocalDateTime.now()
-            )
+            orderId = orderId,
+            now = now,
         )
 
         //act

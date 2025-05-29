@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.payment.application
 
-import kr.hhplus.be.server.order.application.OrderSagaContext
 import kr.hhplus.be.server.payment.domain.model.PaymentContext
 import kr.hhplus.be.server.shared.domain.Money
 import java.time.LocalDateTime
@@ -9,8 +8,7 @@ class PaymentCommand {
     class Prepare {
         data class Root(
             val order: OrderInfo,
-            val timestamp: LocalDateTime,
-            val context: OrderSagaContext
+            val timestamp: LocalDateTime
         )
 
         data class OrderInfo(
@@ -30,15 +28,37 @@ class PaymentCommand {
         )
     }
 
+    /**
+     * PG를 통한 결제 처리 명령
+     */
+    data class ProcessWithPg(
+        val paymentId: Long,
+        val orderId: Long,
+        val pgPaymentId: String,
+        val amount: Money,
+        val paymentMethod: String,
+        val timestamp: LocalDateTime
+    )
 
     data class Complete(
         val paymentId: Long,
-        val context: OrderSagaContext
+        val orderId: Long,
+        val timestamp: LocalDateTime
     )
 
     data class Cancel(
         val paymentId: Long,
-        val context: OrderSagaContext
+        val orderId: Long,
+        val timestamp: LocalDateTime
+    )
+
+    data class Fail(
+        val paymentId: Long,
+        val orderId: Long,
+        val pgPaymentId: String,
+        val amount: Money,
+        val failedReason: String,
+        val timestamp: LocalDateTime
     )
 }
 

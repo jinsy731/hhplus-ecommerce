@@ -41,4 +41,8 @@ class DefaultUserCouponRepository(private val jpaRepository: JpaUserCouponReposi
     override fun findById(id: Long): UserCoupon? {
         return jpaRepository.findById(id).getOrNull()
     }
+
+    override fun findAllByOrderId(orderId: Long): List<UserCoupon> {
+        return jpaRepository.findAllByOrderId(orderId)
+    }
 }

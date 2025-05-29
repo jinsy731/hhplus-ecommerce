@@ -10,4 +10,5 @@ interface PaymentRepository {
 
     fun getById(id: Long): Payment
     fun getByOrderId(orderId: Long): Payment
+    fun hasSuccessfulPaymentByOrderId(orderId: Long): Boolean
 }

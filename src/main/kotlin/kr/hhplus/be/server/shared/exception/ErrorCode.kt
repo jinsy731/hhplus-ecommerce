@@ -24,4 +24,5 @@ enum class ErrorCode(
     INSUFFICIENT_POINT(HttpStatus.CONFLICT, "UP001", "잔여 포인트가 부족합니다."),
     ALREADY_PAID(HttpStatus.CONFLICT, "PMT001", "이미 결제되었습니다."),
     NOT_FOUND(HttpStatus.NOT_FOUND, "CM001", "존재하지 않는 리소스입니다."),
+    INVALID_PAYMENT_STATUS(HttpStatus.CONFLICT, "PMT002", "유효하지 않은 결제 상태입니다.");
 }

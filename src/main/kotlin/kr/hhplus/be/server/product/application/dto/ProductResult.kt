@@ -4,7 +4,6 @@ import kr.hhplus.be.server.product.domain.product.model.OptionSpec
 import kr.hhplus.be.server.product.domain.product.model.OptionValue
 import kr.hhplus.be.server.product.domain.product.model.ProductStatus
 import kr.hhplus.be.server.product.domain.product.model.ProductVariant
-import kr.hhplus.be.server.product.infrastructure.ProductListDto
 import kr.hhplus.be.server.shared.domain.Money
 
 class ProductResult {
@@ -46,14 +45,7 @@ class ProductResult {
     )
 }
 
-fun ProductListDto.toProductDetail(): ProductResult.ProductSummary {
-    return ProductResult.ProductSummary(
-        productId = this.id ?: throw IllegalStateException("Product ID is null"),
-        name = this.name,
-        basePrice = this.basePrice,
-        status = this.status,
-    )
-}
+// 매핑 함수는 ProductMapper로 이동됨
 
 fun OptionSpec.toOptionSpecDetail(): ProductResult.OptionSpecDetail {
     return ProductResult.OptionSpecDetail(

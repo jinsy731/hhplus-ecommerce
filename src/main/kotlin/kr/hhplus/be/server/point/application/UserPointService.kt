@@ -2,7 +2,6 @@ package kr.hhplus.be.server.point.application
 
 import kr.hhplus.be.server.lock.annotation.WithDistributedLock
 import kr.hhplus.be.server.lock.executor.LockType
-import kr.hhplus.be.server.point.domain.UserPointEvent
 import kr.hhplus.be.server.point.domain.UserPointHistoryRepository
 import kr.hhplus.be.server.point.domain.UserPointRepository
 import kr.hhplus.be.server.point.domain.model.UserPoint
@@ -66,10 +65,6 @@ class UserPointService(
             userPointRepository.save(userPoint)
             userPointHistoryRepository.save(history)
             userPoint
-        }.onFailure { e ->
-            eventPublisher.publish(UserPointEvent.DeductionFailed(cmd.context.copy(failedReason = e.message ?: "Unknown error")))
-        }.onSuccess {
-            eventPublisher.publish(UserPointEvent.Deducted(cmd.context))
         }
     }
 
@@ -88,10 +83,6 @@ class UserPointService(
             userPointRepository.save(userPoint)
             userPointHistoryRepository.save(history)
             userPoint
-        }.onFailure { e ->
-            eventPublisher.publish(UserPointEvent.DeductionFailed(cmd.context.copy(failedReason = e.message ?: "Unknown error")))
-        }.onSuccess {
-            eventPublisher.publish(UserPointEvent.Deducted(cmd.context))
         }
     }
 

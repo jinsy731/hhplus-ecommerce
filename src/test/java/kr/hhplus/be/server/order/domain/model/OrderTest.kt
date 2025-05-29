@@ -2,12 +2,11 @@ package kr.hhplus.be.server.order.domain.model
 
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.coupon.application.dto.DiscountInfo
+import kr.hhplus.be.server.order.OrderTestFixture
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.exception.AlreadyPaidOrderException
 import kr.hhplus.be.server.shared.exception.ErrorCode
-import kr.hhplus.be.server.coupon.application.dto.DiscountInfo
-import kr.hhplus.be.server.order.OrderTestFixture
-import kr.hhplus.be.server.order.domain.model.OrderStatus
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
@@ -57,7 +56,7 @@ class OrderTest {
     @Test
     fun `✅할인 항목 추가_할인 항목이 추가되면 해당 금액만큼 discountedAmount가 증가해야 한다`() {
         // arrange
-        val order = OrderTestFixture.standardOrder(userId = 1L)
+        val order = OrderTestFixture.order(userId = 1L).withStandardItems(true).build()
         val discountLines = listOf(
             DiscountInfo(
                 orderItemId = 1L,
@@ -80,7 +79,8 @@ class OrderTest {
     @Test
     fun `✅할인 항목 추가_할인 항목이 추가되면 해당 금액만큼 orderItem의 discountedAmount가 증가해야 한다`() {
         // arrange
-        val order = OrderTestFixture.standardOrder(userId = 1L)
+        val order = OrderTestFixture.order(userId = 1L)
+            .withStandardItems(true).build()
         val orderItems = order.orderItems.asList()
         val discountLines = listOf(
             DiscountInfo(
@@ -127,7 +127,7 @@ class OrderTest {
         // arrange
         val order = OrderTestFixture.order(userId = 1L)
             .withOriginalTotal(Money.of(10000))
-            .withStandardItems()
+            .withStandardItems(true)
             .build()
             
         val discountLines = listOf(

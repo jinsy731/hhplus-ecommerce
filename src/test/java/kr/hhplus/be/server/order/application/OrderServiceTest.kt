@@ -2,12 +2,13 @@ package kr.hhplus.be.server.order.application
 
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.shouldBe
-import io.mockk.mockk
+import kr.hhplus.be.server.order.OrderTestFixture
 import kr.hhplus.be.server.order.domain.OrderRepository
+import kr.hhplus.be.server.order.domain.event.PaymentCompletedPayload
 import kr.hhplus.be.server.order.domain.model.Order
-import kr.hhplus.be.server.order.domain.model.OrderContext
 import kr.hhplus.be.server.order.domain.model.OrderStatus
 import kr.hhplus.be.server.product.application.dto.ProductInfo
+import kr.hhplus.be.server.shared.TestEntityUtils
 import kr.hhplus.be.server.shared.domain.DomainEvent
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.event.DomainEventPublisher
@@ -31,19 +32,8 @@ class OrderServiceTest {
         eventPublisher = mock()
         orderService = OrderService(orderRepository, eventPublisher)
 
-        val context = OrderContext.Create.Root(
-            userId = 1L,
-            timestamp = LocalDateTime.now(),
-            items = listOf(
-                OrderContext.Create.Item(
-                    productId = 1L,
-                    variantId = 1L,
-                    quantity = 1,
-                    unitPrice = Money.of(1000)
-                )
-            )
-        )
-        testOrder = Order.create(context)
+        testOrder = OrderTestFixture.order().withStandardItems(true).build()
+        TestEntityUtils.setEntityId(testOrder, 1L)
     }
 
     @Test
@@ -84,11 +74,17 @@ class OrderServiceTest {
         whenever(orderRepository.getById(any())).thenReturn(testOrder)
         whenever(orderRepository.save(any())).thenReturn(testOrder)
 
-        // act
-        shouldNotThrowAny { orderService.completeOrder(1L, OrderSagaContext(
-            order = mockk<Order>(),
+        val payload = PaymentCompletedPayload(
+            orderId = 1L,
+            userId = 1L,
+            paymentId = 1L,
+            pgPaymentId = "pg_12345",
+            amount = Money.of(1000),
             timestamp = LocalDateTime.now()
-        )) }
+        )
+
+        // act
+        shouldNotThrowAny { orderService.completeOrder(1L, payload) }
 
         // assert
         testOrder.status shouldBe OrderStatus.PAID

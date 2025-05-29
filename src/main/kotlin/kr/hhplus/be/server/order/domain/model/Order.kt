@@ -12,7 +12,7 @@ class Order(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column
-    val id: Long = 0L,
+    val id: Long? = null,
 
     @Column(nullable = false)
     val userId: Long,
@@ -74,10 +74,6 @@ class Order(
 
     fun applyDiscount(discountInfos: List<DiscountInfo>) {
         this.orderItems.applyDiscounts(discountInfos)
-//        discountInfos.forEach { discountLine ->
-//            val orderItem = this.orderItems.find { orderItem -> orderItem.id == discountLine.orderItemId }
-//            orderItem?.applyDiscount(discountLine.amount) ?: throw IllegalStateException()
-//        }
 
         discountedAmount = discountInfos.fold(Money.ZERO) { acc, it -> acc + it.amount}
         
@@ -87,9 +83,9 @@ class Order(
         }
     }
 
-
     fun completeOrder() {
         if (status != OrderStatus.CREATED) {
+            println("this.status = ${this.status}")
             throw AlreadyPaidOrderException()
         }
         status = OrderStatus.PAID

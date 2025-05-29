@@ -4,6 +4,7 @@ import jakarta.persistence.*
 import kr.hhplus.be.server.shared.domain.BaseTimeEntity
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.exception.AlreadyPaidException
+import kr.hhplus.be.server.shared.exception.InvalidPaymentStatusException
 import java.time.LocalDateTime
 
 /**
@@ -74,7 +75,12 @@ class Payment(
     }
 
     fun cancel() {
-        check(this.status == PaymentStatus.PENDING || this.status == PaymentStatus.FAILED) { throw AlreadyPaidException() }
+        check(this.status == PaymentStatus.PAID) { throw InvalidPaymentStatusException() }
+        this.status = PaymentStatus.REFUNDED
+    }
+
+    fun fail() {
+        check(this.status == PaymentStatus.PENDING) { throw InvalidPaymentStatusException() }
         this.status = PaymentStatus.FAILED
     }
 }

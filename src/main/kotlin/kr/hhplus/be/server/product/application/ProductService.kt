@@ -4,8 +4,8 @@ import kr.hhplus.be.server.lock.annotation.WithMultiDistributedLock
 import kr.hhplus.be.server.lock.executor.LockType
 import kr.hhplus.be.server.product.application.dto.ProductCommand
 import kr.hhplus.be.server.product.application.dto.ProductResult
-import kr.hhplus.be.server.product.application.dto.toProductDetail
-import kr.hhplus.be.server.product.domain.product.ProductEvent
+
+import kr.hhplus.be.server.product.application.port.ProductApplicationService
 import kr.hhplus.be.server.product.domain.product.model.Product
 import kr.hhplus.be.server.product.domain.product.model.ProductRepository
 import kr.hhplus.be.server.product.domain.stats.PopularProductDailyId
@@ -22,15 +22,16 @@ import org.springframework.transaction.annotation.Transactional
 class ProductService(
     private val productRepository: ProductRepository,
     private val popularProductsDailyRepository: JpaPopularProductsDailyRepository,
-    private val eventPublisher: DomainEventPublisher
-) {
+    private val eventPublisher: DomainEventPublisher,
+    private val productMapper: kr.hhplus.be.server.product.application.mapper.ProductMapper
+) : ProductApplicationService {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    fun retrieveList(cmd: ProductCommand.RetrieveList): ProductResult.RetrieveList {
+    override fun retrieveList(cmd: ProductCommand.RetrieveList): ProductResult.RetrieveList {
         val products = productRepository.searchByKeyword(cmd.keyword, cmd.lastId, cmd.pageable)
 
         return ProductResult.RetrieveList(
-            products = products.map { it.toProductDetail() }
+            products = products.map { productMapper.mapToProductSummary(it) }
         )
     }
 
@@ -51,8 +52,10 @@ class ProductService(
         waitTimeMillis = 4000
     )
     @Transactional
-    fun validateAndReduceStock(cmd: ProductCommand.ValidateAndReduceStock.Root): Result<Unit> {
+    override fun validateAndReduceStock(cmd: ProductCommand.ValidateAndReduceStock.Root): Result<Unit> {
         return runCatching {
+            logger.info("Processing stock reduction for orderId: {}", cmd.orderId)
+            
             val products = productRepository.findAllByIdForUpdate(cmd.items.map { it.productId }.sorted())
             val variants = productRepository.findAllVariantsByIdForUpdate(cmd.items.map { it.variantId }.sorted())
 
@@ -63,10 +66,10 @@ class ProductService(
                 product.validatePurchasability(item.variantId, item.quantity)
                 variant.reduceStock(item.quantity)
             }
-        }.onSuccess {
-            eventPublisher.publish(ProductEvent.StockDeducted(cmd.context))
+            
+            logger.info("Successfully reduced stock for orderId: {}", cmd.orderId)
         }.onFailure { e ->
-            eventPublisher.publish(ProductEvent.StockDeductionFailed(cmd.context.copy(failedReason = e.message ?: "Unknown error")))
+            logger.error("Failed to reduce stock for orderId: {}, error: {}", cmd.orderId, e.message)
         }
     }
 
@@ -79,7 +82,9 @@ class ProductService(
         waitTimeMillis = 4000
     )
     @Transactional
-    fun restoreStock(cmd: ProductCommand.RestoreStock.Root) {
+    override fun restoreStock(cmd: ProductCommand.RestoreStock.Root) {
+        logger.info("Processing stock restoration for orderId: {}", cmd.orderId)
+        
         val products = productRepository.findAllByIdForUpdate(cmd.items.map { it.productId }.sorted())
         val variants = productRepository.findAllVariantsByIdForUpdate(cmd.items.map { it.variantId }.sorted())
 
@@ -89,9 +94,11 @@ class ProductService(
 
             variant.restoreStock(item.quantity)
         }
+        
+        logger.info("Successfully restored stock for orderId: {}", cmd.orderId)
     }
 
-    fun retrievePopular(cmd: ProductCommand.RetrievePopularProducts): List<ProductResult.PopularProduct> {
+    override fun retrievePopular(cmd: ProductCommand.RetrievePopularProducts): List<ProductResult.PopularProduct> {
         val salesAggregates = popularProductsDailyRepository.findAllById(
             (1..cmd.limit).map { PopularProductDailyId(cmd.toDate, it) }
         ).toList()
@@ -114,5 +121,5 @@ class ProductService(
     fun retrievePopularWithCaching(cmd: ProductCommand.RetrievePopularProducts): List<ProductResult.PopularProduct>
     = retrievePopular(cmd)
 
-    fun findAllById(ids: List<Long>): List<Product> = productRepository.findAll(ids)
+    override fun findAllById(ids: List<Long>): List<Product> = productRepository.findAll(ids)
 }

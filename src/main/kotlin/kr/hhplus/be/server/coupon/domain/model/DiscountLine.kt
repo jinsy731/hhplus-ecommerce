@@ -3,7 +3,6 @@ package kr.hhplus.be.server.coupon.domain.model
 import jakarta.persistence.*
 import kr.hhplus.be.server.shared.domain.Money
 import java.time.LocalDateTime
-import kotlin.collections.map
 
 /**
  * 할인 유형
@@ -18,7 +17,7 @@ enum class DiscountMethod {
 class DiscountLine(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0L,
+    val id: Long? = null,
 
     @Column(nullable = false)
     val orderItemId: Long,

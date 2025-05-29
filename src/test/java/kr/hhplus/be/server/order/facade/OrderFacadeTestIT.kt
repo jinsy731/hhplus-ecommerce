@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.order.facade
 
 import kr.hhplus.be.server.MySqlDatabaseCleaner
+import kr.hhplus.be.server.order.OrderTestFixture
 import kr.hhplus.be.server.order.domain.OrderResultSender
 import kr.hhplus.be.server.order.infrastructure.persistence.JpaOrderRepository
 import kr.hhplus.be.server.point.UserPointTestFixture
@@ -64,53 +65,28 @@ class OrderFacadeTestIT {
     fun `✅주문 완료 후 상품 랭킹이 업데이트된다`() {
         // given
         val userId = 1L
-        val quantity = 5
-        val savedProduct = ProductTestFixture
+        ProductTestFixture
             .product()
             .withVariant(ProductTestFixture.variant())
             .build().let { productJpaRepository.save(it) }
         userPointJpaRepository.save(UserPointTestFixture.userPoint(userId = userId, balance = Money.of(100000)).build())
-        val cri = createOrderCriteria(
-            productId = savedProduct.id!!,
-            variantId = savedProduct.variants.first().id!!,
-            userId = userId,
-            quantity = quantity
+        val order = OrderTestFixture.order(userId = userId).withStandardItems().build()
+        val savedOrder = orderJpaRepository.save(order)
+        val cri = OrderCriteria.ProcessPayment.Root(
+            orderId = savedOrder.id!!,
+            pgPaymentId = "",
+            paymentMethod = "",
+            timestamp = LocalDateTime.now(),
         )
 
         // when
-        orderFacade.placeOrder(cri)
+        orderFacade.processPayment(cri)
 
         // then
         await()
-            .atMost(5, TimeUnit.SECONDS)
+            .atMost(10, TimeUnit.SECONDS)
             .untilAsserted {
-                verify(productRankingRepository).increaseRanking(
-                    any(),
-                    any(),
-                    any()
-                )
+                verify(rankingService).updateProductRanking(any())
             }
-    }
-
-    private fun createOrderCriteria(
-        productId: Long,
-        variantId: Long,
-        userId: Long,
-        quantity: Int = 5
-    ): OrderCriteria.PlaceOrder.Root {
-        val orderItems = listOf(
-            OrderCriteria.PlaceOrder.Item(
-                productId = productId,
-                variantId = variantId,
-                quantity = quantity
-            )
-        )
-
-        return OrderCriteria.PlaceOrder.Root(
-            userId = userId,
-            items = orderItems,
-            timestamp = LocalDateTime.now(),
-            userCouponIds = listOf()
-        )
     }
 } 

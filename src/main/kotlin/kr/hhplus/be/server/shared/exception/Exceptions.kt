@@ -11,6 +11,7 @@ class CouponOutOfStockException: BusinessException(ErrorCode.COUPON_OUT_OF_STOCK
 
 // Payment
 class AlreadyPaidException: BusinessException(ErrorCode.ALREADY_PAID)
+class InvalidPaymentStatusException: BusinessException(ErrorCode.INVALID_PAYMENT_STATUS)
 
 // Order
 class EmptyOrderItemException(): BusinessException(ErrorCode.EMPTY_ORDER_ITEM)

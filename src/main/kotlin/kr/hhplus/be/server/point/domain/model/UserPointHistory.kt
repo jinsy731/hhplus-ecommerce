@@ -1,16 +1,6 @@
 package kr.hhplus.be.server.point.domain.model
 
-import jakarta.persistence.AttributeOverride
-import jakarta.persistence.Column
-import jakarta.persistence.Embedded
-import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.Index
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import kr.hhplus.be.server.shared.domain.Money
 import java.time.LocalDateTime
 
@@ -20,7 +10,7 @@ import java.time.LocalDateTime
     indexes = [Index(name = "idx_user_point_history_user_id", columnList = "user_id")]
 )class UserPointHistory(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0L,
+    val id: Long? = null,
     @Column(nullable = false)
     val userId: Long,
     @Column(nullable = false) @Enumerated(EnumType.STRING)

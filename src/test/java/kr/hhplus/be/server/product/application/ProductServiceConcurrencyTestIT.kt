@@ -1,9 +1,7 @@
 package kr.hhplus.be.server.product.application
 
 import io.kotest.matchers.shouldBe
-import io.mockk.mockk
 import kr.hhplus.be.server.executeConcurrently
-import kr.hhplus.be.server.order.application.OrderSagaContext
 import kr.hhplus.be.server.product.ProductTestFixture
 import kr.hhplus.be.server.product.application.dto.ProductCommand
 import kr.hhplus.be.server.product.domain.product.model.ProductRepository
@@ -25,6 +23,7 @@ class ProductServiceConcurrencyTestIT @Autowired constructor(
     @Test
     fun `✅재고 감소 동시성 테스트_재고감소 요청을 동시에 보내도 재고가 정확히 반영되어야 한다`() {
         // arrange: 5개의 상품 설정, 각 상품은 2개의 variant를 가지고 있고 각 variant는 100개의 재고를 가짐
+        val orderId = 1L
         val variantIds = mutableListOf<Long>()
         val items = mutableListOf<ProductCommand.ValidateAndReduceStock.Item>()
         val quantity = 1
@@ -49,7 +48,7 @@ class ProductServiceConcurrencyTestIT @Autowired constructor(
                 quantity = quantity
             ))
         }
-        val cmd = ProductCommand.ValidateAndReduceStock.Root(items = items, context = mockk<OrderSagaContext>())
+        val cmd = ProductCommand.ValidateAndReduceStock.Root(items = items, orderId = orderId)
 
         // act: 100개의 동시 요청
         executeConcurrently(100) {

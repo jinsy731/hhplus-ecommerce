@@ -2,9 +2,7 @@ package kr.hhplus.be.server.point.application
 
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.mockk.mockk
 import kr.hhplus.be.server.MySqlDatabaseCleaner
-import kr.hhplus.be.server.order.application.OrderSagaContext
 import kr.hhplus.be.server.point.UserPointTestFixture
 import kr.hhplus.be.server.point.domain.UserPointHistoryRepository
 import kr.hhplus.be.server.point.domain.UserPointRepository
@@ -76,6 +74,7 @@ class UserPointServiceIntegrationTest {
     @Test
     fun `사용자의 포인트를 사용할 수 있다`() {
         // Arrange
+        val orderId = 1L
         val userId = 2L
         val initialBalance = Money.of(10000)
         val initialPoint = UserPointTestFixture.userPoint(userId = userId, balance = initialBalance).build()
@@ -83,7 +82,12 @@ class UserPointServiceIntegrationTest {
 
         val useAmount = Money.of(3000)
         val now = LocalDateTime.now()
-        val command = UserPointCommand.Use(userId, useAmount, now, mockk<OrderSagaContext>())
+        val command = UserPointCommand.Use(
+            userId = userId,
+            amount = useAmount,
+            orderId = orderId,
+            now = now
+        )
 
         // Act
         userPointService.use(command)

@@ -4,10 +4,8 @@ import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.mockk.mockk
 import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.RedisCleaner
-import kr.hhplus.be.server.order.application.OrderSagaContext
 import kr.hhplus.be.server.product.application.dto.ProductCommand
 import kr.hhplus.be.server.product.domain.product.model.Product
 import kr.hhplus.be.server.product.domain.product.model.ProductRepository
@@ -34,7 +32,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import java.time.LocalDate
-import java.time.LocalDateTime
 import kotlin.jvm.optionals.getOrNull
 
 @SpringBootTest
@@ -287,6 +284,7 @@ class ProductServiceTestIT @Autowired constructor(
     @Test
     fun `✅구매 가능한 상품과 옵션은 검증을 통과한다`() {
         // Arrange
+        val orderId = 1L
         val product = testProducts[0]
         val variantId = product.variants[0].id
         val cmd = ProductCommand.ValidateAndReduceStock.Root(
@@ -296,7 +294,7 @@ class ProductServiceTestIT @Autowired constructor(
                     variantId = variantId!!,
                     quantity = 5
                 )
-            ), mockk<OrderSagaContext>()
+            ), orderId = orderId
         )
 
         // Act & Assert
@@ -306,6 +304,7 @@ class ProductServiceTestIT @Autowired constructor(
     @Test
     fun `❌품절된 상품(status=OUT_OF_STOCK)은 구매 불가능하다`() {
         // Arrange
+        val orderId = 1L
         val outOfStockProduct = testProducts[2]
         val variantId = outOfStockProduct.variants[0].id
         val cmd = ProductCommand.ValidateAndReduceStock.Root(
@@ -315,7 +314,7 @@ class ProductServiceTestIT @Autowired constructor(
                     variantId = variantId!!,
                     quantity = 1
                 )
-            ), OrderSagaContext(mockk(), LocalDateTime.now())
+            ), orderId = orderId
         )
 
         // Act & Assert
@@ -330,6 +329,7 @@ class ProductServiceTestIT @Autowired constructor(
     @Test
     fun `❌존재하지 않는 상품은 구매 검증 시 예외가 발생한다`() {
         // Arrange
+        val orderId = 1L
         val nonExistentProductId = 9999L
         val cmd = ProductCommand.ValidateAndReduceStock.Root(
             listOf(
@@ -338,7 +338,7 @@ class ProductServiceTestIT @Autowired constructor(
                     variantId = 1L,
                     quantity = 1
                 )
-            ), OrderSagaContext(mockk(), LocalDateTime.now())
+            ), orderId = orderId
         )
 
         // Act & Assert
@@ -353,6 +353,7 @@ class ProductServiceTestIT @Autowired constructor(
     @Test
     fun `❌주문 수량이 재고보다 많으면 예외가 발생한다`() {
         // Arrange
+        val orderId = 1L
         val product = testProducts[0]
         val variant = product.variants[1] // 재고 5개
         val cmd = ProductCommand.ValidateAndReduceStock.Root(
@@ -362,7 +363,7 @@ class ProductServiceTestIT @Autowired constructor(
                     variantId = variant.id!!,
                     quantity = 10 // 재고보다 많은 수량
                 )
-            ), OrderSagaContext(mockk(), LocalDateTime.now())
+            ), orderId = orderId
         )
 
         // Act & Assert
@@ -377,6 +378,7 @@ class ProductServiceTestIT @Autowired constructor(
     @Test
     fun `✅구매로 재고를 감소시킬 수 있다`() {
         // Arrange
+        val orderId = 1L
         val product = testProducts[0]
         val variant = product.variants[0]
         val initialStock = variant.stock
@@ -388,7 +390,7 @@ class ProductServiceTestIT @Autowired constructor(
                     variantId = variant.id!!,
                     quantity = quantity
                 )
-            ), mockk<OrderSagaContext>()
+            ), orderId = orderId
         )
 
         // Act

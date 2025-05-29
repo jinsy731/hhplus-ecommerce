@@ -9,4 +9,5 @@ interface JpaUserCouponRepository: JpaRepository<UserCoupon, Long> {
     fun findByUserIdAndCouponId(userId: Long, couponId: Long): UserCoupon?
     fun findAllByUserIdAndIdIsIn(userId: Long, ids: List<Long>): List<UserCoupon>
     fun findAllByUserId(userId: Long, pageable: Pageable): Page<UserCoupon>
+    fun findAllByOrderId(orderId: Long): List<UserCoupon>
 }

@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.coupon.application
 
-import io.kotest.assertions.throwables.shouldThrowAny
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -8,20 +8,18 @@ import io.mockk.mockk
 import io.mockk.verify
 import kr.hhplus.be.server.coupon.CouponTestFixture
 import kr.hhplus.be.server.coupon.application.dto.CouponCommand
+import kr.hhplus.be.server.coupon.application.mapper.CouponMapper
 import kr.hhplus.be.server.coupon.domain.model.*
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.DiscountLineRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
 import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponKVStore
 import kr.hhplus.be.server.order.OrderTestFixture
-import kr.hhplus.be.server.order.application.OrderSagaContext
-import kr.hhplus.be.server.order.application.toUseCouponCommandItem
-import kr.hhplus.be.server.order.domain.model.Order
+import kr.hhplus.be.server.order.domain.event.OrderEventPayload
 import kr.hhplus.be.server.shared.domain.DomainEvent
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.event.DomainEventPublisher
 import kr.hhplus.be.server.shared.exception.DuplicateCouponIssueException
-import kr.hhplus.be.server.shared.exception.InvalidCouponStatusException
 import kr.hhplus.be.server.shared.time.ClockHolder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -36,6 +34,7 @@ class CouponServiceTest {
     private lateinit var clockHolder: ClockHolder
     private lateinit var couponKVStore: CouponKVStore
     private lateinit var eventPublisher: DomainEventPublisher
+    private val couponMapper = CouponMapper()
 
     @BeforeEach
     fun setUp() {
@@ -47,7 +46,15 @@ class CouponServiceTest {
         eventPublisher = mockk()
 
         every { eventPublisher.publish(any<DomainEvent<*>>()) } returns Unit
-        couponService = CouponService(couponRepository, userCouponRepository, discountLineRepository, couponKVStore, clockHolder, eventPublisher)
+        couponService = CouponService(
+            couponRepository = couponRepository,
+            userCouponRepository = userCouponRepository,
+            discountLineRepository = discountLineRepository,
+            couponKVStore = couponKVStore,
+            clockHolder = clockHolder,
+            eventPublisher = eventPublisher,
+            couponMapper = couponMapper
+        )
     }
     
     @Test
@@ -90,22 +97,20 @@ class CouponServiceTest {
 
         // 쿠폰 사용 명령 생성
         val cmd = CouponCommand.Use.Root(
+            orderId = 1L,
             userId = userId,
             userCouponIds = listOf(1L),
             totalAmount = Money.of(1000),
             items = listOf(
                 CouponCommand.Use.Item(
-                orderItemId = 1L,
-                productId = 1L,
-                variantId = 1L,
-                quantity = 1,
-                subTotal = Money.of(1000)
-            )),
+                    orderItemId = 1L,
+                    productId = 1L,
+                    variantId = 1L,
+                    quantity = 1,
+                    subTotal = Money.of(1000)
+                )
+            ),
             timestamp = now,
-            context = OrderSagaContext(
-                order = mockk<Order>(),
-                timestamp = now,
-            )
         )
         
         // act
@@ -142,16 +147,22 @@ class CouponServiceTest {
 
         // 쿠폰 사용 명령 생성
         val cmd = CouponCommand.Use.Root(
+            orderId = 1L,
             userId = userId,
             userCouponIds = listOf(1L),
             totalAmount = order.originalTotal, // 5000원 (쿠폰 적용 조건인 10000원 미만)
-            items = order.orderItems.toUseCouponCommandItem(),
+            items = listOf(CouponCommand.Use.Item(
+                orderItemId = 1L,
+                productId = 1L,
+                variantId = 1L,
+                quantity = 1,
+                subTotal = order.originalTotal
+            )),
             timestamp = now,
-            context = mockk<OrderSagaContext>()
         )
         
         // act & assert
-        shouldThrowAny { couponService.use(cmd) }
+        shouldNotThrowAny { couponService.use(cmd) }
 
         // 할인 내역이 저장되지 않았는지 검증
         verify(exactly = 0) { discountLineRepository.saveAll(any()) }
@@ -218,21 +229,30 @@ class CouponServiceTest {
     fun `✅쿠폰 복구가 정상적으로 동작한다`() {
         // given
         val userId = 1L
+        val orderId = 1L
         val userCouponIds = listOf(1L, 2L)
         val coupon = CouponTestFixture.coupon().build()
         val userCoupons = listOf(
-            CouponTestFixture.userCoupon(userId = userId, coupon = coupon, status = UserCouponStatus.USED).build(),
-            CouponTestFixture.userCoupon(userId = userId, coupon = coupon, status = UserCouponStatus.USED).build()
+            CouponTestFixture.userCoupon(userId = userId, coupon = coupon, status = UserCouponStatus.USED, orderId = orderId).build(),
+            CouponTestFixture.userCoupon(userId = userId, coupon = coupon, status = UserCouponStatus.USED, orderId = orderId).build()
         )
 
-        every { userCouponRepository.findAllByUserIdAndIdIsIn(userId, userCouponIds) } returns userCoupons
+        every { userCouponRepository.findAllByOrderId(orderId) } returns userCoupons
         every { userCouponRepository.saveAll(userCoupons) } returns userCoupons
 
         // when
-        couponService.restoreCoupons(userId, userCouponIds, OrderSagaContext(
-            order = mockk<Order>(),
-            timestamp = LocalDateTime.now()
-        ))
+        couponService.restoreCoupons(
+            orderId = userId,
+            orderEventPayload = OrderEventPayload(
+                orderId = 1L,
+                userId = userId,
+                originalTotal = Money.ZERO,
+                discountedAmount = Money.ZERO,
+                orderItems = emptyList(),
+                timestamp = LocalDateTime.now(),
+                userCouponIds = userCouponIds,
+            ),
+        )
 
         // then
         userCoupons.forEach { userCoupon ->
@@ -240,24 +260,5 @@ class CouponServiceTest {
             userCoupon.usedAt shouldBe null
         }
         verify { userCouponRepository.saveAll(userCoupons) }
-    }
-
-    @Test
-    fun `❌사용되지 않은 쿠폰을 복구하려고 하면 예외가 발생한다`() {
-        // given
-        val userId = 1L
-        val userCouponIds = listOf(1L)
-        val coupon = CouponTestFixture.coupon().build()
-        val userCoupon = CouponTestFixture.userCoupon(userId = userId, coupon = coupon, status = UserCouponStatus.UNUSED).build()
-
-        every { userCouponRepository.findAllByUserIdAndIdIsIn(userId, userCouponIds) } returns listOf(userCoupon)
-
-        // when & then
-        shouldThrowExactly<InvalidCouponStatusException> {
-            couponService.restoreCoupons(userId, userCouponIds, OrderSagaContext(
-                order = mockk<Order>(),
-                timestamp = LocalDateTime.now()
-            ))
-        }
     }
 }

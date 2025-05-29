@@ -10,18 +10,18 @@ import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
 
 @Component
-class SpringRankingOrderEventListener(private val rankingService: RankingService) {
+class ApplicationRankingOrderEventListener(private val rankingService: RankingService) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun onOrderCompleted(event: OrderEvent.Completed) {
         logger.info("[{}] Received OrderEvent.Completed: orderId={}, items={}",
-            Thread.currentThread().name, event.payload.order.id, event.payload.order.orderItems)
+            Thread.currentThread().name, event.payload.orderId, event.payload.orderItems)
         rankingService.updateProductRanking(
             RankingCommand.UpdateProductRanking.Root(
-            items = event.payload.order.orderItems.map { RankingCommand.UpdateProductRanking.Item(it.productId, it.quantity.toLong()) },
-            timestamp = event.payload.order.createdAt
+            items = event.payload.orderItems.map { RankingCommand.UpdateProductRanking.Item(it.productId, it.quantity.toLong()) },
+            timestamp = event.payload.timestamp
         ))
     }
 }

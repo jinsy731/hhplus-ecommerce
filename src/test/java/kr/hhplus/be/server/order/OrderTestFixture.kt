@@ -1,10 +1,10 @@
 package kr.hhplus.be.server.order
 
-import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.order.domain.model.Order
 import kr.hhplus.be.server.order.domain.model.OrderItem
 import kr.hhplus.be.server.order.domain.model.OrderItemStatus
 import kr.hhplus.be.server.order.domain.model.OrderStatus
+import kr.hhplus.be.server.shared.domain.Money
 import java.time.LocalDateTime
 
 /**
@@ -15,7 +15,7 @@ object OrderTestFixture {
     
     // 기본 주문 생성 (테스트 의도에 맞게 커스터마이징 가능)
     fun order(
-        id: Long = 1L,
+        id: Long? = null,
         userId: Long = 1L,
         status: OrderStatus = OrderStatus.CREATED,
         originalTotal: Money = Money.of(10000),
@@ -87,7 +87,7 @@ object OrderTestFixture {
     
     // 이중 클래스를 통한 빌더 패턴 구현
     class OrderBuilder(
-        private val id: Long,
+        private val id: Long? = null,
         private val userId: Long,
         private var status: OrderStatus,
         private var originalTotal: Money,
@@ -128,7 +128,7 @@ object OrderTestFixture {
         }
         
         fun withItem(
-            id: Long = items.size.toLong() + 1,
+            id: Long? = null,
             productId: Long = 1L,
             variantId: Long = 1L,
             quantity: Int = 5,
@@ -162,14 +162,18 @@ object OrderTestFixture {
             return this
         }
         
-        fun withStandardItems(): OrderBuilder {
-            return withItem(id = 1L, discountAmount = Money.ZERO)
-                .withItem(id = 2L, discountAmount = Money.ZERO)
+        fun withStandardItems(withId: Boolean = false): OrderBuilder {
+            val id1 = if (withId) 1L else null
+            val id2 = if (withId) 2L else null
+            return withItem(id = id1, discountAmount = Money.ZERO)
+                .withItem(id = id2, discountAmount = Money.ZERO)
         }
         
-        fun withDiscountedItems(): OrderBuilder {
-            return withItem(id = 1L, discountAmount = Money.of(500))
-                .withItem(id = 2L, discountAmount = Money.of(500))
+        fun withDiscountedItems(withId: Boolean = false): OrderBuilder {
+            val id1 = if (withId) 1L else null
+            val id2 = if (withId) 2L else null
+            return withItem(id = id1, discountAmount = Money.of(500))
+                .withItem(id = id2, discountAmount = Money.of(500))
         }
     }
 

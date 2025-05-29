@@ -9,7 +9,7 @@ class OrderItem(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column
-    val id: Long = 0L,
+    val id: Long? = null,
 
     @Column(nullable = false)
     val productId: Long,

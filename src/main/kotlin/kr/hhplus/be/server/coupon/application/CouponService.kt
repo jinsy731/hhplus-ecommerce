@@ -1,7 +1,9 @@
 package kr.hhplus.be.server.coupon.application
 
-import kr.hhplus.be.server.coupon.application.dto.*
-import kr.hhplus.be.server.coupon.domain.CouponEvent
+import kr.hhplus.be.server.coupon.application.dto.CouponCommand
+import kr.hhplus.be.server.coupon.application.dto.CouponResult
+import kr.hhplus.be.server.coupon.application.dto.toDiscountContext
+import kr.hhplus.be.server.coupon.application.port.CouponApplicationService
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.DiscountLineRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
@@ -11,7 +13,7 @@ import kr.hhplus.be.server.coupon.infrastructure.kvstore.IssuedStatus
 import kr.hhplus.be.server.lock.annotation.WithDistributedLock
 import kr.hhplus.be.server.lock.annotation.WithMultiDistributedLock
 import kr.hhplus.be.server.lock.executor.LockType
-import kr.hhplus.be.server.order.application.OrderSagaContext
+import kr.hhplus.be.server.order.domain.event.OrderEventPayload
 import kr.hhplus.be.server.shared.event.DomainEventPublisher
 import kr.hhplus.be.server.shared.exception.CouponOutOfStockException
 import kr.hhplus.be.server.shared.exception.DuplicateCouponIssueException
@@ -32,8 +34,9 @@ class CouponService(
     private val discountLineRepository: DiscountLineRepository,
     private val couponKVStore: CouponKVStore,
     private val clockHolder: ClockHolder,
-    private val eventPublisher: DomainEventPublisher
-    ) {
+    private val eventPublisher: DomainEventPublisher,
+    private val couponMapper: kr.hhplus.be.server.coupon.application.mapper.CouponMapper
+    ) : CouponApplicationService {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @WithDistributedLock(
@@ -41,7 +44,7 @@ class CouponService(
         type = LockType.PUBSUB
     )
     @Transactional
-    fun issueCoupon(cmd: CouponCommand.Issue): CouponResult.Issue {
+    override fun issueCoupon(cmd: CouponCommand.Issue): CouponResult.Issue {
         userCouponRepository.findByUserIdAndCouponId(cmd.userId, cmd.couponId)
             ?.let { throw DuplicateCouponIssueException() }
 
@@ -58,7 +61,7 @@ class CouponService(
     }
 
     @Transactional
-    fun issueCouponAsync(cmd: CouponCommand.Issue): CouponResult.AsyncIssue {
+    override fun issueCouponAsync(cmd: CouponCommand.Issue): CouponResult.AsyncIssue {
         // 1. 중복 검증
         if (couponKVStore.existsIssuedUser(cmd.userId, cmd.couponId)) {
             throw DuplicateCouponIssueException()
@@ -129,42 +132,42 @@ class CouponService(
         maxAttempts = 3,
         backoff = Backoff(delay = 300, multiplier = 1.5)
     )
-    fun use(cmd: CouponCommand.Use.Root): Result<CouponResult.Use> {
+    override fun use(cmd: CouponCommand.Use.Root): Result<CouponResult.Use> {
         return runCatching {
             val discountLines = userCouponRepository
                 .findAllByUserIdAndIdIsIn(cmd.userId, cmd.userCouponIds)
-                .flatMap { it.calculateDiscountAndUse(cmd.toDiscountContext()) }
+                .flatMap { it.calculateDiscountAndUse(cmd.toDiscountContext(), cmd.orderId) }
 
             val savedDiscountLine = discountLineRepository.saveAll(discountLines)
+            val discountInfo = couponMapper.mapToDiscountInfoList(savedDiscountLine)
 
-            CouponResult.Use(discountInfo = savedDiscountLine.toDiscountInfoList())
-        }.onFailure { e ->
-            eventPublisher.publish(CouponEvent.UseFailed(cmd.context.copy(failedReason = e.message ?: "Unknown error")))
-        }.onSuccess {
-            eventPublisher.publish(CouponEvent.Used(cmd.context.copy(discountInfos = it.discountInfo)))
+            CouponResult.Use(discountInfo = discountInfo)
         }
     }
 
     @Transactional
-    fun restoreCoupons(userId: Long, userCouponIds: List<Long>, context: OrderSagaContext) {
-        val userCoupons = userCouponRepository.findAllByUserIdAndIdIsIn(userId, userCouponIds)
+    override fun restoreCoupons(orderId: Long, orderEventPayload: OrderEventPayload) {
+        // orderId로 사용된 쿠폰들을 조회
+        val userCoupons = userCouponRepository.findAllByOrderId(orderId)
 
-        userCoupons.forEach { userCoupon ->
-            userCoupon.restore()
-        }
+        userCoupons.forEach { userCoupon -> userCoupon.restore() }
 
         userCouponRepository.saveAll(userCoupons)
-
-        eventPublisher.publish(CouponEvent.UseRestored(context))
     }
 
     @Transactional(readOnly = true)
-    fun retrieveLists(userId: Long, pageable: Pageable): CouponResult.RetrieveList {
+    override fun retrieveLists(userId: Long, pageable: Pageable): CouponResult.RetrieveList {
         val userCouponPage = userCouponRepository.findAllByUserId(userId, pageable)
 
         return CouponResult.RetrieveList(
-            coupons = userCouponPage.content.map { uc -> uc.toUserCouponData() },
+            coupons = userCouponPage.content.map { uc -> couponMapper.mapToUserCouponData(uc) },
             pageResult = PageResult.of(userCouponPage)
         )
+    }
+
+    @Transactional(readOnly = true)
+    override fun getUsedCouponIdsByOrderId(orderId: Long): List<Long> {
+        val userCoupons = userCouponRepository.findAllByOrderId(orderId)
+        return userCoupons.map { it.id!! }
     }
 }

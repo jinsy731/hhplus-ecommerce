@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.order.domain.model
 
-import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.coupon.application.dto.DiscountInfo
+import kr.hhplus.be.server.shared.domain.Money
 import java.math.BigDecimal
 
 class OrderItems(
@@ -24,7 +24,7 @@ class OrderItems(
 
     fun applyDiscounts(discountInfos: List<DiscountInfo>) {
         discountInfos.forEach { discountLine ->
-            val target = items.find { it.id == discountLine.orderItemId }
+            val target = items.find { it.id != null && it.id == discountLine.orderItemId }
                 ?: throw IllegalStateException("OrderItem not found for discount: ${discountLine.orderItemId}")
             target.applyDiscount(discountLine.amount)
         }

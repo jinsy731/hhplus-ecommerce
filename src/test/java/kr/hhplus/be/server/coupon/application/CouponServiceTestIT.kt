@@ -4,7 +4,6 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.mockk.mockk
 import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.RedisCleaner
 import kr.hhplus.be.server.coupon.CouponTestFixture
@@ -18,8 +17,6 @@ import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponStock
 import kr.hhplus.be.server.coupon.infrastructure.kvstore.IssuedStatus
 import kr.hhplus.be.server.coupon.infrastructure.persistence.JpaUserCouponRepository
 import kr.hhplus.be.server.executeConcurrently
-import kr.hhplus.be.server.order.application.OrderSagaContext
-import kr.hhplus.be.server.order.domain.model.Order
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.event.DomainEventPublisher
 import kr.hhplus.be.server.shared.exception.CouponOutOfStockException
@@ -530,6 +527,7 @@ class CouponServiceTestIT @Autowired constructor(
         
         // 쿠폰 사용 명령 생성
         val useCommand = CouponCommand.Use.Root(
+            orderId = 1L,
             userId = userId,
             userCouponIds = listOf(userCouponId),
             totalAmount = Money.of(20000),
@@ -543,10 +541,6 @@ class CouponServiceTestIT @Autowired constructor(
                 )
             ),
             timestamp = now,
-            context = OrderSagaContext(
-                order = mockk<Order>(),
-                timestamp = LocalDateTime.now()
-            )
         )
 
         // when

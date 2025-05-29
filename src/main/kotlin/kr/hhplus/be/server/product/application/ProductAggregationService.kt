@@ -43,7 +43,7 @@ class ProductAggregationService(
 
         val newLastDailyLogId = productSalesLogs.first().id
         val checkpoint = ProductSalesAggregationDailyCheckpoint(
-            lastAggregatedLogId = newLastDailyLogId,
+            lastAggregatedLogId = newLastDailyLogId!!,
             lastAggregatedAt = LocalDateTime.now())
         productSalesAggregationDailyCheckpointRepository.save(checkpoint)
     }

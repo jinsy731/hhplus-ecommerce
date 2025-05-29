@@ -2,7 +2,6 @@ package kr.hhplus.be.server.coupon.application
 
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.mockk.mockk
 import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.coupon.CouponTestFixture
 import kr.hhplus.be.server.coupon.application.dto.CouponCommand
@@ -10,8 +9,6 @@ import kr.hhplus.be.server.coupon.domain.model.UserCouponStatus
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.infrastructure.persistence.JpaUserCouponRepository
 import kr.hhplus.be.server.executeConcurrently
-import kr.hhplus.be.server.order.application.OrderSagaContext
-import kr.hhplus.be.server.order.domain.model.Order
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.event.DomainEventPublisher
 import org.junit.jupiter.api.AfterEach
@@ -67,7 +64,7 @@ class CouponServiceConcurrencyTestIT @Autowired constructor(
         // act: 10번의 동시 사용 요청
         executeConcurrently(10) {
             try {
-                val result = couponService.use(createUseCouponCommand(1L, listOf(userCoupon.id!!)))
+                val result = couponService.use(createUseCouponCommand(userId = 1L, userCouponIds = listOf(userCoupon.id!!)))
                 if(result.isSuccess) successCnt.incrementAndGet()
                 else throw result.exceptionOrNull() ?: IllegalStateException()
             } catch(e: Throwable) {
@@ -83,15 +80,12 @@ class CouponServiceConcurrencyTestIT @Autowired constructor(
         findUserCoupon!!.status shouldBe UserCouponStatus.USED
     }
     
-    private fun createUseCouponCommand(userId: Long = 1L, userCouponIds: List<Long>) = CouponCommand.Use.Root(
-        userId = 1L,
+    private fun createUseCouponCommand(orderId: Long = 1L, userId: Long = 1L, userCouponIds: List<Long>) = CouponCommand.Use.Root(
+        orderId = orderId,
+        userId = userId,
         userCouponIds = userCouponIds,
         totalAmount = Money.of(1000),
         items = listOf(CouponCommand.Use.Item(1L, 1L, 1L, 10, Money.of(1000))),
         timestamp = LocalDateTime.now(),
-        context = OrderSagaContext(
-            order = mockk<Order>(),
-            timestamp = LocalDateTime.now()
-        )
     )
 }

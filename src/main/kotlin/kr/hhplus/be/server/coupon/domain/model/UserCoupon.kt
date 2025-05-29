@@ -40,13 +40,16 @@ class UserCoupon(
     @Column(nullable = false) @Enumerated(EnumType.STRING)
     var status: UserCouponStatus = UserCouponStatus.UNUSED,
 
+    @Column(nullable = true)
+    var orderId: Long? = null,
+
     @Version
     var version: Long? = null
 ) {
     /**
      * 쿠폰 사용 처리
      */
-    fun use(now: LocalDateTime) {
+    fun use(now: LocalDateTime, orderId: Long) {
         coupon.validatUsability(now)
         check(status == UserCouponStatus.UNUSED) { throw InvalidCouponStatusException() }
         check(expiredAt.isAfter(now)) {
@@ -56,6 +59,7 @@ class UserCoupon(
 
         this.usedAt = now
         this.status = UserCouponStatus.USED
+        this.orderId = orderId
     }
 
     /**
@@ -65,12 +69,13 @@ class UserCoupon(
         check(status == UserCouponStatus.USED) { throw InvalidCouponStatusException() }
         this.usedAt = null
         this.status = UserCouponStatus.UNUSED
+        this.orderId = null
     }
 
-    fun calculateDiscountAndUse(context: DiscountContext.Root): List<DiscountLine> {
+    fun calculateDiscountAndUse(context: DiscountContext.Root, orderId: Long): List<DiscountLine> {
         val applicableItems = coupon.getApplicableItems(context)
 
-        use(context.timestamp)
+        use(context.timestamp, orderId)
 
         val orderItemsDiscountMap = coupon.calculateDiscount(context, applicableItems)
         return DiscountLine.from(
