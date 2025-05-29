@@ -39,7 +39,7 @@ class KafkaMessageProducer(
         }
     }
 
-    private fun generateTopicName(message: KafkaEventMessage): String {
+    private fun generateTopicName(message: KafkaEventMessage<*>): String {
         // eventType 형식: "order.created", "payment.completed" 등
         // 토픽 형식: "order_created.v1", "payment_completed.v1" 등
         return message.eventType.replace(".", "_") + "." + message.version

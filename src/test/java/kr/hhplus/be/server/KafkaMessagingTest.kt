@@ -53,7 +53,7 @@ class KafkaEventListener() {
 
     @KafkaListener(topics = ["test.v1"], groupId = "test-group")
     fun onReceived(
-        @Payload message: KafkaEventMessage,
+        @Payload message: KafkaEventMessage<TestEvent>,
         @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String,
         @Header(KafkaHeaders.RECEIVED_PARTITION) partition: Int,
         @Header(KafkaHeaders.OFFSET) offset: Long,
@@ -74,7 +74,7 @@ class KafkaEventBatchListener() {
 
     @KafkaListener(topics = ["test-batch.v1"], groupId = "test-group", batch = "true")
     fun onReceivedBatch(
-        @Payload message: List<KafkaEventMessage>,
+        @Payload message: List<KafkaEventMessage<TestBatchEvent>>,
         @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String,
         @Header(KafkaHeaders.RECEIVED_PARTITION) partition: Int,
         @Header(KafkaHeaders.OFFSET) offset: Long,
@@ -97,7 +97,7 @@ class KafkaFailEventListener() {
 
     @KafkaListener(topics = ["test-fail.v1"], groupId = "test-group")
     fun onReceivedBatch(
-        @Payload message: KafkaEventMessage,
+        @Payload message: KafkaEventMessage<TestFailEvent>,
         @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String,
         @Header(KafkaHeaders.RECEIVED_PARTITION) partition: Int,
         @Header(KafkaHeaders.OFFSET) offset: Long,
