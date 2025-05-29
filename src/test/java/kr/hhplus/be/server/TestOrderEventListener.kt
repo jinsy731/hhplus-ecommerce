@@ -9,22 +9,15 @@ import org.springframework.kafka.support.KafkaHeaders
 import org.springframework.messaging.handler.annotation.Header
 import org.springframework.messaging.handler.annotation.Payload
 import org.springframework.stereotype.Component
-import java.util.concurrent.CountDownLatch
 
 @Component
 class TestOrderEventListener(
     private val objectMapper: ObjectMapper
 ) {
     companion object {
-        lateinit var latch: CountDownLatch
         var lastReceivedPayload: OrderCompletedPayload? = null
-        
-        init {
-            resetLatch()
-        }
-        
-        fun resetLatch() {
-            latch = CountDownLatch(1)
+
+        fun reset() {
             lastReceivedPayload = null
         }
     }
@@ -39,8 +32,7 @@ class TestOrderEventListener(
     ) {
         println("Received OrderCompleted event: topic=$topic, partition=$partition, offset=$offset, eventId=${message.eventId}")
         
-        lastReceivedPayload = objectMapper.convertValue(message.payload, OrderCompletedPayload::class.java)
-        latch.countDown()
+        lastReceivedPayload = message.payload
         acknowledgment.acknowledge()
     }
 }
