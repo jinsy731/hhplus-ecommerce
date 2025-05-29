@@ -2,19 +2,28 @@ package kr.hhplus.be.server.order.application
 
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.TestOrderEventListener
 import kr.hhplus.be.server.coupon.application.dto.DiscountInfo
+import kr.hhplus.be.server.order.domain.OrderEvent
 import kr.hhplus.be.server.order.domain.OrderRepository
+import kr.hhplus.be.server.order.domain.event.OrderCompletedPayload
 import kr.hhplus.be.server.order.domain.event.PaymentCompletedPayload
+import kr.hhplus.be.server.order.domain.event.toOrderItemEventPayload
 import kr.hhplus.be.server.order.domain.model.Order
 import kr.hhplus.be.server.order.domain.model.OrderStatus
 import kr.hhplus.be.server.product.application.dto.ProductInfo
 import kr.hhplus.be.server.shared.domain.Money
+import kr.hhplus.be.server.shared.event.MessageProducer
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @SpringBootTest
 class OrderServiceTestIT {
@@ -24,6 +33,14 @@ class OrderServiceTestIT {
 
     @Autowired
     private lateinit var orderRepository: OrderRepository
+
+    @MockitoSpyBean
+    private lateinit var messageProducer: MessageProducer
+
+    @BeforeEach
+    fun setUp() {
+        TestOrderEventListener.resetLatch()
+    }
 
     @Test
     @DisplayName("주문 생성 시 주문 정보가 정확하게 저장된다")
@@ -92,6 +109,47 @@ class OrderServiceTestIT {
         // then
         val completedOrder = orderRepository.getById(order.id!!)
         completedOrder.status shouldBe OrderStatus.PAID
+    }
+
+    @Test
+    @DisplayName("주문 완료 시 주문완료 이벤트 메시지가 발행된다")
+    @Transactional
+    fun completeOrder_shouldPublishOrderCompletedEvent() {
+        // given
+        val order = createOrderSheet()
+        val now = LocalDateTime.now()
+        val event = OrderEvent.Completed(
+            payload = OrderCompletedPayload(
+                orderId = order.id!!,
+                userId = order.userId,
+                originalTotal = order.originalTotal,
+                finalTotal = order.finalTotal(),
+                orderItems = order.orderItems.toOrderItemEventPayload(),
+                paymentId = 1L,
+                pgPaymentId = "",
+                timestamp = now
+            )
+        )
+
+        // when
+        orderService.completeOrder(order.id!!, PaymentCompletedPayload(
+            orderId = order.id!!,
+            userId = order.userId,
+            paymentId = 1L,
+            pgPaymentId = "",
+            amount = Money.ZERO,
+            timestamp = now
+        ))
+
+        // then
+        val received = TestOrderEventListener.latch.await(5, TimeUnit.SECONDS)
+        received shouldBe true
+        
+        // 메시지 내용 검증
+        val receivedPayload = TestOrderEventListener.lastReceivedPayload!!
+        receivedPayload.orderId shouldBe order.id
+
+        verify(messageProducer).publish(event)
     }
 
     private fun createOrderCommand(userId: Long = 1L): OrderCommand.Create.Root {
