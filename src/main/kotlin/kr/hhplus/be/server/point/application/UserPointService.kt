@@ -6,7 +6,6 @@ import kr.hhplus.be.server.point.domain.UserPointHistoryRepository
 import kr.hhplus.be.server.point.domain.UserPointRepository
 import kr.hhplus.be.server.point.domain.model.UserPoint
 import kr.hhplus.be.server.point.domain.model.UserPointHistory
-import kr.hhplus.be.server.shared.event.DomainEventPublisher
 import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
@@ -17,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional
 class UserPointService(
     private val userPointRepository: UserPointRepository,
     private val userPointHistoryRepository: UserPointHistoryRepository,
-    private val eventPublisher: DomainEventPublisher
     ) {
 
     @WithDistributedLock(

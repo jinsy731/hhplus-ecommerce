@@ -44,7 +44,6 @@ class PaymentSagaOrchestratorTest {
         paymentSagaOrchestrator = PaymentSagaOrchestrator(
             orderService = orderService,
             paymentClient = paymentClient,
-            eventPublisher = eventPublisher,
             orderSagaOrchestrator = orderSagaOrchestrator,
             couponClient = couponClient,
         )
@@ -148,7 +147,6 @@ class PaymentSagaOrchestratorTest {
             verify(exactly = 0) { paymentClient.processPayment(any()) }
             verify(exactly = 0) { paymentClient.restoreUserPoint(any()) }
             verify(exactly = 1) { orderService.fail(any()) }
-            verify(exactly = 1) { eventPublisher.publish(any<OrderEvent.PaymentFailed>()) }
         }
 
         @Test
@@ -179,7 +177,6 @@ class PaymentSagaOrchestratorTest {
             verify(exactly = 1) { paymentClient.processPayment(any()) }
             verify(exactly = 1) { paymentClient.restoreUserPoint(any()) }
             verify(exactly = 1) { orderService.fail(any()) }
-            verify(exactly = 1) { eventPublisher.publish(any<OrderEvent.PaymentFailed>()) }
         }
 
         @Test
@@ -233,7 +230,6 @@ class PaymentSagaOrchestratorTest {
                 verify(exactly = 1) { paymentClient.restoreUserPoint(any()) } // 포인트 복구 보상
                 verify(exactly = 1) { paymentClient.failPayment(any()) } // 포인트 복구 보상
                 verify(exactly = 1) { orderService.fail(any()) }
-                verify(exactly = 1) { eventPublisher.publish(any<OrderEvent.PaymentFailed>()) }
             }
         }
 
@@ -263,7 +259,6 @@ class PaymentSagaOrchestratorTest {
             // then
             verify(exactly = 1) { paymentClient.restoreUserPoint(any()) }
             verify(exactly = 1) { orderService.fail(any()) }
-            verify(exactly = 1) { eventPublisher.publish(any<OrderEvent.PaymentFailed>()) }
         }
     }
 
@@ -285,7 +280,6 @@ class PaymentSagaOrchestratorTest {
             
             // when & then
             shouldThrowAny { paymentSagaOrchestrator.executePaymentSaga(paymentCommand) }
-            verify(exactly = 1) { eventPublisher.publish(any<OrderEvent.PaymentFailed>()) }
         }
     }
 } 

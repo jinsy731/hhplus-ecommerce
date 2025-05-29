@@ -52,7 +52,6 @@ class CouponServiceTest {
             discountLineRepository = discountLineRepository,
             couponKVStore = couponKVStore,
             clockHolder = clockHolder,
-            eventPublisher = eventPublisher,
             couponMapper = couponMapper
         )
     }

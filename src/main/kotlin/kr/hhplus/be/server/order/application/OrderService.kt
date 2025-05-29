@@ -1,20 +1,19 @@
 package kr.hhplus.be.server.order.application
 
 import kr.hhplus.be.server.coupon.application.dto.DiscountInfo
-import kr.hhplus.be.server.order.domain.OrderEvent
+import kr.hhplus.be.server.order.domain.OrderEventPublisher
 import kr.hhplus.be.server.order.domain.OrderRepository
 import kr.hhplus.be.server.order.domain.event.PaymentCompletedPayload
 import kr.hhplus.be.server.order.domain.event.toOrderCompletedPayload
 import kr.hhplus.be.server.order.domain.event.toOrderEventPayload
 import kr.hhplus.be.server.order.domain.model.Order
-import kr.hhplus.be.server.shared.event.DomainEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class OrderService(
     private val orderRepository: OrderRepository,
-    private val eventPublisher: DomainEventPublisher
+    private val orderEventPublisher: OrderEventPublisher
 ) {
 
     /**
@@ -47,11 +46,6 @@ class OrderService(
     fun createOrder(cmd: OrderCommand.Create.Root): Order {
         val order = Order.create(cmd.toOrderCreateContext())
         val savedOrder = orderRepository.save(order)
-
-        eventPublisher.publish(OrderEvent.Created(
-            savedOrder.toOrderEventPayload(timestamp = cmd.timestamp)
-        ))
-
         return savedOrder
     }
 
@@ -63,23 +57,23 @@ class OrderService(
             val completedOrder = orderRepository.save(order)
             
             // 주문 완료 이벤트 발행
-            eventPublisher.publish(OrderEvent.Completed(
+            orderEventPublisher.publishOrderCompleted(
                 completedOrder.toOrderCompletedPayload(
                     paymentId = paymentCompletedPayload.paymentId,
                     pgPaymentId = paymentCompletedPayload.pgPaymentId,
                     timestamp = paymentCompletedPayload.timestamp
                 )
-            ))
+            )
             
             completedOrder
         }.onFailure { e ->
             val order = orderRepository.getById(orderId)
-            eventPublisher.publish(OrderEvent.Failed(
+            orderEventPublisher.publishOrderFailed(
                 order.toOrderEventPayload(
                     failedReason = e.message ?: "Unknown error",
                     timestamp = paymentCompletedPayload.timestamp
                 )
-            ))
+            )
         }
     }
 

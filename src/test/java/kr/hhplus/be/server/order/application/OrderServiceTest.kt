@@ -3,27 +3,25 @@ package kr.hhplus.be.server.order.application
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.shouldBe
 import kr.hhplus.be.server.order.OrderTestFixture
+import kr.hhplus.be.server.order.domain.OrderEventPublisher
 import kr.hhplus.be.server.order.domain.OrderRepository
 import kr.hhplus.be.server.order.domain.event.PaymentCompletedPayload
 import kr.hhplus.be.server.order.domain.model.Order
 import kr.hhplus.be.server.order.domain.model.OrderStatus
 import kr.hhplus.be.server.product.application.dto.ProductInfo
 import kr.hhplus.be.server.shared.TestEntityUtils
-import kr.hhplus.be.server.shared.domain.DomainEvent
 import kr.hhplus.be.server.shared.domain.Money
-import kr.hhplus.be.server.shared.event.DomainEventPublisher
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.time.LocalDateTime
 
 class OrderServiceTest {
     private lateinit var orderService: OrderService
     private lateinit var orderRepository: OrderRepository
-    private lateinit var eventPublisher: DomainEventPublisher
+    private lateinit var eventPublisher: OrderEventPublisher
     private lateinit var testOrder: Order
 
     @BeforeEach
@@ -64,7 +62,6 @@ class OrderServiceTest {
         val order = orderService.createOrder(cmd)
 
         // assert
-        verify(eventPublisher).publish(any<DomainEvent<*>>())
         order.status shouldBe OrderStatus.CREATED
     }
 
