@@ -1,5 +1,3 @@
-import org.gradle.kotlin.dsl.implementation
-
 plugins {
 	kotlin("jvm") version "1.9.0"
 	kotlin("kapt") version "1.9.0"
@@ -70,6 +68,7 @@ dependencies {
 	implementation("org.redisson:redisson-spring-boot-starter:3.23.2")
 	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 	implementation("org.springframework.boot:spring-boot-starter-cache")
+	implementation("org.springframework.kafka:spring-kafka")
     // DB
 	runtimeOnly("com.mysql:mysql-connector-j")
 
@@ -86,7 +85,10 @@ dependencies {
 	testImplementation("org.testcontainers:mysql")
 	testImplementation("io.kotest:kotest-assertions-core:5.8.0")
 	testImplementation("io.mockk:mockk:1.13.17")
+	testImplementation("org.springframework.kafka:spring-kafka-test")
+	testImplementation("org.testcontainers:kafka")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(kotlin("test"))
 }
 
 tasks.withType<Test> {
