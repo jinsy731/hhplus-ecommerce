@@ -2,7 +2,6 @@ package kr.hhplus.be.server.order.facade
 
 import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.order.OrderTestFixture
-import kr.hhplus.be.server.order.domain.OrderResultSender
 import kr.hhplus.be.server.order.infrastructure.persistence.JpaOrderRepository
 import kr.hhplus.be.server.point.UserPointTestFixture
 import kr.hhplus.be.server.point.infrastructure.JpaUserPointRepository
@@ -15,6 +14,7 @@ import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -45,9 +45,6 @@ class OrderFacadeTestIT {
 
     @Autowired
     private lateinit var databaseCleaner: MySqlDatabaseCleaner
-
-    @MockitoSpyBean
-    private lateinit var orderResultSender: OrderResultSender
 
     @MockitoSpyBean
     private lateinit var rankingService: RankingService
@@ -86,7 +83,7 @@ class OrderFacadeTestIT {
         await()
             .atMost(10, TimeUnit.SECONDS)
             .untilAsserted {
-                verify(rankingService).updateProductRanking(any())
+                verify(rankingService, times(1)).updateProductRanking(any())
             }
     }
 } 

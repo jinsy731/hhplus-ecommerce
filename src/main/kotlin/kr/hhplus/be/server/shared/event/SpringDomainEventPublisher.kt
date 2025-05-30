@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
 @Component
 class SpringDomainEventPublisher(
     private val publisher: ApplicationEventPublisher,
-    private val kafkaEventProducer: KafkaEventProducer
+    private val messageProducer: MessageProducer
 ): DomainEventPublisher {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -17,7 +17,7 @@ class SpringDomainEventPublisher(
         publisher.publishEvent(event)
         
         // Kafka로 이벤트 발행 (분산 처리용)
-        kafkaEventProducer.publish(event)
+        messageProducer.publish(event)
         
         logger.info("[{}] Event Published: {} {}", Thread.currentThread().name, event.eventId, event.eventType)
     }

@@ -1,12 +1,9 @@
 package kr.hhplus.be.server.order.application.saga
 
 import kr.hhplus.be.server.order.application.*
-import kr.hhplus.be.server.order.domain.OrderEvent
 import kr.hhplus.be.server.order.domain.client.*
 import kr.hhplus.be.server.order.domain.event.PaymentCompletedPayload
-import kr.hhplus.be.server.order.domain.event.toOrderEventPayload
 import kr.hhplus.be.server.order.domain.model.Order
-import kr.hhplus.be.server.shared.event.DomainEventPublisher
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -39,7 +36,6 @@ private data class PaymentSagaContext(
 class PaymentSagaOrchestrator(
     private val orderService: OrderService,
     private val paymentClient: PaymentClient,
-    private val eventPublisher: DomainEventPublisher,
     private val orderSagaOrchestrator: OrderSagaOrchestrator,
     private val couponClient: CouponClient
 ) {
@@ -190,8 +186,6 @@ class PaymentSagaOrchestrator(
         compensateOrderSaga(context)
 
         failOrder(context)
-        // 결제 실패 이벤트 발행
-        publishPaymentFailedEvent(context, ex.message ?: "Unknown error")
     }
     
     /**
@@ -307,25 +301,6 @@ class PaymentSagaOrchestrator(
             }
         } else {
             logger.warn("Cannot fail order - order is null")
-        }
-    }
-    
-    /**
-     * 결제 실패 이벤트 발행
-     */
-    private fun publishPaymentFailedEvent(context: PaymentSagaContext, failedReason: String) {
-        val orderInfo = context.orderInfo
-        if (orderInfo != null) {
-            runCatching {
-                // OrderInfo를 사용하여 이벤트 발행 (lazy loading 문제 해결)
-                eventPublisher.publish(OrderEvent.PaymentFailed(
-                    orderInfo.toOrderEventPayload(
-                        failedReason = failedReason,
-                        timestamp = context.cmd.timestamp
-                    )
-                ))
-                logger.info("Published payment failed event for order: {}", orderInfo.id)
-            }.onFailure { logger.error("Failed to publish payment failed event for order: {}", orderInfo.id, it) }
         }
     }
 }

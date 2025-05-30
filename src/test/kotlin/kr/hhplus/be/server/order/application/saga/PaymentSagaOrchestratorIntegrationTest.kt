@@ -172,10 +172,6 @@ class PaymentSagaOrchestratorIntegrationTest {
             // 결제 기록이 생성되지 않았는지 확인
             val payments = paymentRepository.findByOrderId(savedPoorOrder.id!!)
             payments.shouldBeNull()
-
-            // 실패 이벤트 발행 검증
-            val paymentFailedEvents = applicationEvents.stream(OrderEvent.PaymentFailed::class.java).toList()
-            paymentFailedEvents.size shouldBe 1
         }
 
         @Test
@@ -228,10 +224,6 @@ class PaymentSagaOrchestratorIntegrationTest {
             // 주문 상태 검증
             val savedOrder = orderRepository.findById(testOrder.id!!).orElseThrow()
             savedOrder.status shouldNotBe OrderStatus.PAID
-
-            // 실패 이벤트 발행 검증
-            val paymentFailedEvents = applicationEvents.stream(OrderEvent.PaymentFailed::class.java).toList()
-            paymentFailedEvents.isNotEmpty() shouldBe true
         }
     }
 

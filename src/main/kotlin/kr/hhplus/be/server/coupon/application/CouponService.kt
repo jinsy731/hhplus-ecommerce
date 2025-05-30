@@ -3,6 +3,7 @@ package kr.hhplus.be.server.coupon.application
 import kr.hhplus.be.server.coupon.application.dto.CouponCommand
 import kr.hhplus.be.server.coupon.application.dto.CouponResult
 import kr.hhplus.be.server.coupon.application.dto.toDiscountContext
+import kr.hhplus.be.server.coupon.application.mapper.CouponMapper
 import kr.hhplus.be.server.coupon.application.port.CouponApplicationService
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.DiscountLineRepository
@@ -14,7 +15,6 @@ import kr.hhplus.be.server.lock.annotation.WithDistributedLock
 import kr.hhplus.be.server.lock.annotation.WithMultiDistributedLock
 import kr.hhplus.be.server.lock.executor.LockType
 import kr.hhplus.be.server.order.domain.event.OrderEventPayload
-import kr.hhplus.be.server.shared.event.DomainEventPublisher
 import kr.hhplus.be.server.shared.exception.CouponOutOfStockException
 import kr.hhplus.be.server.shared.exception.DuplicateCouponIssueException
 import kr.hhplus.be.server.shared.time.ClockHolder
@@ -34,8 +34,7 @@ class CouponService(
     private val discountLineRepository: DiscountLineRepository,
     private val couponKVStore: CouponKVStore,
     private val clockHolder: ClockHolder,
-    private val eventPublisher: DomainEventPublisher,
-    private val couponMapper: kr.hhplus.be.server.coupon.application.mapper.CouponMapper
+    private val couponMapper: CouponMapper
     ) : CouponApplicationService {
     private val logger = LoggerFactory.getLogger(javaClass)
 

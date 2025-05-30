@@ -1,7 +1,9 @@
 package kr.hhplus.be.server.order.application
 
 import io.kotest.matchers.comparables.shouldBeGreaterThan
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.TestOrderEventListener
 import kr.hhplus.be.server.coupon.application.dto.DiscountInfo
 import kr.hhplus.be.server.order.domain.OrderRepository
 import kr.hhplus.be.server.order.domain.event.PaymentCompletedPayload
@@ -9,12 +11,15 @@ import kr.hhplus.be.server.order.domain.model.Order
 import kr.hhplus.be.server.order.domain.model.OrderStatus
 import kr.hhplus.be.server.product.application.dto.ProductInfo
 import kr.hhplus.be.server.shared.domain.Money
+import org.awaitility.Awaitility.await
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @SpringBootTest
 class OrderServiceTestIT {
@@ -24,6 +29,11 @@ class OrderServiceTestIT {
 
     @Autowired
     private lateinit var orderRepository: OrderRepository
+
+    @BeforeEach
+    fun setUp() {
+        TestOrderEventListener.reset()
+    }
 
     @Test
     @DisplayName("주문 생성 시 주문 정보가 정확하게 저장된다")
@@ -92,6 +102,31 @@ class OrderServiceTestIT {
         // then
         val completedOrder = orderRepository.getById(order.id!!)
         completedOrder.status shouldBe OrderStatus.PAID
+    }
+
+    @Test
+    @DisplayName("주문 완료 시 주문완료 이벤트 메시지가 발행된다")
+    fun completeOrder_shouldPublishOrderCompletedEvent() {
+        // given
+        val order = createOrderSheet()
+        val now = LocalDateTime.now()
+
+        // when
+        orderService.completeOrder(order.id!!, PaymentCompletedPayload(
+            orderId = order.id!!,
+            userId = order.userId,
+            paymentId = 1L,
+            pgPaymentId = "",
+            amount = Money.ZERO,
+            timestamp = now
+        ))
+
+        // then
+        await().atMost(10, TimeUnit.SECONDS).untilAsserted {
+            val receivedPayload = TestOrderEventListener.lastReceivedPayload
+            receivedPayload.shouldNotBeNull()
+            receivedPayload.orderId shouldBe order.id
+        }
     }
 
     private fun createOrderCommand(userId: Long = 1L): OrderCommand.Create.Root {

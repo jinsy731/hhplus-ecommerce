@@ -1,20 +1,19 @@
 package kr.hhplus.be.server.payment.application
 
 import jakarta.transaction.Transactional
-import kr.hhplus.be.server.payment.domain.PaymentEvent
+import kr.hhplus.be.server.payment.domain.PaymentEventPublisher
 import kr.hhplus.be.server.payment.domain.PaymentRepository
 import kr.hhplus.be.server.payment.domain.model.Payment
 import kr.hhplus.be.server.payment.infrastructure.client.PgClient
 import kr.hhplus.be.server.payment.infrastructure.client.PgPaymentRequest
 import kr.hhplus.be.server.payment.infrastructure.client.PgPaymentStatus
-import kr.hhplus.be.server.shared.event.DomainEventPublisher
 import kr.hhplus.be.server.shared.exception.AlreadyPaidException
 import org.springframework.stereotype.Service
 
 @Service
 class PaymentService(
     private val paymentRepository: PaymentRepository,
-    private val eventPublisher: DomainEventPublisher,
+    private val paymentEventPublisher: PaymentEventPublisher,
     private val pgClient: PgClient
 ) {
 
@@ -25,13 +24,9 @@ class PaymentService(
             if (paymentRepository.hasSuccessfulPaymentByOrderId(cmd.order.id)) {
                 throw AlreadyPaidException()
             }
-            
+
             val payment = Payment.create(cmd.toPreparePaymentContext())
             paymentRepository.save(payment)
-        }.onFailure { e ->
-            eventPublisher.publish(PaymentEvent.InitializingFailed(createEventPayload(cmd.order.id, null, null, cmd.order.originalTotal, cmd.timestamp, e.message)))
-        }.onSuccess {
-            eventPublisher.publish(PaymentEvent.Initialized(createEventPayload(cmd.order.id, it.id, null, cmd.order.originalTotal, cmd.timestamp)))
         }
     }
 
@@ -114,9 +109,9 @@ class PaymentService(
                 message = cmd.failedReason
             )
         }.onFailure { e ->
-            eventPublisher.publish(PaymentEvent.FailureFailed(createEventPayload(cmd.orderId, cmd.paymentId, cmd.pgPaymentId, cmd.amount, cmd.timestamp, "결제 실패 처리 중 오류: ${e.message}")))
+            paymentEventPublisher.publishPaymentFailureFailed(createEventPayload(cmd.orderId, cmd.paymentId, cmd.pgPaymentId, cmd.amount, cmd.timestamp, "결제 실패 처리 중 오류: ${e.message}"))
         }.onSuccess { result ->
-            eventPublisher.publish(PaymentEvent.Failed(createEventPayload(cmd.orderId, cmd.paymentId, cmd.pgPaymentId, cmd.amount, cmd.timestamp, cmd.failedReason)))
+            paymentEventPublisher.publishPaymentFailed(createEventPayload(cmd.orderId, cmd.paymentId, cmd.pgPaymentId, cmd.amount, cmd.timestamp, cmd.failedReason))
         }
     }
     

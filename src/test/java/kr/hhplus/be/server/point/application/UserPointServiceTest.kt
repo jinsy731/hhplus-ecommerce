@@ -10,9 +10,7 @@ import kr.hhplus.be.server.point.domain.UserPointRepository
 import kr.hhplus.be.server.point.domain.model.TransactionType
 import kr.hhplus.be.server.point.domain.model.UserPoint
 import kr.hhplus.be.server.point.domain.model.UserPointHistory
-import kr.hhplus.be.server.shared.domain.DomainEvent
 import kr.hhplus.be.server.shared.domain.Money
-import kr.hhplus.be.server.shared.event.DomainEventPublisher
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -21,15 +19,12 @@ class UserPointServiceTest {
     private lateinit var userPointRepository: UserPointRepository
     private lateinit var userPointHistoryRepository: UserPointHistoryRepository
     private lateinit var pointService: UserPointService
-    private lateinit var eventPublisher: DomainEventPublisher
 
     @BeforeEach
     fun setUp() {
         userPointRepository = mockk()
         userPointHistoryRepository = mockk()
-        eventPublisher = mockk()
-        every { eventPublisher.publish(any<DomainEvent<*>>()) } returns Unit
-        pointService = UserPointService(userPointRepository, userPointHistoryRepository, eventPublisher)
+        pointService = UserPointService(userPointRepository, userPointHistoryRepository)
     }
 
     @Test
