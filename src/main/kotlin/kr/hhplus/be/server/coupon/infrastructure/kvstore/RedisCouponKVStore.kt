@@ -1,11 +1,11 @@
 package kr.hhplus.be.server.coupon.infrastructure.kvstore
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import kr.hhplus.be.server.coupon.application.CouponKeyGenerator
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.core.script.RedisScript
 import org.springframework.stereotype.Component
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import java.time.Instant
 
 @Component
@@ -286,5 +286,83 @@ class RedisCouponKVStore(
     override fun countFailedIssueRequestQueue(couponId: Long): Long {
         val key = CouponKeyGenerator.getFailedIssueRequestQueueKey(couponId)
         return redisTemplate.opsForList().size(key) ?: 0
+    }
+
+    // Redis + Kafka 개선된 발급을 위한 메서드들
+    
+    /**
+     * Lua Script를 활용한 원자적 쿠폰 발급 사전 검증 및 처리
+     */
+    override fun validateAndMarkCouponIssue(userId: Long, couponId: Long): CouponIssueValidationResult {
+        val validateAndMarkScript = """
+            local stockKey = KEYS[1]
+            local issuedSetKey = KEYS[2] 
+            local userId = ARGV[1]
+            
+            -- 1. 재고 정보 확인
+            local stockData = redis.call('GET', stockKey)
+            if not stockData then
+                return { 'INVALID', 'COUPON_NOT_FOUND', '쿠폰을 찾을 수 없습니다.' }
+            end
+            
+            -- 2. 중복 발급 체크
+            if redis.call('SISMEMBER', issuedSetKey, userId) == 1 then
+                return { 'INVALID', 'DUPLICATE_ISSUE', '이미 발급받은 쿠폰입니다.' }
+            end
+            
+            -- 3. 재고 파싱 및 검증 (stock은 최대 발급 수량)
+            local stock = cjson.decode(stockData)
+            local currentIssued = redis.call('SCARD', issuedSetKey)
+            local remainingStock = stock.stock - currentIssued
+            
+            if remainingStock < 1 then
+                return { 'INVALID', 'OUT_OF_STOCK', '쿠폰 재고가 부족합니다.' }
+            end
+            
+            -- 4. 검증 성공 시 발급 처리
+            redis.call('SADD', issuedSetKey, userId)
+            
+            return { 'VALID', nil, nil }
+        """.trimIndent()
+        
+        val stockKey = CouponKeyGenerator.getStockKey(couponId)
+        val issuedSetKey = CouponKeyGenerator.getIssuedUserSetKey(couponId)
+        
+        val keys = listOf(stockKey, issuedSetKey)
+        val args = listOf(userId.toString())
+        
+        try {
+            val result = redisTemplate.execute(
+                RedisScript.of(validateAndMarkScript, List::class.java),
+                keys, 
+                *args.toTypedArray()
+            ) as? List<String>
+            
+            return when (result?.get(0)) {
+                "VALID" -> CouponIssueValidationResult.success()
+                "INVALID" -> {
+                    val errorCode = result.getOrNull(1) ?: "UNKNOWN_ERROR"
+                    val errorMessage = result.getOrNull(2) ?: "알 수 없는 오류가 발생했습니다."
+                    CouponIssueValidationResult.failure(errorCode, errorMessage)
+                }
+                else -> CouponIssueValidationResult.failure("SCRIPT_ERROR", "Redis 스크립트 실행 중 오류가 발생했습니다.")
+            }
+        } catch (e: Exception) {
+            return CouponIssueValidationResult.failure("REDIS_ERROR", "Redis 처리 중 오류가 발생했습니다: ${e.message}")
+        }
+    }
+    
+    /**
+     * 쿠폰 발급 실패 시 롤백 처리 (보상 로직)
+     * 단순한 연산이므로 Lua Script 없이 직접 처리
+     */
+    override fun rollbackCouponIssue(userId: Long, couponId: Long): Boolean {
+        return try {
+            val issuedSetKey = CouponKeyGenerator.getIssuedUserSetKey(couponId)
+            val result = redisTemplate.opsForSet().remove(issuedSetKey, userId.toString())
+            result != null && result > 0
+        } catch (e: Exception) {
+            false
+        }
     }
 } 
