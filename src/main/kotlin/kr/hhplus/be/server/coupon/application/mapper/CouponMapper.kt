@@ -2,6 +2,7 @@ package kr.hhplus.be.server.coupon.application.mapper
 
 import kr.hhplus.be.server.coupon.application.dto.CouponResult
 import kr.hhplus.be.server.coupon.application.dto.DiscountInfo
+import kr.hhplus.be.server.coupon.domain.model.Coupon
 import kr.hhplus.be.server.coupon.domain.model.DiscountLine
 import kr.hhplus.be.server.coupon.domain.model.UserCoupon
 import org.springframework.stereotype.Component
@@ -20,14 +21,14 @@ class CouponMapper {
         }
     }
 
-    fun mapToUserCouponData(userCoupon: UserCoupon): CouponResult.UserCouponData {
+    fun mapToUserCouponData(userCoupon: UserCoupon, coupon: Coupon): CouponResult.UserCouponData {
         return CouponResult.UserCouponData(
             id = userCoupon.id!!,
-            couponId = userCoupon.coupon.id!!,
-            couponName = userCoupon.coupon.name,
-            description = userCoupon.coupon.description,
-            discountPolicyName = userCoupon.coupon.discountPolicy.name,
-            value = userCoupon.coupon.discountPolicy.discountType.getDiscountValue(),
+            couponId = userCoupon.couponId,
+            couponName = coupon.name,
+            description = coupon.description,
+            discountPolicyName = coupon.discountPolicy.name,
+            value = coupon.discountPolicy.discountType.getDiscountValue(),
             status = userCoupon.status.name,
             expiredAt = userCoupon.expiredAt
         )

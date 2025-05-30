@@ -86,7 +86,7 @@ class OrderSagaOrchestratorIntegrationTest {
         // 테스트용 사용자 쿠폰 생성
         testUserCoupon = CouponTestFixture.userCoupon(
             userId = 1L,
-            coupon = testCoupon
+            couponId = testCoupon.id!!
         ).build()
         testUserCoupon = userCouponRepository.save(testUserCoupon)
 
@@ -305,7 +305,7 @@ class OrderSagaOrchestratorIntegrationTest {
 
             val secondUserCoupon = CouponTestFixture.userCoupon(
                 userId = 1L,
-                coupon = savedSecondCoupon
+                couponId = savedSecondCoupon.id!!
             ).build()
             val savedSecondUserCoupon = userCouponRepository.save(secondUserCoupon)
 
@@ -351,7 +351,7 @@ class OrderSagaOrchestratorIntegrationTest {
 
             val highMinOrderUserCoupon = CouponTestFixture.userCoupon(
                 userId = 1L,
-                coupon = savedHighMinOrderCoupon
+                couponId = savedHighMinOrderCoupon.id!!
             ).build()
             val savedHighMinOrderUserCoupon = userCouponRepository.save(highMinOrderUserCoupon)
 

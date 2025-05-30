@@ -23,7 +23,6 @@ class CouponIssueBatchService(
 
     @Transactional
     fun processIssueRequest() {
-        logger.info("[processIssueRequest] 시작")
         val couponId = couponKVStore.peekFromIssueRequestedCouponIdList() ?: return
 
         try {

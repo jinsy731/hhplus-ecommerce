@@ -1,24 +1,24 @@
 package kr.hhplus.be.server.coupon.application
 
-import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.*
 import kr.hhplus.be.server.coupon.CouponTestFixture
 import kr.hhplus.be.server.coupon.application.dto.CouponCommand
 import kr.hhplus.be.server.coupon.application.mapper.CouponMapper
 import kr.hhplus.be.server.coupon.domain.model.*
+import kr.hhplus.be.server.coupon.domain.port.CouponEventPublisher
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.DiscountLineRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
+import kr.hhplus.be.server.coupon.domain.service.CouponDomainService
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponIssueValidationResult
 import kr.hhplus.be.server.coupon.infrastructure.kvstore.CouponKVStore
+import kr.hhplus.be.server.coupon.infrastructure.kvstore.IssuedStatus
 import kr.hhplus.be.server.order.OrderTestFixture
 import kr.hhplus.be.server.order.domain.event.OrderEventPayload
-import kr.hhplus.be.server.shared.domain.DomainEvent
 import kr.hhplus.be.server.shared.domain.Money
-import kr.hhplus.be.server.shared.event.DomainEventPublisher
+import kr.hhplus.be.server.shared.exception.CouponOutOfStockException
 import kr.hhplus.be.server.shared.exception.DuplicateCouponIssueException
 import kr.hhplus.be.server.shared.time.ClockHolder
 import org.junit.jupiter.api.BeforeEach
@@ -33,7 +33,8 @@ class CouponServiceTest {
     private lateinit var couponService: CouponService
     private lateinit var clockHolder: ClockHolder
     private lateinit var couponKVStore: CouponKVStore
-    private lateinit var eventPublisher: DomainEventPublisher
+    private lateinit var eventPublisher: CouponEventPublisher
+    private lateinit var couponDomainService: CouponDomainService
     private val couponMapper = CouponMapper()
 
     @BeforeEach
@@ -44,15 +45,22 @@ class CouponServiceTest {
         clockHolder = mockk()
         couponKVStore = mockk()
         eventPublisher = mockk()
+        couponDomainService = mockk()
 
-        every { eventPublisher.publish(any<DomainEvent<*>>()) } returns Unit
+        // 기본 mock 설정
+        every { couponKVStore.setIssuedStatus(any(), any(), any()) } just Runs
+        every { couponKVStore.rollbackCouponIssue(any(), any()) } returns true
+        every { eventPublisher.publishIssueRequested(any()) } just Runs
+
         couponService = CouponService(
             couponRepository = couponRepository,
             userCouponRepository = userCouponRepository,
             discountLineRepository = discountLineRepository,
             couponKVStore = couponKVStore,
             clockHolder = clockHolder,
-            couponMapper = couponMapper
+            couponMapper = couponMapper,
+            couponEventPublisher = eventPublisher,
+            couponDomainService = couponDomainService,
         )
     }
     
@@ -78,7 +86,7 @@ class CouponServiceTest {
         val userCoupon = CouponTestFixture.userCoupon(
             id = 1L,
             userId = userId,
-            coupon = coupon
+            couponId = 1L
         ).build()
 
         // 할인 내역 생성
@@ -91,6 +99,7 @@ class CouponServiceTest {
 
         // Mock 설정
         every { userCouponRepository.findAllByUserIdAndIdIsIn(userId, listOf(1L)) } returns listOf(userCoupon)
+        every { couponDomainService.calculateDiscountAndUse(any(), any(), any()) } returns discountLine
         every { discountLineRepository.saveAll(any()) } returns discountLine
         every { clockHolder.getNowInLocalDateTime() } returns now
 
@@ -118,6 +127,7 @@ class CouponServiceTest {
         // assert
         result.discountInfo.first()
         verify(exactly = 1) { discountLineRepository.saveAll(any()) }
+        verify(exactly = 1) { couponDomainService.calculateDiscountAndUse(any(), any(), any()) }
     }
 
     @Test
@@ -126,23 +136,19 @@ class CouponServiceTest {
         val userId = 1L
         val now = LocalDateTime.now()
         
-        // 10000원 이상 구매 시 적용되는 5000원 할인 쿠폰 생성
-        val coupon = CouponTestFixture.validFixedAmountCoupon()
-        
-        // 미사용 상태의 사용자 쿠폰 생성
+        // 사용자 쿠폰 생성
         val userCoupon = CouponTestFixture.userCoupon(
             id = 1L,
             userId = userId,
-            coupon = coupon
+            couponId = 1L
         ).build()
 
         // 금액이 적은 주문 생성 (5000원, 10000원 미만으로 쿠폰 적용 조건 미충족)
         val order = OrderTestFixture.lowAmountOrder(userId)
 
-        // Mock 설정
+        // Mock 설정 - 도메인 서비스에서 예외 발생
         every { userCouponRepository.findAllByUserIdAndIdIsIn(userId, listOf(1L)) } returns listOf(userCoupon)
-        every { userCouponRepository.saveAll(any()) } returns listOf(userCoupon)
-        every { discountLineRepository.saveAll(any()) } returns listOf(mockk())
+        every { couponDomainService.calculateDiscountAndUse(any(), any(), any()) } throws RuntimeException("쿠폰 적용 조건 미충족")
 
         // 쿠폰 사용 명령 생성
         val cmd = CouponCommand.Use.Root(
@@ -161,12 +167,12 @@ class CouponServiceTest {
         )
         
         // act & assert
-        shouldNotThrowAny { couponService.use(cmd) }
+        val result = couponService.use(cmd)
+        result.isFailure shouldBe true
 
         // 할인 내역이 저장되지 않았는지 검증
         verify(exactly = 0) { discountLineRepository.saveAll(any()) }
     }
-
 
     @Test
     fun `✅쿠폰 발급`() {
@@ -230,10 +236,10 @@ class CouponServiceTest {
         val userId = 1L
         val orderId = 1L
         val userCouponIds = listOf(1L, 2L)
-        val coupon = CouponTestFixture.coupon().build()
+        val couponId = 1L
         val userCoupons = listOf(
-            CouponTestFixture.userCoupon(userId = userId, coupon = coupon, status = UserCouponStatus.USED, orderId = orderId).build(),
-            CouponTestFixture.userCoupon(userId = userId, coupon = coupon, status = UserCouponStatus.USED, orderId = orderId).build()
+            CouponTestFixture.userCoupon(userId = userId, couponId = couponId, status = UserCouponStatus.USED, orderId = orderId).build(),
+            CouponTestFixture.userCoupon(userId = userId, couponId = couponId, status = UserCouponStatus.USED, orderId = orderId).build()
         )
 
         every { userCouponRepository.findAllByOrderId(orderId) } returns userCoupons
@@ -259,5 +265,105 @@ class CouponServiceTest {
             userCoupon.usedAt shouldBe null
         }
         verify { userCouponRepository.saveAll(userCoupons) }
+    }
+
+    @Test
+    fun `✅Redis Kafka 쿠폰 발급이 성공한다`() {
+        // given
+        val userId = 1L
+        val couponId = 100L
+        val now = LocalDateTime.now()
+        val cmd = CouponCommand.Issue(userId = userId, couponId = couponId)
+        
+        val validationResult = CouponIssueValidationResult(isValid = true)
+        
+        every { couponKVStore.validateAndMarkCouponIssue(userId, couponId) } returns validationResult
+        every { clockHolder.getNowInLocalDateTime() } returns now
+
+        // when
+        val result = couponService.issueCouponWithRedisKafka(cmd)
+
+        // then
+        result.couponId shouldBe couponId
+        result.status shouldBe "REQUESTED"
+        
+        verify { couponKVStore.validateAndMarkCouponIssue(userId, couponId) }
+        verify { couponKVStore.setIssuedStatus(userId, couponId, IssuedStatus.PENDING) }
+        verify { eventPublisher.publishIssueRequested(any()) }
+    }
+
+    @Test
+    fun `⛔️Redis Kafka 쿠폰 발급 시 중복 발급으로 실패한다`() {
+        // given
+        val userId = 1L
+        val couponId = 100L
+        val cmd = CouponCommand.Issue(userId = userId, couponId = couponId)
+        
+        val validationResult = CouponIssueValidationResult(
+            isValid = false,
+            errorCode = CouponIssueValidationResult.ERROR_DUPLICATE_ISSUE,
+            errorMessage = "이미 발급된 쿠폰입니다"
+        )
+        
+        every { couponKVStore.validateAndMarkCouponIssue(userId, couponId) } returns validationResult
+
+        // when & then
+        shouldThrowExactly<DuplicateCouponIssueException> {
+            couponService.issueCouponWithRedisKafka(cmd)
+        }
+        
+        verify { couponKVStore.validateAndMarkCouponIssue(userId, couponId) }
+        verify(exactly = 0) { couponKVStore.setIssuedStatus(any(), any(), any()) }
+        verify(exactly = 0) { eventPublisher.publishIssueRequested(any()) }
+    }
+
+    @Test
+    fun `⛔️Redis Kafka 쿠폰 발급 시 재고 부족으로 실패한다`() {
+        // given
+        val userId = 1L
+        val couponId = 100L
+        val cmd = CouponCommand.Issue(userId = userId, couponId = couponId)
+        
+        val validationResult = CouponIssueValidationResult(
+            isValid = false,
+            errorCode = CouponIssueValidationResult.ERROR_OUT_OF_STOCK,
+            errorMessage = "쿠폰 재고가 부족합니다"
+        )
+        
+        every { couponKVStore.validateAndMarkCouponIssue(userId, couponId) } returns validationResult
+
+        // when & then
+        shouldThrowExactly<CouponOutOfStockException> {
+            couponService.issueCouponWithRedisKafka(cmd)
+        }
+        
+        verify { couponKVStore.validateAndMarkCouponIssue(userId, couponId) }
+        verify(exactly = 0) { couponKVStore.setIssuedStatus(any(), any(), any()) }
+        verify(exactly = 0) { eventPublisher.publishIssueRequested(any()) }
+    }
+
+    @Test
+    fun `⛔️Redis Kafka 쿠폰 발급 시 이벤트 발행 실패하면 보상 처리를 수행한다`() {
+        // given
+        val userId = 1L
+        val couponId = 100L
+        val now = LocalDateTime.now()
+        val cmd = CouponCommand.Issue(userId = userId, couponId = couponId)
+        
+        val validationResult = CouponIssueValidationResult(isValid = true)
+        
+        every { couponKVStore.validateAndMarkCouponIssue(userId, couponId) } returns validationResult
+        every { clockHolder.getNowInLocalDateTime() } returns now
+        every { eventPublisher.publishIssueRequested(any()) } throws RuntimeException("이벤트 발행 실패")
+
+        // when & then
+        shouldThrowExactly<RuntimeException> {
+            couponService.issueCouponWithRedisKafka(cmd)
+        }
+        
+        verify { couponKVStore.validateAndMarkCouponIssue(userId, couponId) }
+        verify { couponKVStore.setIssuedStatus(userId, couponId, IssuedStatus.PENDING) }
+        verify { eventPublisher.publishIssueRequested(any()) }
+        verify { couponKVStore.rollbackCouponIssue(userId, couponId) }
     }
 }
