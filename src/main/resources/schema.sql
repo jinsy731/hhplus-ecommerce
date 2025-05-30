@@ -228,9 +228,7 @@ create table user_coupons
     status     enum ('EXPIRED', 'UNUSED', 'USED') not null,
     used_at    datetime(6)                        null,
     user_id    bigint                             not null,
-    coupon_id  bigint                             not null,
-    constraint FK9oi3p5xyfe4j32xs54nn7mi20
-        foreign key (coupon_id) references coupons (id)
+    coupon_id  bigint                             not null
 );
 
 CREATE TABLE USER_POINT (

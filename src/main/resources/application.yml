@@ -14,10 +14,11 @@ spring:
   jpa:
     open-in-view: false
     generate-ddl: true
-    show-sql: true
+    show-sql: false
     hibernate:
       ddl-auto: update
     properties:
+      hibernate.show_sql: false
       hibernate.timezone.default_storage: NORMALIZE_UTC
       hibernate.jdbc.time_zone: UTC
       hibernate.format_sql: false
@@ -33,8 +34,8 @@ spring:
   output:
     ansi:
       enabled: always
+
   kafka:
-    bootstrap-servers: localhost:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -77,6 +78,10 @@ spring:
       host: localhost
       port: 6379
       timeout: 3000
+
+  kafka:
+    bootstrap-servers: localhost:9094
+
 
 logging:
   level:
