@@ -1,14 +1,14 @@
 package kr.hhplus.be.server.coupon.domain.model
 
 import io.kotest.assertions.throwables.shouldNotThrowAny
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.assertions.throwables.shouldThrowExactly
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import kr.hhplus.be.server.coupon.CouponTestFixture
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.exception.CouponTargetNotFoundException
 import kr.hhplus.be.server.shared.exception.ExceededMaxCouponLimitException
 import kr.hhplus.be.server.shared.exception.InvalidCouponStatusException
-import kr.hhplus.be.server.coupon.CouponTestFixture
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
@@ -114,7 +114,7 @@ class CouponTest {
     @Test
     fun `✅쿠폰 발급`() {
         // arrange
-        val coupon = CouponTestFixture.createValidCoupon()
+        val coupon = CouponTestFixture.coupon(id = 1L).build()
         val now = LocalDateTime.now()
         // act
         val userCoupon = coupon.issueTo(1L, now)

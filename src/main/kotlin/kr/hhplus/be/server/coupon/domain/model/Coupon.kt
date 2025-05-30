@@ -89,7 +89,7 @@ class Coupon(
 
         return UserCoupon(
             userId = userId,
-            coupon = this,
+            couponId = this.id!!,
             issuedAt = now,
             expiredAt = now.plusDays(this.validDays.toLong()),
         )
@@ -98,7 +98,7 @@ class Coupon(
     fun asyncIssueTo(userId: Long, now: LocalDateTime = LocalDateTime.now()): UserCoupon {
         return UserCoupon(
             userId = userId,
-            coupon = this,
+            couponId = this.id!!,
             issuedAt = now,
             expiredAt = now.plusDays(this.validDays.toLong()),
         )

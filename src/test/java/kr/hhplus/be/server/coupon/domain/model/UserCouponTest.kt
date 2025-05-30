@@ -1,10 +1,11 @@
 package kr.hhplus.be.server.coupon.domain.model
 
 import io.kotest.assertions.throwables.shouldThrowExactly
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeSameInstanceAs
-import kr.hhplus.be.server.coupon.CouponTestFixture
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import kr.hhplus.be.server.coupon.domain.service.CouponDomainService
 import kr.hhplus.be.server.shared.domain.Money
 import kr.hhplus.be.server.shared.exception.ErrorCode
 import kr.hhplus.be.server.shared.exception.ExpiredCouponException
@@ -12,7 +13,6 @@ import kr.hhplus.be.server.shared.exception.InvalidCouponStatusException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import java.math.BigDecimal
 import java.time.LocalDateTime
 
 class UserCouponTest {
@@ -22,13 +22,13 @@ class UserCouponTest {
         // arrange
         val time = LocalDateTime.now()
         val expiredAt = time.plusHours(1)
-        val coupon = CouponTestFixture.createValidCoupon()
+        val couponId = 1L
 
         // act
         val userCoupon = UserCoupon(
             id = 1L,
             userId = 1L,
-            coupon = coupon,
+            couponId = couponId,
             issuedAt = time,
             expiredAt = expiredAt,
         )
@@ -36,7 +36,7 @@ class UserCouponTest {
         // assert
         userCoupon.id shouldBe 1L
         userCoupon.userId shouldBe 1L
-        userCoupon.coupon shouldBeSameInstanceAs coupon
+        userCoupon.couponId shouldBe couponId
         userCoupon.expiredAt shouldBe expiredAt
         userCoupon.status shouldBe UserCouponStatus.UNUSED
         userCoupon.issuedAt shouldBe time
@@ -48,11 +48,11 @@ class UserCouponTest {
         val time = LocalDateTime.now()
         val expiredAt = time.plusHours(1)
         val orderId = 1L
-        val coupon = CouponTestFixture.createValidCoupon()
+        val couponId = 1L
         val userCoupon = UserCoupon(
             id = 1L,
             userId = 1L,
-            coupon = coupon,
+            couponId = couponId,
             issuedAt = time,
             expiredAt = expiredAt,
         )
@@ -73,11 +73,11 @@ class UserCouponTest {
         val orderId = 1L
         val time = LocalDateTime.now()
         val expiredAt = time.plusHours(1)
-        val coupon = CouponTestFixture.createValidCoupon()
+        val couponId = 1L
         val userCoupon = UserCoupon(
             id = 1L,
             userId = 1L,
-            coupon = coupon,
+            couponId = couponId,
             issuedAt = time,
             expiredAt = expiredAt,
             status = status
@@ -94,11 +94,11 @@ class UserCouponTest {
         val orderId = 1L
         val time = LocalDateTime.now()
         val expiredAt = time.minusMinutes(1)
-        val coupon = CouponTestFixture.createValidCoupon()
+        val couponId = 1L
         val userCoupon = UserCoupon(
             id = 1L,
             userId = 1L,
-            coupon = coupon,
+            couponId = couponId,
             issuedAt = time,
             expiredAt = expiredAt,
             status = UserCouponStatus.UNUSED
@@ -108,59 +108,72 @@ class UserCouponTest {
         ex.message shouldBe ErrorCode.EXPIRED_COUPON.message
         userCoupon.status shouldBe UserCouponStatus.EXPIRED
     }
-    
+
     @Test
-    fun `⛔️유저 쿠폰 사용 실패_쿠폰이 유효하지 않으면(coupon#isValid == false) InvalidCouponStatusException 예외가 발생해야 한다`() {
+    fun `✅쿠폰 복구_사용된 쿠폰을 복구하면 UNUSED 상태로 변경된다`() {
         // arrange
-        val orderId = 1L
         val time = LocalDateTime.now()
-        val expiredAt = time.plusMinutes(1)
-        val coupon = CouponTestFixture.createInvalidCoupon()
+        val expiredAt = time.plusHours(1)
+        val orderId = 1L
+        val couponId = 1L
         val userCoupon = UserCoupon(
             id = 1L,
             userId = 1L,
-            coupon = coupon,
+            couponId = couponId,
             issuedAt = time,
             expiredAt = expiredAt,
-            status = UserCouponStatus.UNUSED
+            status = UserCouponStatus.USED,
+            usedAt = time,
+            orderId = orderId
         )
-        // act, assert
-        val ex = shouldThrowExactly<InvalidCouponStatusException> { userCoupon.use(time, orderId) }
-        ex.message shouldBe ErrorCode.INVALID_COUPON_STATUS.message
-    }
-    
-    @Test
-    fun `✅할인 적용_할인이 정상적으로 적용되면 DiscountLine이 반환된다`() {
-        // arrange
-        val orderId = 1L
-        val time = LocalDateTime.now()
-        val expiredAt = time.plusMinutes(1)
-        val coupon = CouponTestFixture.createValidCoupon(id = 1L)
-        val userCoupon = UserCoupon(
-            id = 1L,
-            userId = 1L,
-            coupon = coupon,
-            issuedAt = time,
-            expiredAt = expiredAt,
-            status = UserCouponStatus.UNUSED
-        )
-        val context = CouponTestFixture.createDiscountContext(timestamp = time)
+
         // act
-        val discountLines = userCoupon.calculateDiscountAndUse(context, orderId)
+        userCoupon.restore()
+
         // assert
-        discountLines shouldHaveSize 2
-        discountLines.sumOf { it.amount.amount }.compareTo(BigDecimal(5000)) shouldBe 0
-        discountLines[0].sourceId shouldBe 1L
-        discountLines[0].createdAt shouldBe time
-        discountLines[0].amount.compareTo(Money.of(2500)) shouldBe 0
-        discountLines[0].type shouldBe DiscountMethod.COUPON
-        discountLines[0].orderItemId shouldBe 1L
-        discountLines[0].createdAt shouldBe time
-        discountLines[1].sourceId shouldBe 1L
-        discountLines[1].createdAt shouldBe time
-        discountLines[1].amount.compareTo(Money.of(2500)) shouldBe 0
-        discountLines[1].type shouldBe DiscountMethod.COUPON
-        discountLines[1].orderItemId shouldBe 2L
-        discountLines[1].createdAt shouldBe time
+        userCoupon.status shouldBe UserCouponStatus.UNUSED
+        userCoupon.usedAt shouldBe null
+        userCoupon.orderId shouldBe null
+    }
+
+    @Test
+    fun `✅도메인 서비스를 통한 할인 계산_도메인 서비스에 위임하여 처리한다`() {
+        // arrange
+        val time = LocalDateTime.now()
+        val expiredAt = time.plusHours(1)
+        val orderId = 1L
+        val couponId = 1L
+        val userCoupon = UserCoupon(
+            id = 1L,
+            userId = 1L,
+            couponId = couponId,
+            issuedAt = time,
+            expiredAt = expiredAt,
+            status = UserCouponStatus.UNUSED
+        )
+
+        val mockDomainService = mockk<CouponDomainService>()
+        val mockContext = mockk<DiscountContext.Root>()
+        val expectedDiscountLines = listOf(
+            DiscountLine(
+                orderItemId = 1L,
+                amount = Money.of(1000),
+                sourceId = 1L,
+                type = DiscountMethod.COUPON
+            )
+        )
+
+        every { 
+            mockDomainService.calculateDiscountAndUse(userCoupon, mockContext, orderId) 
+        } returns expectedDiscountLines
+
+        // act
+        val result = userCoupon.calculateDiscountAndUse(mockDomainService, mockContext, orderId)
+
+        // assert
+        result shouldBe expectedDiscountLines
+        verify(exactly = 1) { 
+            mockDomainService.calculateDiscountAndUse(userCoupon, mockContext, orderId) 
+        }
     }
 }

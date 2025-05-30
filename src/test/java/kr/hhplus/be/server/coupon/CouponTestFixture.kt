@@ -56,6 +56,29 @@ object CouponTestFixture {
     fun userCoupon(
         id: Long? = null,
         userId: Long = 1L,
+        couponId: Long = 1L,
+        issuedAt: LocalDateTime = LocalDateTime.now(),
+        expiredAt: LocalDateTime = LocalDateTime.now().plusDays(7),
+        usedAt: LocalDateTime? = null,
+        status: UserCouponStatus = UserCouponStatus.UNUSED,
+        orderId: Long? = null,
+    ): UserCouponBuilder {
+        return UserCouponBuilder(
+            id = id,
+            userId = userId,
+            couponId = couponId,
+            issuedAt = issuedAt,
+            expiredAt = expiredAt,
+            usedAt = usedAt,
+            status = status,
+            orderId = orderId
+        )
+    }
+
+    // 유저 쿠폰 빌더 (Coupon 객체를 받는 오버로드 메서드)
+    fun userCoupon(
+        id: Long? = null,
+        userId: Long = 1L,
         coupon: Coupon,
         issuedAt: LocalDateTime = LocalDateTime.now(),
         expiredAt: LocalDateTime = LocalDateTime.now().plusDays(7),
@@ -66,7 +89,7 @@ object CouponTestFixture {
         return UserCouponBuilder(
             id = id,
             userId = userId,
-            coupon = coupon,
+            couponId = coupon.id!!,
             issuedAt = issuedAt,
             expiredAt = expiredAt,
             usedAt = usedAt,
@@ -353,7 +376,7 @@ object CouponTestFixture {
     class UserCouponBuilder(
         private val id: Long?,
         private val userId: Long,
-        private val coupon: Coupon,
+        private val couponId: Long,
         private val issuedAt: LocalDateTime,
         private val expiredAt: LocalDateTime,
         private val usedAt: LocalDateTime?,
@@ -364,7 +387,7 @@ object CouponTestFixture {
             return UserCoupon(
                 id = id,
                 userId = userId,
-                coupon = coupon,
+                couponId = couponId,
                 issuedAt = issuedAt,
                 expiredAt = expiredAt,
                 usedAt = usedAt,
@@ -376,7 +399,7 @@ object CouponTestFixture {
             return UserCouponBuilder(
                 id = id,
                 userId = userId,
-                coupon = coupon,
+                couponId = couponId,
                 issuedAt = issuedAt,
                 expiredAt = expiredAt,
                 usedAt = usedAt,
@@ -389,7 +412,7 @@ object CouponTestFixture {
             return UserCouponBuilder(
                 id = id,
                 userId = userId,
-                coupon = coupon,
+                couponId = couponId,
                 issuedAt = issuedAt,
                 expiredAt = expiredAt,
                 usedAt = usedAt,
@@ -402,7 +425,7 @@ object CouponTestFixture {
             return UserCouponBuilder(
                 id = id,
                 userId = userId,
-                coupon = coupon,
+                couponId = couponId,
                 issuedAt = issuedAt,
                 expiredAt = expiredAt,
                 usedAt = usedAt,
@@ -415,7 +438,7 @@ object CouponTestFixture {
             return UserCouponBuilder(
                 id = id,
                 userId = userId,
-                coupon = coupon,
+                couponId = couponId,
                 issuedAt = issuedAt,
                 expiredAt = LocalDateTime.now().minusDays(1),
                 usedAt = usedAt,

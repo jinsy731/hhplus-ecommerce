@@ -24,9 +24,8 @@ class UserCoupon(
     @Column(nullable = false)
     val userId: Long,
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "coupon_id", nullable = false)
-    val coupon: Coupon,
+    @Column(name = "coupon_id", nullable = false)
+    val couponId: Long,
 
     @Column(nullable = false)
     val issuedAt: LocalDateTime = LocalDateTime.now(),
@@ -47,10 +46,9 @@ class UserCoupon(
     var version: Long? = null
 ) {
     /**
-     * 쿠폰 사용 처리
+     * 쿠폰 사용 처리 (쿠폰 유효성 검증은 서비스 레이어에서 수행)
      */
     fun use(now: LocalDateTime, orderId: Long) {
-        coupon.validatUsability(now)
         check(status == UserCouponStatus.UNUSED) { throw InvalidCouponStatusException() }
         check(expiredAt.isAfter(now)) {
             this.status = UserCouponStatus.EXPIRED
@@ -72,17 +70,16 @@ class UserCoupon(
         this.orderId = null
     }
 
-    fun calculateDiscountAndUse(context: DiscountContext.Root, orderId: Long): List<DiscountLine> {
-        val applicableItems = coupon.getApplicableItems(context)
-
-        use(context.timestamp, orderId)
-
-        val orderItemsDiscountMap = coupon.calculateDiscount(context, applicableItems)
-        return DiscountLine.from(
-            sourceId = this.coupon.id!!,
-            discountMethod = DiscountMethod.COUPON,
-            orderItemsDiscountMap = orderItemsDiscountMap,
-            now = context.timestamp)
+    /**
+     * 도메인 서비스를 통한 할인 계산 및 사용 처리
+     * 도메인 서비스에 위임하여 복잡한 비즈니스 로직을 처리
+     */
+    fun calculateDiscountAndUse(
+        domainService: kr.hhplus.be.server.coupon.domain.service.CouponDomainService,
+        context: DiscountContext.Root, 
+        orderId: Long
+    ): List<DiscountLine> {
+        return domainService.calculateDiscountAndUse(this, context, orderId)
     }
 }
 
