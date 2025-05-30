@@ -8,6 +8,8 @@ import kr.hhplus.be.server.MySqlDatabaseCleaner
 import kr.hhplus.be.server.RedisCleaner
 import kr.hhplus.be.server.coupon.CouponTestFixture
 import kr.hhplus.be.server.coupon.application.dto.CouponCommand
+import kr.hhplus.be.server.coupon.domain.CouponEvent
+import kr.hhplus.be.server.coupon.domain.CouponIssueRequestedPayload
 import kr.hhplus.be.server.coupon.domain.model.UserCouponStatus
 import kr.hhplus.be.server.coupon.domain.port.CouponRepository
 import kr.hhplus.be.server.coupon.domain.port.UserCouponRepository
@@ -18,10 +20,10 @@ import kr.hhplus.be.server.coupon.infrastructure.kvstore.IssuedStatus
 import kr.hhplus.be.server.coupon.infrastructure.persistence.JpaUserCouponRepository
 import kr.hhplus.be.server.executeConcurrently
 import kr.hhplus.be.server.shared.domain.Money
-import kr.hhplus.be.server.shared.event.DomainEventPublisher
 import kr.hhplus.be.server.shared.exception.CouponOutOfStockException
 import kr.hhplus.be.server.shared.exception.DuplicateCouponIssueException
 import kr.hhplus.be.server.shared.time.ClockHolder
+import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -36,18 +38,19 @@ import java.time.LocalDateTime
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 @SpringBootTest
 class CouponServiceTestIT @Autowired constructor(
     private val couponService: CouponService,
     private val couponIssueBatchService: CouponIssueBatchService,
+    private val couponIssueConsumerService: CouponIssueConsumerService,
     private val couponRepository: CouponRepository,
     private val userCouponJpaRepository: JpaUserCouponRepository,
     @MockitoSpyBean private val userCouponRepository: UserCouponRepository,
     private val couponKVStore: CouponKVStore,
     private val redisCleaner: RedisCleaner,
     @MockitoBean private val mockClockHolder: ClockHolder,
-    @MockitoBean private val eventPublisher: DomainEventPublisher,
     private val databaseCleaner: MySqlDatabaseCleaner,
 ){
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -90,7 +93,7 @@ class CouponServiceTestIT @Autowired constructor(
         // DB에 저장된 사용자 쿠폰 확인
         val userCoupon = userCouponRepository.findById(result.userCouponId!!) ?: throw IllegalStateException()
         userCoupon.userId shouldBe userId
-        userCoupon.coupon.id shouldBe couponId
+        userCoupon.couponId shouldBe couponId
         userCoupon.status shouldBe UserCouponStatus.UNUSED
 
         // 쿠폰의 발급 횟수가 증가했는지 확인
@@ -132,7 +135,7 @@ class CouponServiceTestIT @Autowired constructor(
         val userCoupon = userCouponRepository.findByUserIdAndCouponId(userId, couponId)
         userCoupon shouldNotBe null
         userCoupon!!.userId shouldBe userId
-        userCoupon.coupon.id shouldBe couponId
+        userCoupon.couponId shouldBe couponId
         userCoupon.status shouldBe UserCouponStatus.UNUSED
 
         // Redis에 발급 완료로 표시되었는지 확인
@@ -248,7 +251,7 @@ class CouponServiceTestIT @Autowired constructor(
         val userCoupons = userCouponRepository.findAllByUserId(userId, PageRequest.of(0, 10))
         userCoupons.content.size shouldBe 1
         userCoupons.content[0].userId shouldBe userId
-        userCoupons.content[0].coupon.id shouldBe couponId
+        userCoupons.content[0].couponId shouldBe couponId
 
         // Redis에 발급 완료로 표시되었는지 확인
         couponKVStore.existsIssuedUser(userId, couponId) shouldBe true
@@ -314,7 +317,7 @@ class CouponServiceTestIT @Autowired constructor(
         val userCoupon = userCouponRepository.findById(result.userCouponId!!)
         userCoupon shouldNotBe null
         userCoupon!!.userId shouldBe userId
-        userCoupon.coupon.id shouldBe couponId
+        userCoupon.couponId shouldBe couponId
     }
 
     @Test
@@ -420,7 +423,7 @@ class CouponServiceTestIT @Autowired constructor(
             val userCoupon = userCouponRepository.findByUserIdAndCouponId(userId, couponId)
             userCoupon shouldNotBe null
             userCoupon!!.userId shouldBe userId
-            userCoupon.coupon.id shouldBe couponId
+            userCoupon.couponId shouldBe couponId
             userCoupon.status shouldBe UserCouponStatus.UNUSED
 
             // Redis에 발급 완료로 표시되었는지 확인
@@ -462,7 +465,7 @@ class CouponServiceTestIT @Autowired constructor(
         val userCoupon = userCouponRepository.findByUserIdAndCouponId(userId, couponId)
         userCoupon shouldNotBe null
         userCoupon!!.userId shouldBe userId
-        userCoupon.coupon.id shouldBe couponId
+        userCoupon.couponId shouldBe couponId
         userCoupon.status shouldBe UserCouponStatus.UNUSED
 
         // Redis에 발급 완료로 표시되었는지 확인
@@ -611,5 +614,356 @@ class CouponServiceTestIT @Autowired constructor(
         result.coupons.size shouldBe 0
         result.pageResult.totalElements shouldBe 0
         result.pageResult.totalPages shouldBe 0
+    }
+
+    @Test
+    fun `✅Redis Kafka 쿠폰 발급이 성공적으로 처리된다`() {
+        // given
+        val userId = 2000L
+        val now = LocalDateTime.now()
+        whenever(mockClockHolder.getNowInLocalDateTime()).thenReturn(now)
+        val coupon = CouponTestFixture.coupon().build()
+        val savedCoupon = couponRepository.save(coupon)
+        val couponId = savedCoupon.id!!
+
+        // Redis 쿠폰 재고 설정
+        couponKVStore.setStock(CouponStock(couponId, 100))
+
+        val issueCommand = CouponCommand.Issue(
+            userId = userId,
+            couponId = couponId
+        )
+
+        // when
+        val result = couponService.issueCouponWithRedisKafka(issueCommand)
+
+        // then
+        await().atMost(10, TimeUnit.SECONDS).untilAsserted {
+            // DB에 사용자 쿠폰이 생성되었는지 확인
+            val userCoupon = userCouponRepository.findByUserIdAndCouponId(userId, couponId)!!
+            userCoupon.status shouldBe UserCouponStatus.UNUSED
+            userCoupon.issuedAt shouldNotBe null
+            result.couponId shouldBe couponId
+            result.status shouldBe "REQUESTED"
+            
+            // Redis에서 발급 상태가 ISSUED로 업데이트되었는지 확인
+            val issueStatus = couponKVStore.getIssuedStatus(userId, couponId)
+            issueStatus shouldBe IssuedStatus.ISSUED
+        }
+    }
+
+    @Test
+    fun `⛔️Redis Kafka 쿠폰 발급 시 중복 발급이 방지된다`() {
+        // given
+        val userId = 2001L
+        val coupon = CouponTestFixture.coupon().build()
+        val savedCoupon = couponRepository.save(coupon)
+        val couponId = savedCoupon.id!!
+
+        // Redis 쿠폰 재고 설정
+        couponKVStore.setStock(CouponStock(couponId, 100))
+        // 이미 발급된 사용자로 설정
+        couponKVStore.setIssuedUser(userId, couponId)
+
+        val issueCommand = CouponCommand.Issue(
+            userId = userId,
+            couponId = couponId
+        )
+
+        // when & then
+        shouldThrow<DuplicateCouponIssueException> {
+            couponService.issueCouponWithRedisKafka(issueCommand)
+        }
+    }
+
+    @Test
+    fun `⛔️Redis Kafka 쿠폰 발급 시 재고 부족으로 실패한다`() {
+        // given
+        val userId = 2002L
+        val coupon = CouponTestFixture.coupon().build()
+        val savedCoupon = couponRepository.save(coupon)
+        val couponId = savedCoupon.id!!
+
+        // Redis 쿠폰 재고 설정 (소진 상태)
+        couponKVStore.setStock(CouponStock(couponId, 5))
+        
+        // 이미 5명이 발급받은 상태로 설정
+        repeat(5) { i ->
+            couponKVStore.setIssuedUser(i.toLong(), couponId)
+        }
+
+        val issueCommand = CouponCommand.Issue(
+            userId = userId,
+            couponId = couponId
+        )
+
+        // when & then
+        shouldThrow<CouponOutOfStockException> {
+            couponService.issueCouponWithRedisKafka(issueCommand)
+        }
+    }
+
+    @Test
+    fun `✅CouponIssueConsumerService 단일 쿠폰 발급 이벤트 처리가 성공한다`() {
+        // given
+        val userId = 3000L
+        val now = LocalDateTime.now()
+        whenever(mockClockHolder.getNowInLocalDateTime()).thenReturn(now)
+        
+        val coupon = CouponTestFixture.coupon().build()
+        val savedCoupon = couponRepository.save(coupon)
+        val couponId = savedCoupon.id!!
+
+        val event = CouponEvent.IssueRequested(
+            payload = CouponIssueRequestedPayload(
+                userId = userId,
+                couponId = couponId,
+                issuedAt = now
+            )
+        )
+
+        // when
+        couponIssueConsumerService.processSingleCouponIssueRequest(event)
+
+        // then
+        val userCoupon = userCouponRepository.findByUserIdAndCouponId(userId, couponId)
+        userCoupon shouldNotBe null
+        userCoupon!!.userId shouldBe userId
+        userCoupon.couponId shouldBe couponId
+        userCoupon.status shouldBe UserCouponStatus.UNUSED
+        userCoupon.issuedAt shouldBe now
+        
+        // Redis에서 발급 상태가 ISSUED로 업데이트되었는지 확인
+        val issueStatus = couponKVStore.getIssuedStatus(userId, couponId)
+        issueStatus shouldBe IssuedStatus.ISSUED
+    }
+
+    @Test
+    fun `✅CouponIssueConsumerService 배치 쿠폰 발급 이벤트 처리가 성공한다`() {
+        // given
+        val userIds = listOf(3001L, 3002L, 3003L, 3004L, 3005L)
+        val now = LocalDateTime.now()
+        whenever(mockClockHolder.getNowInLocalDateTime()).thenReturn(now)
+        
+        val coupon = CouponTestFixture.coupon().build()
+        val savedCoupon = couponRepository.save(coupon)
+        val couponId = savedCoupon.id!!
+
+        val events = userIds.map { userId ->
+            CouponEvent.IssueRequested(
+                payload = CouponIssueRequestedPayload(
+                    userId = userId,
+                    couponId = couponId,
+                    issuedAt = now
+                )
+            )
+        }
+
+        // when
+        couponIssueConsumerService.processCouponIssueRequestsBatch(events)
+
+        // then
+        userIds.forEach { userId ->
+            val userCoupon = userCouponRepository.findByUserIdAndCouponId(userId, couponId)
+            userCoupon shouldNotBe null
+            userCoupon!!.userId shouldBe userId
+            userCoupon.couponId shouldBe couponId
+            userCoupon.status shouldBe UserCouponStatus.UNUSED
+            userCoupon.issuedAt shouldBe now
+            
+            // Redis에서 발급 상태가 ISSUED로 업데이트되었는지 확인
+            val issueStatus = couponKVStore.getIssuedStatus(userId, couponId)
+            issueStatus shouldBe IssuedStatus.ISSUED
+        }
+
+        // DB에 모든 쿠폰이 저장되었는지 확인
+        val allUserCoupons = userCouponJpaRepository.findAll()
+        allUserCoupons.size shouldBe userIds.size
+    }
+
+    @Test
+    fun `✅Redis Kafka 전체 연동 테스트 - 발급 요청부터 Consumer 처리까지`() {
+        // given
+        val userId = 4000L
+        val now = LocalDateTime.now()
+        whenever(mockClockHolder.getNowInLocalDateTime()).thenReturn(now)
+        
+        val coupon = CouponTestFixture.coupon().build()
+        val savedCoupon = couponRepository.save(coupon)
+        val couponId = savedCoupon.id!!
+
+        // Redis 쿠폰 재고 설정
+        couponKVStore.setStock(CouponStock(couponId, 100))
+
+        val issueCommand = CouponCommand.Issue(
+            userId = userId,
+            couponId = couponId
+        )
+
+        // when
+        // 1. Redis Kafka 쿠폰 발급 요청
+        val result = couponService.issueCouponWithRedisKafka(issueCommand)
+
+        // then
+        await().atMost(10, TimeUnit.SECONDS).untilAsserted {
+            result.couponId shouldBe couponId
+            result.status shouldBe "REQUESTED"
+
+            // DB에 사용자 쿠폰이 생성되었는지 확인
+            val userCoupon = userCouponRepository.findByUserIdAndCouponId(userId, couponId)
+            userCoupon shouldNotBe null
+            userCoupon!!.userId shouldBe userId
+            userCoupon.couponId shouldBe couponId
+            userCoupon.status shouldBe UserCouponStatus.UNUSED
+            userCoupon.issuedAt shouldBe now
+            
+            // Redis에서 발급 상태가 ISSUED로 업데이트되었는지 확인
+            val issueStatus = couponKVStore.getIssuedStatus(userId, couponId)
+            issueStatus shouldBe IssuedStatus.ISSUED
+        }
+    }
+
+    @Test
+    fun `✅Redis Kafka 동시성 테스트 - 여러 사용자가 동시 요청`() {
+        // given
+        val userCount = 100
+        val now = LocalDateTime.now()
+        whenever(mockClockHolder.getNowInLocalDateTime()).thenReturn(now)
+        
+        val coupon = CouponTestFixture.coupon().build()
+        val savedCoupon = couponRepository.save(coupon)
+        val couponId = savedCoupon.id!!
+
+        // Redis 쿠폰 재고 설정 (충분한 재고)
+        couponKVStore.setStock(CouponStock(couponId, userCount.toLong()))
+
+        val successCount = AtomicInteger(0)
+        val failureCount = AtomicInteger(0)
+
+        // when
+        executeConcurrently(userCount) { index ->
+            try {
+                val userId = 5000L + index
+                val issueCommand = CouponCommand.Issue(
+                    userId = userId,
+                    couponId = couponId
+                )
+                
+                couponService.issueCouponWithRedisKafka(issueCommand)
+                successCount.incrementAndGet()
+            } catch (e: Exception) {
+                failureCount.incrementAndGet()
+                logger.info { "발급 실패: ${e.message}" }
+            }
+        }
+
+        // then
+        successCount.get() shouldBe userCount
+        failureCount.get() shouldBe 0
+
+        await().atMost(10, TimeUnit.SECONDS).untilAsserted {
+            val allUserCoupons = userCouponJpaRepository.findAll()
+            allUserCoupons.size shouldBe userCount
+            allUserCoupons.stream()
+                .allMatch { it.status == UserCouponStatus.UNUSED }
+            allUserCoupons.map { it.userId }.distinct().size shouldBe userCount
+        }
+    }
+
+    @Test
+    fun `✅Redis Kafka 동시성 테스트 - 제한된 재고에서 정확한 수량만 발급`() {
+        // given
+        val userCount = 100
+        val stockLimit = 30L
+        val now = LocalDateTime.now()
+        whenever(mockClockHolder.getNowInLocalDateTime()).thenReturn(now)
+        
+        val coupon = CouponTestFixture.coupon().build()
+        val savedCoupon = couponRepository.save(coupon)
+        val couponId = savedCoupon.id!!
+
+        // Redis 쿠폰 재고 설정 (제한된 재고)
+        couponKVStore.setStock(CouponStock(couponId, stockLimit))
+
+        val successCount = AtomicInteger(0)
+        val failureCount = AtomicInteger(0)
+
+        // when
+        executeConcurrently(userCount) { index ->
+            try {
+                val userId = 6000L + index
+                val issueCommand = CouponCommand.Issue(
+                    userId = userId,
+                    couponId = couponId
+                )
+                
+                couponService.issueCouponWithRedisKafka(issueCommand)
+                successCount.incrementAndGet()
+            } catch (e: CouponOutOfStockException) {
+                failureCount.incrementAndGet()
+            } catch (e: Exception) {
+                logger.error { "예상치 못한 에러: ${e.message}" }
+                failureCount.incrementAndGet()
+            }
+        }
+
+
+        // then
+        successCount.get() shouldBe stockLimit.toInt()
+        failureCount.get() shouldBe (userCount - stockLimit.toInt())
+
+        await().atMost(10, TimeUnit.SECONDS).untilAsserted {
+            // 정확한 수량만큼 쿠폰이 발급되었는지 확인
+            val allUserCoupons = userCouponJpaRepository.findAll()
+            allUserCoupons.size shouldBe stockLimit.toInt()
+        }
+    }
+
+    @Test
+    fun `✅Redis Kafka 동시성 테스트 - 동일 사용자 중복 요청 방지`() {
+        // given
+        val userId = 7000L
+        val requestCount = 50
+        val now = LocalDateTime.now()
+        whenever(mockClockHolder.getNowInLocalDateTime()).thenReturn(now)
+        
+        val coupon = CouponTestFixture.coupon().build()
+        val savedCoupon = couponRepository.save(coupon)
+        val couponId = savedCoupon.id!!
+
+        // Redis 쿠폰 재고 설정
+        couponKVStore.setStock(CouponStock(couponId, 100))
+
+        val successCount = AtomicInteger(0)
+        val duplicateCount = AtomicInteger(0)
+
+        // when - 동일 사용자가 여러 번 요청
+        executeConcurrently(requestCount) {
+            try {
+                val issueCommand = CouponCommand.Issue(
+                    userId = userId,
+                    couponId = couponId
+                )
+                
+                couponService.issueCouponWithRedisKafka(issueCommand)
+                successCount.incrementAndGet()
+            } catch (e: DuplicateCouponIssueException) {
+                duplicateCount.incrementAndGet()
+            } catch (e: Exception) {
+                logger.error { "예상치 못한 에러: ${e.message}" }
+            }
+        }
+
+        // then
+        successCount.get() shouldBe 1  // 한 번만 성공
+        duplicateCount.get() shouldBe (requestCount - 1)  // 나머지는 중복으로 실패
+
+        await().atMost(10, TimeUnit.SECONDS).untilAsserted {
+            // DB에 하나의 쿠폰만 저장되었는지 확인
+            val userCoupons = userCouponRepository.findAllByUserId(userId, PageRequest.of(0, 10))
+            userCoupons.content.size shouldBe 1
+            userCoupons.content[0].userId shouldBe userId
+            userCoupons.content[0].couponId shouldBe couponId
+        }
     }
 }
