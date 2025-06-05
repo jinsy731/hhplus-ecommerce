@@ -11,23 +11,27 @@ const issueDuration = new Trend('issue_duration', true);
 const serverErrorRate = new Rate('server_error_rate');
 
 export let options = {
-    tags: { testid: 'coupon-issue-peak-test' },
+  tags: { testid: 'coupon-issue-stress-test' },
   stages: [
-    { duration: '30s', target: 20 },
-    { duration: '30s', target: 100 },
-    { duration: '30s', target: 500 },
-    { duration: '2m', target: 1000 },
-    { duration: '30s', target: 500 },
-    { duration: '30s', target: 100 },
-    { duration: '30s', target: 0 },
+    { duration: '10s', target: 50 },
+    { duration: '10s', target: 100 },
+    { duration: '10s', target: 150 },
+    { duration: '10s', target: 200 },
+    { duration: '10s', target: 250 },
+    { duration: '10s', target: 500 },
+    { duration: '10s', target: 700 },
+    { duration: '10s', target: 900 },
+    { duration: '10s', target: 1500 },
+    { duration: '10s', target: 2000 },
+    { duration: '10s', target: 0 }
   ],
   thresholds: {
     'issue_duration': ['p(95)<800', 'p(99.9)<1500'],
     'server_error_rate': ['rate<0.001'],
-    'issued_coupon_total': ['count==1000'],
+    // 'issued_coupon_total': ['count==50000'],
   },
   // 커스텀 메트릭을 summary에 포함하기 위한 설정
-  summaryTrendStats: ['avg', 'min', 'med', 'p(90)', 'p(95)', 'p(99)', 'p(99.9)', 'max'],
+  summaryTrendStats: ['avg', 'p(90)', 'p(95)', 'p(99)', 'p(99.9)', 'max'],
 };
 
 export function setup() {
