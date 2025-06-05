@@ -8,5 +8,23 @@ providers:
     disableDeletion: false
     updateIntervalSeconds: 10
     options:
-      path: /dashboard/k6.json
+      path: /dashboard/k6-prometheus.json
+      foldersFromFilesStructure: true
+  - name: "HHPlus ecommerce JVM micrometer"
+    orgId: 1
+    folder: ""
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    options:
+      path: /dashboard/JVM_Micrometer.json
+      foldersFromFilesStructure: true
+  - name: "HHPlus ecommerce Hikari CP & JDBC"
+    orgId: 1
+    folder: ""
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    options:
+      path: /dashboard/HikariCP_JDBC.json
       foldersFromFilesStructure: true
