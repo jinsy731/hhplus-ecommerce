@@ -72,6 +72,10 @@ dependencies {
     // DB
 	runtimeOnly("com.mysql:mysql-connector-j")
 
+	// monitoring
+	implementation("org.springframework.boot:spring-boot-starter-actuator")
+	implementation("io.micrometer:micrometer-registry-prometheus")
+
 	// Doc
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
 
